@@ -31,29 +31,41 @@ private struct PlayerLayout: View {
     @ObservedObject var windowState: WindowState
 
     var body: some View {
-        Group {
-            if windowState.isFullscreen {
+        VSplitView {
+            PlayerContainerView(
+                appModel: appModel,
+                engine: engine,
+                videoView: videoView,
+                windowState: windowState,
+                isVideoSurfaceActive: !windowState.isFullscreen
+            )
+            .frame(minHeight: 280)
+
+            FolderBrowserView(appModel: appModel)
+                .frame(minHeight: 190, idealHeight: 260)
+        }
+        .background(Color.black)
+        .onAppear {
+            windowState.attachVideoView(videoView)
+        }
+        .background {
+            FullscreenPlayerPresenter(
+                isPresented: windowState.isFullscreen,
+                exitRequest: windowState.fullscreenExitRequest,
+                sourceFrame: windowState.fullscreenSourceFrame
+            ) {
                 PlayerContainerView(
                     appModel: appModel,
                     engine: engine,
                     videoView: videoView,
-                    windowState: windowState
+                    windowState: windowState,
+                    isVideoSurfaceActive: true
                 )
-            } else {
-                VSplitView {
-                    PlayerContainerView(
-                        appModel: appModel,
-                        engine: engine,
-                        videoView: videoView,
-                        windowState: windowState
-                    )
-                    .frame(minHeight: 280)
-
-                    FolderBrowserView(appModel: appModel)
-                        .frame(minHeight: 190, idealHeight: 260)
-                }
+                .preferredColorScheme(.dark)
+            } onDismiss: {
+                windowState.fullscreenDidExit()
             }
+            .frame(width: 0, height: 0)
         }
-        .background(Color.black)
     }
 }

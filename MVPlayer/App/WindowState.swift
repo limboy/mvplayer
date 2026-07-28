@@ -4,61 +4,38 @@ import SwiftUI
 @MainActor
 final class WindowState: ObservableObject {
     @Published private(set) var isFullscreen = false
+    @Published private(set) var fullscreenExitRequest: UInt = 0
+    @Published private(set) var fullscreenSourceFrame: NSRect?
 
-    private weak var window: NSWindow?
-    private var observerTokens: [NSObjectProtocol] = []
+    private var isExitRequested = false
+    private weak var videoView: NSView?
 
-    func attach(_ window: NSWindow) {
-        guard self.window !== window else { return }
-        observerTokens.forEach(NotificationCenter.default.removeObserver)
-        observerTokens = []
-        self.window = window
-        isFullscreen = window.styleMask.contains(.fullScreen)
-
-        let center = NotificationCenter.default
-        observerTokens.append(
-            center.addObserver(
-                forName: NSWindow.didEnterFullScreenNotification,
-                object: window,
-                queue: .main
-            ) { [weak self] _ in
-                Task { @MainActor in self?.isFullscreen = true }
-            }
-        )
-        observerTokens.append(
-            center.addObserver(
-                forName: NSWindow.didExitFullScreenNotification,
-                object: window,
-                queue: .main
-            ) { [weak self] _ in
-                Task { @MainActor in self?.isFullscreen = false }
-            }
-        )
+    func attachVideoView(_ videoView: NSView) {
+        self.videoView = videoView
     }
 
     func toggleFullscreen() {
-        window?.toggleFullScreen(nil)
-    }
-}
-
-struct WindowReader: NSViewRepresentable {
-    let onResolve: @MainActor (NSWindow) -> Void
-
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.async {
-            if let window = view.window {
-                onResolve(window)
-            }
+        if isFullscreen {
+            guard !isExitRequested else { return }
+            isExitRequested = true
+            fullscreenExitRequest &+= 1
+        } else {
+            isExitRequested = false
+            fullscreenSourceFrame = videoView.flatMap(Self.screenFrame)
+            isFullscreen = true
         }
-        return view
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {
-        DispatchQueue.main.async {
-            if let window = nsView.window {
-                onResolve(window)
-            }
-        }
+    func fullscreenDidExit() {
+        isExitRequested = false
+        isFullscreen = false
+        fullscreenSourceFrame = nil
+    }
+
+    private static func screenFrame(for view: NSView) -> NSRect? {
+        guard let window = view.window else { return nil }
+        view.layoutSubtreeIfNeeded()
+        let frameInWindow = view.convert(view.bounds, to: nil)
+        return window.convertToScreen(frameInWindow)
     }
 }

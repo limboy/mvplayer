@@ -7,6 +7,7 @@ struct PlayerContainerView: View {
     let engine: MPVPlayerEngine
     let videoView: MVVideoView
     @ObservedObject var windowState: WindowState
+    let isVideoSurfaceActive: Bool
 
     @ObservedObject private var state: PlayerState
     @ObservedObject private var queue: PlaybackQueue
@@ -19,12 +20,14 @@ struct PlayerContainerView: View {
         appModel: AppModel,
         engine: MPVPlayerEngine,
         videoView: MVVideoView,
-        windowState: WindowState
+        windowState: WindowState,
+        isVideoSurfaceActive: Bool = true
     ) {
         self.appModel = appModel
         self.engine = engine
         self.videoView = videoView
         self.windowState = windowState
+        self.isVideoSurfaceActive = isVideoSurfaceActive
         _state = ObservedObject(wrappedValue: appModel.playerState)
         _queue = ObservedObject(wrappedValue: appModel.playbackQueue)
     }
@@ -33,7 +36,7 @@ struct PlayerContainerView: View {
         ZStack {
             Color.black
 
-            VideoSurface(view: videoView)
+            VideoSurface(view: videoView, isActive: isVideoSurfaceActive)
 
             if !state.hasMedia {
                 VStack(spacing: 12) {

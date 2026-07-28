@@ -13,12 +13,6 @@ struct MVPlayerApp: App {
         WindowGroup("MV Player") {
             ContentView(appModel: appModel, windowState: windowState)
                 .frame(minWidth: 760, minHeight: 560)
-                .background(
-                    WindowReader { window in
-                        windowState.attach(window)
-                    }
-                    .frame(width: 0, height: 0)
-                )
         }
         .defaultSize(width: 1_080, height: 760)
         .commands {
