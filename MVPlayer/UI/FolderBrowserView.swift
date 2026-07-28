@@ -36,6 +36,15 @@ struct FolderBrowserView: View {
     }
 
     private var browserHeader: some View {
+        ViewThatFits(in: .horizontal) {
+            browserHeaderContent(showsItemCount: true)
+            browserHeaderContent(showsItemCount: false)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 42)
+    }
+
+    private func browserHeaderContent(showsItemCount: Bool) -> some View {
         HStack(spacing: 10) {
             Button {
                 library.goBack()
@@ -56,10 +65,11 @@ struct FolderBrowserView: View {
 
             Spacer()
 
-            if !library.isAtRootList {
+            if showsItemCount, !library.isAtRootList {
                 Text("\(library.entries.count) items")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .fixedSize()
             }
 
             Button {
@@ -80,8 +90,6 @@ struct FolderBrowserView: View {
             .buttonStyle(.plain)
             .help("Add Folder")
         }
-        .padding(.horizontal, 12)
-        .frame(height: 42)
     }
 
     @ViewBuilder

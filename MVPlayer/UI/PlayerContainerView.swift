@@ -64,22 +64,26 @@ struct PlayerContainerView: View {
 
                 Spacer()
 
-                PlayerControlsView(
-                    appModel: appModel,
-                    engine: engine,
-                    windowState: windowState,
-                    state: state,
-                    queue: queue,
-                    isSeeking: $isSeeking,
-                    seekValue: $seekValue
-                )
-                .opacity(controlsVisible ? 1 : 0)
-                .offset(y: controlsVisible ? 0 : 14)
-                .allowsHitTesting(controlsVisible)
-                .padding(.horizontal, 18)
-                .padding(.bottom, windowState.isFullscreen ? 24 : 14)
+                if state.hasMedia {
+                    PlayerControlsView(
+                        appModel: appModel,
+                        engine: engine,
+                        windowState: windowState,
+                        state: state,
+                        queue: queue,
+                        isSeeking: $isSeeking,
+                        seekValue: $seekValue
+                    )
+                    .opacity(controlsVisible ? 1 : 0)
+                    .offset(y: controlsVisible ? 0 : 14)
+                    .allowsHitTesting(controlsVisible)
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, windowState.isFullscreen ? 24 : 14)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
             .animation(.easeOut(duration: 0.18), value: controlsVisible)
+            .animation(.easeOut(duration: 0.18), value: state.hasMedia)
         }
         .contentShape(Rectangle())
         .onTapGesture(count: 2) {
@@ -155,7 +159,79 @@ private struct PlayerControlsView: View {
     @Binding var seekValue: Double
 
     var body: some View {
+        ViewThatFits(in: .horizontal) {
+            regularControls
+            compactControls
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 11)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .shadow(color: .black.opacity(0.25), radius: 12, y: 4)
+    }
+
+    private var regularControls: some View {
         HStack(spacing: 12) {
+            transportControls
+
+            Divider()
+                .frame(height: 18)
+
+            controlButton(
+                volumeSymbol,
+                help: "Cycle Volume"
+            ) {
+                cycleVolume()
+            }
+
+            currentTimeLabel
+            seekSlider
+                .frame(minWidth: 120)
+                .layoutPriority(1)
+            durationLabel
+
+            secondaryControls
+        }
+        // Including the surrounding padding, this layout is selected at
+        // approximately 630 points or wider.
+        .frame(minWidth: 560)
+    }
+
+    private var compactControls: some View {
+        VStack(spacing: 8) {
+            VStack(spacing: 2) {
+                HStack {
+                    Text(timeString(isSeeking ? seekValue : state.currentTime))
+                    Spacer()
+                    Text(timeString(state.duration))
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+
+                seekSlider
+                    .frame(minWidth: 80)
+            }
+            .frame(maxWidth: .infinity)
+
+            HStack(spacing: 14) {
+                transportControls
+
+                controlButton(
+                    volumeSymbol,
+                    help: "Cycle Volume"
+                ) {
+                    cycleVolume()
+                }
+
+                Spacer(minLength: 4)
+                secondaryControls
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var transportControls: some View {
+        Group {
             controlButton("backward.end.fill", help: "Previous video") {
                 appModel.playPrevious()
             }
@@ -171,49 +247,48 @@ private struct PlayerControlsView: View {
             controlButton("forward.end.fill", help: "Next video") {
                 appModel.playNext()
             }
+        }
+    }
 
-            Divider()
-                .frame(height: 18)
+    private var currentTimeLabel: some View {
+        Text(timeString(isSeeking ? seekValue : state.currentTime))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .monospacedDigit()
+            .frame(width: 54, alignment: .trailing)
+    }
 
-            controlButton(
-                volumeSymbol,
-                help: "Cycle Volume"
-            ) {
-                cycleVolume()
-            }
-
-            Text(timeString(isSeeking ? seekValue : state.currentTime))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-                .frame(width: 54, alignment: .trailing)
-
-            Slider(
-                value: Binding(
-                    get: { isSeeking ? seekValue : state.currentTime },
-                    set: { seekValue = $0 }
-                ),
-                in: 0...max(state.duration, 0.01),
-                onEditingChanged: { editing in
-                    if editing {
-                        seekValue = state.currentTime
-                        isSeeking = true
-                    } else {
-                        engine.seek(to: seekValue)
-                        isSeeking = false
-                    }
+    private var seekSlider: some View {
+        Slider(
+            value: Binding(
+                get: { isSeeking ? seekValue : state.currentTime },
+                set: { seekValue = $0 }
+            ),
+            in: 0...max(state.duration, 0.01),
+            onEditingChanged: { editing in
+                if editing {
+                    seekValue = state.currentTime
+                    isSeeking = true
+                } else {
+                    engine.seek(to: seekValue)
+                    isSeeking = false
                 }
-            )
-            .disabled(!state.hasMedia || state.duration <= 0)
-            .frame(minWidth: 120)
-            .layoutPriority(1)
+            }
+        )
+        .disabled(!state.hasMedia || state.duration <= 0)
+    }
 
-            Text(timeString(state.duration))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
-                .frame(width: 54, alignment: .leading)
+    private var durationLabel: some View {
+        Text(timeString(state.duration))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .monospacedDigit()
+            .frame(width: 54, alignment: .leading)
+    }
 
+    @ViewBuilder
+    private var secondaryControls: some View {
+        Group {
             subtitleMenu
 
             controlButton(
@@ -241,10 +316,6 @@ private struct PlayerControlsView: View {
                 windowState.toggleFullscreen()
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 11)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
-        .shadow(color: .black.opacity(0.25), radius: 12, y: 4)
     }
 
     private var volumeSymbol: String {
