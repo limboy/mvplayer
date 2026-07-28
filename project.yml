@@ -1,0 +1,74 @@
+name: MVPlayer
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    ARCHS: arm64
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    CLANG_ENABLE_MODULES: YES
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_HARDENED_RUNTIME: YES
+targets:
+  CMPVShim:
+    type: framework
+    platform: macOS
+    sources:
+      - path: CMPVShim
+        excludes:
+          - include
+    headers:
+      public:
+        - CMPVShim/CMPVShim.h
+    settings:
+      base:
+        PRODUCT_MODULE_NAME: CMPVShim
+        DEFINES_MODULE: YES
+        SKIP_INSTALL: YES
+        GENERATE_INFOPLIST_FILE: YES
+        HEADER_SEARCH_PATHS:
+          - "$(SRCROOT)/CMPVShim"
+  MVPlayer:
+    type: application
+    platform: macOS
+    sources:
+      - MVPlayer
+    dependencies:
+      - target: CMPVShim
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.MVPlayer
+        PRODUCT_NAME: MV Player
+        PRODUCT_MODULE_NAME: MVPlayer
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: MV Player
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.video
+        INFOPLIST_KEY_NSHumanReadableCopyright: ""
+        CODE_SIGN_ENTITLEMENTS: MVPlayer/Support/MVPlayer.entitlements
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/../Frameworks"
+        OTHER_LDFLAGS:
+          - "$(inherited)"
+          - "-ldl"
+    scheme:
+      testTargets:
+        - MVPlayerTests
+  MVPlayerTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - MVPlayerTests
+    dependencies:
+      - target: MVPlayer
+      - target: CMPVShim
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.MVPlayerTests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/MV Player.app/Contents/MacOS/MV Player"
+        BUNDLE_LOADER: "$(TEST_HOST)"
