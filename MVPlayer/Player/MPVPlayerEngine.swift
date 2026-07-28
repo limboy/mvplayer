@@ -176,6 +176,7 @@ final class MPVPlayerEngine: @unchecked Sendable {
             self?.state.resetForLoad(url)
         }
         command(["loadfile", url.path, "replace"])
+        setPaused(false)
     }
 
     func togglePause() {
