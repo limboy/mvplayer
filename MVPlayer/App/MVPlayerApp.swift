@@ -10,7 +10,7 @@ struct MVPlayerApp: App {
     }
 
     var body: some Scene {
-        WindowGroup("MV Player") {
+        WindowGroup("MVPlayer") {
             ContentView(appModel: appModel, windowState: windowState)
                 .frame(minWidth: 560, minHeight: 560)
         }

@@ -127,7 +127,7 @@ struct FullscreenPlayerPresenter<Content: View>: NSViewRepresentable {
                 backing: .buffered,
                 defer: false
             )
-            window.title = "MV Player"
+            window.title = "MVPlayer"
             window.collectionBehavior = [.fullScreenPrimary]
             window.tabbingMode = .disallowed
             window.isReleasedWhenClosed = false

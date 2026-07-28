@@ -108,6 +108,12 @@ struct PlayerContainerView: View {
         .onDisappear {
             hideTask?.cancel()
         }
+        .background {
+            PlaybackKeyboardMonitor {
+                appModel.togglePlayPause()
+            }
+            .frame(width: 0, height: 0)
+        }
     }
 
     @ViewBuilder
@@ -146,6 +152,63 @@ struct PlayerContainerView: View {
             guard !Task.isCancelled, !state.isPaused, !isSeeking else { return }
             controlsVisible = false
         }
+    }
+}
+
+private struct PlaybackKeyboardMonitor: NSViewRepresentable {
+    let togglePlayPause: @MainActor () -> Void
+
+    func makeNSView(context: Context) -> PlaybackKeyboardMonitorView {
+        let view = PlaybackKeyboardMonitorView()
+        view.togglePlayPause = togglePlayPause
+        return view
+    }
+
+    func updateNSView(_ nsView: PlaybackKeyboardMonitorView, context: Context) {
+        nsView.togglePlayPause = togglePlayPause
+    }
+
+    static func dismantleNSView(
+        _ nsView: PlaybackKeyboardMonitorView,
+        coordinator: Void
+    ) {
+        nsView.stopMonitoring()
+    }
+}
+
+@MainActor
+private final class PlaybackKeyboardMonitorView: NSView {
+    var togglePlayPause: (@MainActor () -> Void)?
+    private var eventMonitor: Any?
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        stopMonitoring()
+        guard window != nil else { return }
+
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
+            [weak self] event in
+            guard let self, event.window === window else { return event }
+            guard event.charactersIgnoringModifiers == " " else { return event }
+
+            let actionModifiers: NSEvent.ModifierFlags = [
+                .command, .control, .option, .shift
+            ]
+            guard event.modifierFlags.intersection(actionModifiers).isEmpty else {
+                return event
+            }
+
+            if !event.isARepeat {
+                togglePlayPause?()
+            }
+            return nil
+        }
+    }
+
+    func stopMonitoring() {
+        guard let eventMonitor else { return }
+        NSEvent.removeMonitor(eventMonitor)
+        self.eventMonitor = nil
     }
 }
 

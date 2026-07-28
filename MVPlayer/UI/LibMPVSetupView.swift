@@ -14,9 +14,9 @@ struct LibMPVSetupView: View {
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 8) {
-                Text("MV Player needs libmpv")
+                Text("MVPlayer needs libmpv")
                     .font(.title2.weight(.semibold))
-                Text("Install mpv with Homebrew, then retry. MV Player never runs installation commands for you.")
+                Text("Install mpv with Homebrew, then retry. MVPlayer never runs installation commands for you.")
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: 470)
