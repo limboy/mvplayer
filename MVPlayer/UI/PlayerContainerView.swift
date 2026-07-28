@@ -37,6 +37,10 @@ struct PlayerContainerView: View {
             Color.black
 
             VideoSurface(view: videoView, isActive: isVideoSurfaceActive)
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) {
+                    windowState.toggleFullscreen()
+                }
 
             if !state.hasMedia {
                 VStack(spacing: 12) {
@@ -84,10 +88,6 @@ struct PlayerContainerView: View {
             }
             .animation(.easeOut(duration: 0.18), value: controlsVisible)
             .animation(.easeOut(duration: 0.18), value: state.hasMedia)
-        }
-        .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
-            windowState.toggleFullscreen()
         }
         .onContinuousHover { phase in
             switch phase {
