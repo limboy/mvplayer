@@ -29,6 +29,7 @@
 		AF6DFC6430EE7FAB997F4859 /* CMPVShim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6B7A073254AD11C705C72BD /* CMPVShim.framework */; };
 		B0920A887B99A67535EBEFF5 /* LibMPVLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CF3DBD7509BA5383ACC0B78 /* LibMPVLoader.swift */; };
 		B369F2B940C260E43C2DF5E6 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87F49829CC27CC6B077C53F /* AppModel.swift */; };
+		C743950DE9777BCFAE1DC013 /* mvplayer.icon in Resources */ = {isa = PBXBuildFile; fileRef = 8B9FEE97B7E30264055B6611 /* mvplayer.icon */; };
 		CBCABB6247C8BDA2BCFD8E2D /* CMPVShim.c in Sources */ = {isa = PBXBuildFile; fileRef = E1B2A60AF47452C5972F45AD /* CMPVShim.c */; };
 		D1686F68229307FB773F9FFB /* WindowStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0C9877A4FBADC73A1D2CDD /* WindowStateTests.swift */; };
 		D7D47E9348AB97AD6B719CB6 /* CMPVShim.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A6B7A073254AD11C705C72BD /* CMPVShim.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -95,6 +96,7 @@
 		54248B372A6C3479C6F3BE4C /* MPVPlayerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPVPlayerEngine.swift; sourceTree = "<group>"; };
 		5A734080EC5730DBF0918ED0 /* MVPlayerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MVPlayerApp.swift; sourceTree = "<group>"; };
 		7FF109F6FEADAED14509CD98 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		8B9FEE97B7E30264055B6611 /* mvplayer.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = mvplayer.icon; sourceTree = "<group>"; };
 		9B0A64AA22AE8287477B9CB1 /* LibMPVLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibMPVLoaderTests.swift; sourceTree = "<group>"; };
 		9C5E3C24BFFBDB6A9C17B81D /* FolderBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderBrowserView.swift; sourceTree = "<group>"; };
 		A6B7A073254AD11C705C72BD /* CMPVShim.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CMPVShim.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -174,6 +176,14 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		962EEA42BD939D59A5396308 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				8B9FEE97B7E30264055B6611 /* mvplayer.icon */,
+			);
+			path = Assets;
+			sourceTree = "<group>";
+		};
 		B791DDE53A55EEABC243BC44 /* Library */ = {
 			isa = PBXGroup;
 			children = (
@@ -219,6 +229,7 @@
 		D96E386BF06B4B3A6DAABF05 = {
 			isa = PBXGroup;
 			children = (
+				962EEA42BD939D59A5396308 /* Assets */,
 				071735AAEF56F0C30CC4C184 /* CMPVShim */,
 				BF2CB53912E45DC2CA274785 /* MVPlayer */,
 				DBBA43F6884D955F0ECD042B /* MVPlayerTests */,
@@ -277,6 +288,7 @@
 			buildConfigurationList = BDAC9E8D5FF6789BADD14BDC /* Build configuration list for PBXNativeTarget "MVPlayer" */;
 			buildPhases = (
 				8057C0A35938F825963B73CF /* Sources */,
+				94D301A148C88F1FF9978637 /* Resources */,
 				85B8074C5A82BABD51B49D02 /* Frameworks */,
 				C1750436186DF525B5C7C99F /* Embed Frameworks */,
 			);
@@ -351,6 +363,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		94D301A148C88F1FF9978637 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C743950DE9777BCFAE1DC013 /* mvplayer.icon in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		5927D98E64EB529533F5A292 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -418,11 +441,11 @@
 		0E35FE6FD5F8203E32D93A32 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = mvplayer;
 				CODE_SIGN_ENTITLEMENTS = MVPlayer/Support/MVPlayer.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "MV Player";
+				INFOPLIST_KEY_CFBundleDisplayName = MVPlayer;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -435,7 +458,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.MVPlayer;
 				PRODUCT_MODULE_NAME = MVPlayer;
-				PRODUCT_NAME = "MV Player";
+				PRODUCT_NAME = MVPlayer;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -453,7 +476,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.MVPlayerTests;
 				SDKROOT = macosx;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MV Player.app/Contents/MacOS/MV Player";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MVPlayer.app/Contents/MacOS/MVPlayer";
 			};
 			name = Release;
 		};
@@ -520,11 +543,11 @@
 		442334E5E45378089AB4F585 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = mvplayer;
 				CODE_SIGN_ENTITLEMENTS = MVPlayer/Support/MVPlayer.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "MV Player";
+				INFOPLIST_KEY_CFBundleDisplayName = MVPlayer;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -537,7 +560,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.MVPlayer;
 				PRODUCT_MODULE_NAME = MVPlayer;
-				PRODUCT_NAME = "MV Player";
+				PRODUCT_NAME = MVPlayer;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -622,7 +645,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.MVPlayerTests;
 				SDKROOT = macosx;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MV Player.app/Contents/MacOS/MV Player";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MVPlayer.app/Contents/MacOS/MVPlayer";
 			};
 			name = Debug;
 		};

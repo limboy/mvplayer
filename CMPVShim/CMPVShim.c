@@ -305,6 +305,18 @@ MVPMPVPlayer *mvp_mpv_create(char *error_buffer, size_t error_buffer_size) {
     player->set_option_string(player->handle, "keep-open", "yes");
     player->set_option_string(player->handle, "osc", "no");
 
+    // MVPlayer provides its own UI. Disable mpv's LuaJIT-backed scripts so the
+    // hardened app never attempts to execute unsigned generated code.
+    player->set_option_string(player->handle, "load-scripts", "no");
+    player->set_option_string(player->handle, "load-auto-profiles", "no");
+    player->set_option_string(player->handle, "load-commands", "no");
+    player->set_option_string(player->handle, "load-console", "no");
+    player->set_option_string(player->handle, "load-context-menu", "no");
+    player->set_option_string(player->handle, "load-positioning", "no");
+    player->set_option_string(player->handle, "load-select", "no");
+    player->set_option_string(player->handle, "load-stats-overlay", "no");
+    player->set_option_string(player->handle, "ytdl", "no");
+
     int status = player->initialize(player->handle);
     if (status < 0) {
         write_mpv_error(player, error_buffer, error_buffer_size, "Could not initialize libmpv", status);
