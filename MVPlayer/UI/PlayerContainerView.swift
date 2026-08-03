@@ -408,22 +408,18 @@ private struct PlayerControlsView: View {
 
     private var subtitleMenu: some View {
         Menu {
-            Button {
+            trackToggle("Off", selected: state.selectedSubtitleID == nil) {
                 engine.setSubtitle(id: nil)
-            } label: {
-                subtitleLabel("Off", selected: state.selectedSubtitleID == nil)
             }
 
             if !state.subtitles.isEmpty {
                 Divider()
                 ForEach(state.subtitles) { track in
-                    Button {
+                    trackToggle(
+                        track.displayName + (track.isExternal ? " — External" : ""),
+                        selected: track.isSelected
+                    ) {
                         engine.setSubtitle(id: track.id)
-                    } label: {
-                        subtitleLabel(
-                            track.displayName + (track.isExternal ? " — External" : ""),
-                            selected: track.isSelected
-                        )
                     }
                 }
             }
@@ -449,13 +445,11 @@ private struct PlayerControlsView: View {
                 Text("No alternate audio tracks")
             } else {
                 ForEach(state.audioTracks) { track in
-                    Button {
+                    trackToggle(
+                        track.displayName + (track.isExternal ? " — External" : ""),
+                        selected: track.isSelected
+                    ) {
                         engine.setAudio(id: track.id)
-                    } label: {
-                        subtitleLabel(
-                            track.displayName + (track.isExternal ? " — External" : ""),
-                            selected: track.isSelected
-                        )
                     }
                 }
             }
@@ -469,8 +463,17 @@ private struct PlayerControlsView: View {
         .help("Audio Tracks")
     }
 
-    private func subtitleLabel(_ title: String, selected: Bool) -> some View {
-        Label(title, systemImage: selected ? "checkmark" : "circle")
+    /// Track pickers read as radio buttons, but menus draw their selection with a
+    /// checkmark, the same one the preference toggle below them gets.
+    private func trackToggle(
+        _ title: String,
+        selected: Bool,
+        select: @escaping () -> Void
+    ) -> some View {
+        Toggle(title, isOn: Binding(
+            get: { selected },
+            set: { if $0 { select() } }
+        ))
     }
 
     private func chooseSubtitle() {
