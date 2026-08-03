@@ -61,6 +61,7 @@ private struct PlayerLayout: View {
                     windowState: windowState,
                     isVideoSurfaceActive: true
                 )
+                .ignoresSafeArea()
                 .preferredColorScheme(.dark)
             } onDismiss: {
                 windowState.fullscreenDidExit()
