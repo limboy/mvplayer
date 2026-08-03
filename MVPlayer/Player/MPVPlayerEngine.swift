@@ -10,11 +10,7 @@ private func swiftString<T>(from tuple: inout T) -> String {
 }
 
 private func mpvWakeupCallback(context: UnsafeMutableRawPointer?) {
-    guard let context else { return }
-    Unmanaged<MPVPlayerEngine>
-        .fromOpaque(context)
-        .takeUnretainedValue()
-        .scheduleEventDrain()
+    MPVCallbackContext<MPVPlayerEngine>.target(of: context)?.scheduleEventDrain()
 }
 
 final class MPVPlayerEngine: @unchecked Sendable {
@@ -25,8 +21,33 @@ final class MPVPlayerEngine: @unchecked Sendable {
     var onFileLoaded: (@MainActor () -> Void)?
 
     private let handle: OpaquePointer
+
+    /// Serializes every use of `handle` against the destroy. Reaching mpv from
+    /// anywhere else has to hop through here first.
+    ///
+    /// A lock around the calls instead would deadlock. mpv runs the wakeup
+    /// callback while holding its own client lock, so a lock taken there is
+    /// taken beneath mpv's; a caller holding that same lock while it waits to
+    /// enter mpv closes the cycle. Ordering the work on a serial queue needs no
+    /// lock on either side.
     private let eventQueue = DispatchQueue(label: "com.example.MVPlayer.mpv-events")
+
+    /// Whether the handle has been freed. Read and written on `eventQueue`
+    /// only, and kept in a box because `shutdown` runs from deinit, where the
+    /// engine itself cannot be captured.
+    private final class Lifetime {
+        var isDestroyed = false
+    }
+    private let lifetime = Lifetime()
+
+    /// Guards the once-only part of `shutdown`. Deliberately never held while
+    /// calling mpv, and never taken from an mpv callback.
+    private let shutdownLock = NSLock()
     private var isShuttingDown = false
+
+    /// Owned by libmpv until the player is destroyed. Touched only by `init`
+    /// and `shutdown`, which runs at most once.
+    private var wakeupContext: UnsafeMutableRawPointer?
 
     init(state: PlayerState) throws {
         switch LibMPVLoader.createPlayer() {
@@ -38,11 +59,9 @@ final class MPVPlayerEngine: @unchecked Sendable {
             throw error
         }
 
-        mvp_mpv_set_wakeup_callback(
-            handle,
-            mpvWakeupCallback,
-            Unmanaged.passUnretained(self).toOpaque()
-        )
+        let wakeupContext = MPVCallbackContext<MPVPlayerEngine>.passRetained(self)
+        self.wakeupContext = wakeupContext
+        mvp_mpv_set_wakeup_callback(handle, mpvWakeupCallback, wakeupContext)
         scheduleEventDrain()
     }
 
@@ -51,21 +70,64 @@ final class MPVPlayerEngine: @unchecked Sendable {
     }
 
     func shutdown() {
-        guard !isShuttingDown else { return }
-        isShuttingDown = true
+        let wasShuttingDown = shutdownLock.withLock {
+            let previous = isShuttingDown
+            isShuttingDown = true
+            return previous
+        }
+        guard !wasShuttingDown else { return }
+
+        // The lock is already released, so this call cannot be part of a cycle
+        // with mpv's own. Nothing has destroyed the handle at this point: the
+        // only destroy is the one enqueued below, and the guard above lets that
+        // happen once.
         mvp_mpv_set_wakeup_callback(handle, nil, nil)
-        mvp_mpv_destroy(handle)
+
+        // Freeing on the event queue puts the destroy behind every drain and
+        // command already queued. It has to be asynchronous, because deinit
+        // calls this and deinit itself lands on the event queue whenever a
+        // drain drops the last reference to the engine. Only values are
+        // captured, never self, which deinit could not offer anyway.
+        let handle = self.handle
+        let lifetime = self.lifetime
+        let wakeupContext = self.wakeupContext
+        self.wakeupContext = nil
+        eventQueue.async {
+            guard !lifetime.isDestroyed else { return }
+            lifetime.isDestroyed = true
+            mvp_mpv_destroy(handle)
+            // Clearing the callback does not stop one already running, so the
+            // box outlives the engine and reads as nil for it. mpv makes no
+            // further calls once the player is destroyed, which is the first
+            // moment the box can go.
+            MPVCallbackContext<MPVPlayerEngine>.release(wakeupContext)
+        }
     }
 
+    /// Called from mpv's wakeup callback, which runs with mpv's client lock
+    /// held. Enqueuing is the only thing it may do: taking any lock here would
+    /// order that lock beneath mpv's and deadlock against a thread waiting to
+    /// enter mpv.
     func scheduleEventDrain() {
-        guard !isShuttingDown else { return }
         eventQueue.async { [weak self] in
             self?.drainEvents()
         }
     }
 
+    /// Hands `body` the live handle on the event queue, or drops it once the
+    /// handle has been freed. Safe to call from the event queue itself, where
+    /// it simply defers the work to the next block.
+    private func onEventQueue(_ body: @escaping (OpaquePointer) -> Void) {
+        let handle = self.handle
+        let lifetime = self.lifetime
+        eventQueue.async {
+            guard !lifetime.isDestroyed else { return }
+            body(handle)
+        }
+    }
+
     private func drainEvents() {
-        guard !isShuttingDown else { return }
+        guard !lifetime.isDestroyed else { return }
         while true {
             var event = MVPMPVEvent()
             guard mvp_mpv_poll_event(handle, &event) != 0 else {
@@ -266,66 +328,72 @@ final class MPVPlayerEngine: @unchecked Sendable {
     }
 
     private func command(_ arguments: [String]) {
-        let storage = arguments.map { strdup($0) }
-        defer {
-            storage.forEach { pointer in
-                if let pointer { free(pointer) }
+        onEventQueue { [weak self] handle in
+            let storage = arguments.map { strdup($0) }
+            defer {
+                storage.forEach { pointer in
+                    if let pointer { free(pointer) }
+                }
             }
-        }
-        var pointers: [UnsafePointer<CChar>?] = storage.map { pointer in
-            guard let pointer else { return nil }
-            return UnsafePointer<CChar>(pointer)
-        }
-        pointers.append(nil)
-        var error = [CChar](repeating: 0, count: 512)
-        let result = pointers.withUnsafeBufferPointer { argumentsPointer in
-            error.withUnsafeMutableBufferPointer { errorPointer in
-                mvp_mpv_command_async(
-                    handle,
-                    argumentsPointer.baseAddress,
-                    errorPointer.baseAddress,
-                    errorPointer.count
-                )
+            var pointers: [UnsafePointer<CChar>?] = storage.map { pointer in
+                guard let pointer else { return nil }
+                return UnsafePointer<CChar>(pointer)
             }
-        }
-        if result < 0 {
-            publishImmediateError(error)
+            pointers.append(nil)
+            var error = [CChar](repeating: 0, count: 512)
+            let result = pointers.withUnsafeBufferPointer { argumentsPointer in
+                error.withUnsafeMutableBufferPointer { errorPointer in
+                    mvp_mpv_command_async(
+                        handle,
+                        argumentsPointer.baseAddress,
+                        errorPointer.baseAddress,
+                        errorPointer.count
+                    )
+                }
+            }
+            if result < 0 {
+                self?.publishImmediateError(error)
+            }
         }
     }
 
     private func setFlag(property: String, value: Bool) {
-        var error = [CChar](repeating: 0, count: 512)
-        let result = property.withCString { propertyPointer in
-            error.withUnsafeMutableBufferPointer { errorPointer in
-                mvp_mpv_set_flag_async(
-                    handle,
-                    propertyPointer,
-                    value,
-                    errorPointer.baseAddress,
-                    errorPointer.count
-                )
+        onEventQueue { [weak self] handle in
+            var error = [CChar](repeating: 0, count: 512)
+            let result = property.withCString { propertyPointer in
+                error.withUnsafeMutableBufferPointer { errorPointer in
+                    mvp_mpv_set_flag_async(
+                        handle,
+                        propertyPointer,
+                        value,
+                        errorPointer.baseAddress,
+                        errorPointer.count
+                    )
+                }
             }
-        }
-        if result < 0 {
-            publishImmediateError(error)
+            if result < 0 {
+                self?.publishImmediateError(error)
+            }
         }
     }
 
     private func setDouble(property: String, value: Double) {
-        var error = [CChar](repeating: 0, count: 512)
-        let result = property.withCString { propertyPointer in
-            error.withUnsafeMutableBufferPointer { errorPointer in
-                mvp_mpv_set_double_async(
-                    handle,
-                    propertyPointer,
-                    value,
-                    errorPointer.baseAddress,
-                    errorPointer.count
-                )
+        onEventQueue { [weak self] handle in
+            var error = [CChar](repeating: 0, count: 512)
+            let result = property.withCString { propertyPointer in
+                error.withUnsafeMutableBufferPointer { errorPointer in
+                    mvp_mpv_set_double_async(
+                        handle,
+                        propertyPointer,
+                        value,
+                        errorPointer.baseAddress,
+                        errorPointer.count
+                    )
+                }
             }
-        }
-        if result < 0 {
-            publishImmediateError(error)
+            if result < 0 {
+                self?.publishImmediateError(error)
+            }
         }
     }
 

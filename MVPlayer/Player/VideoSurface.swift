@@ -32,6 +32,12 @@ final class VideoSurfaceHostView: NSView {
 
     func attach(_ videoView: MVVideoView) {
         if videoView.superview !== self {
+            // A retry builds a fresh engine and video view. Drop whichever
+            // view was here before, or the detached one stays in the hierarchy
+            // underneath the new one and keeps it alive.
+            for subview in subviews where subview !== videoView {
+                subview.removeFromSuperview()
+            }
             videoView.removeFromSuperview()
             videoView.frame = bounds
             videoView.autoresizingMask = [.width, .height]

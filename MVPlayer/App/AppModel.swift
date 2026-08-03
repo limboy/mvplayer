@@ -44,6 +44,7 @@ final class AppModel: ObservableObject {
     }
 
     func retryLibMPV() {
+        teardownPlayer()
         startupError = nil
         do {
             let engine = try MPVPlayerEngine(state: playerState)
@@ -64,6 +65,18 @@ final class AppModel: ObservableObject {
             engine = nil
             videoView = nil
         }
+    }
+
+    /// Releases the renderer before the engine, in that order. mpv holds an
+    /// unretained pointer back to the video view for render updates, and
+    /// mvp_mpv_destroy tears down the render context, so leaving either
+    /// attached past this point leaves the render queue pointing at freed
+    /// memory.
+    private func teardownPlayer() {
+        videoView?.detachRenderer()
+        videoView = nil
+        engine?.shutdown()
+        engine = nil
     }
 
     func play(_ url: URL, from videos: [URL], directory: URL?) {

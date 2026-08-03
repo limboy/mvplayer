@@ -6,16 +6,17 @@ private func mpvOpenGLGetProcAddress(
     context: UnsafeMutableRawPointer?,
     name: UnsafePointer<CChar>?
 ) -> UnsafeMutableRawPointer? {
-    guard let context, let name else { return nil }
-    let view = Unmanaged<MVVideoView>.fromOpaque(context).takeUnretainedValue()
-    guard let library = view.openGLLibrary else { return nil }
+    guard let name,
+          let view = MPVCallbackContext<MVVideoView>.target(of: context),
+          let library = view.openGLLibrary
+    else {
+        return nil
+    }
     return dlsym(library, name)
 }
 
 private func mpvRenderUpdate(context: UnsafeMutableRawPointer?) {
-    guard let context else { return }
-    let view = Unmanaged<MVVideoView>.fromOpaque(context).takeUnretainedValue()
-    view.requestDisplay()
+    MPVCallbackContext<MVVideoView>.target(of: context)?.requestDisplay()
 }
 
 private final class MVOpenGLRenderWorker: @unchecked Sendable {
@@ -80,7 +81,12 @@ private final class MVOpenGLRenderWorker: @unchecked Sendable {
             isActive = false
             pendingSize = nil
         }
-        queue.async { [self] in
+        // Synchronous on purpose: the caller shuts the engine down as soon as
+        // this returns, and mvp_mpv_destroy frees the render context too. A
+        // render already in flight has to finish, and this one has to run,
+        // before the handle goes away. Nothing on this queue waits on the main
+        // thread, so blocking here cannot deadlock.
+        queue.sync { [self] in
             guard let context = stateLock.withLock({ self.context }) else { return }
             context.lock()
             context.makeCurrentContext()
@@ -159,6 +165,13 @@ final class MVVideoView: NSOpenGLView {
     private nonisolated let displayRequestLock = NSLock()
     private nonisolated(unsafe) var displayRequestPending = false
 
+    /// Owned by the render context and by mpv respectively, until
+    /// `detachRenderer` tears both down. A view released without that call
+    /// leaks two boxes, which is the deliberate trade: the alternative is mpv
+    /// holding a pointer to freed memory.
+    private var procAddressContext: UnsafeMutableRawPointer?
+    private var renderUpdateContext: UnsafeMutableRawPointer?
+
     init(engine: MPVPlayerEngine) {
         self.engine = engine
         renderWorker = MVOpenGLRenderWorker(engine: engine)
@@ -201,18 +214,22 @@ final class MVVideoView: NSOpenGLView {
         var swapInterval: GLint = 0
         openGLContext.setValues(&swapInterval, for: .swapInterval)
 
+        // mpv keeps this for as long as the render context lives, not just for
+        // the length of the call below.
+        let procAddressContext = MPVCallbackContext<MVVideoView>.passRetained(self)
         var error = [CChar](repeating: 0, count: 1_024)
         let result = error.withUnsafeMutableBufferPointer { buffer in
             mvp_mpv_initialize_renderer(
                 engine.rawHandle,
                 mpvOpenGLGetProcAddress,
-                Unmanaged.passUnretained(self).toOpaque(),
+                procAddressContext,
                 buffer.baseAddress,
                 buffer.count
             )
         }
 
         guard result >= 0 else {
+            MPVCallbackContext<MVVideoView>.release(procAddressContext)
             let message = error.withUnsafeBufferPointer {
                 String(cString: $0.baseAddress!)
             }
@@ -222,12 +239,15 @@ final class MVVideoView: NSOpenGLView {
             return
         }
 
+        self.procAddressContext = procAddressContext
         rendererInitialized = true
         renderWorker.activate(context: openGLContext)
+        let renderUpdateContext = MPVCallbackContext<MVVideoView>.passRetained(self)
+        self.renderUpdateContext = renderUpdateContext
         mvp_mpv_set_render_update_callback(
             engine.rawHandle,
             mpvRenderUpdate,
-            Unmanaged.passUnretained(self).toOpaque()
+            renderUpdateContext
         )
     }
 
@@ -284,7 +304,14 @@ final class MVVideoView: NSOpenGLView {
         guard rendererInitialized else { return }
         mvp_mpv_set_render_update_callback(engine.rawHandle, nil, nil)
         rendererInitialized = false
+        // Returns once the render context is destroyed, which is the point
+        // after which neither callback can be entered again and the boxes
+        // holding this view can be let go.
         renderWorker.deactivate()
+        MPVCallbackContext<MVVideoView>.release(renderUpdateContext)
+        renderUpdateContext = nil
+        MPVCallbackContext<MVVideoView>.release(procAddressContext)
+        procAddressContext = nil
     }
 
 }
