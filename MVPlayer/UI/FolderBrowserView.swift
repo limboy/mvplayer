@@ -28,6 +28,8 @@ struct FolderBrowserView: View {
             browserHeader
             Divider()
             browserContent
+            Divider()
+            statusBar
         }
         .background(Color(nsColor: .controlBackgroundColor))
         .overlay {
@@ -132,6 +134,82 @@ struct FolderBrowserView: View {
             }
 
         }
+    }
+
+    /// What is known about the selected row, along the bottom of the browser.
+    ///
+    /// The library has been reading this for every video it lists since before
+    /// there was anywhere to show it; the row itself has no space for more than
+    /// a name and how far in the viewer is.
+    private var statusBar: some View {
+        HStack(spacing: 10) {
+            // The floor is what the details are measured against: they may take
+            // the rest of the bar, but never the name's last 120 points. A name
+            // longer than what is left loses its middle, where the least of it
+            // is — the extension and the leading words survive.
+            Text(statusTitle)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(minWidth: 120, alignment: .leading)
+
+            Spacer(minLength: 0)
+
+            // Widest first: a bar too narrow for all of it gives up the file
+            // size, then the frame rate, and keeps the running time longest.
+            ViewThatFits(in: .horizontal) {
+                statusDetailText(statusDetails)
+                statusDetailText(Array(statusDetails.dropLast()))
+                statusDetailText(Array(statusDetails.prefix(1)))
+                Color.clear.frame(width: 0)
+            }
+            .layoutPriority(1)
+        }
+        .font(.caption)
+        .padding(.horizontal, 12)
+        .frame(height: 24)
+    }
+
+    private func statusDetailText(_ details: [String]) -> some View {
+        Text(details.joined(separator: "  ·  "))
+            .foregroundStyle(.secondary)
+            .monospacedDigit()
+            .lineLimit(1)
+            .fixedSize()
+    }
+
+    private var statusTitle: String {
+        if let selectedRoot {
+            return selectedRoot.displayName
+        }
+        if let selectedEntry {
+            return selectedEntry.name
+        }
+        return ""
+    }
+
+    private var statusDetails: [String] {
+        if let selectedRoot {
+            return selectedRoot.isAvailable ? [selectedRoot.url.path] : ["Unavailable"]
+        }
+        guard let selectedEntry else { return [] }
+        switch selectedEntry.kind {
+        case .folder:
+            return ["Folder"]
+        case .video:
+            // Empty until the read of the file comes back, rather than a row of
+            // placeholders that would only be replaced a moment later.
+            return library.metadata(for: selectedEntry.url)?.summaryParts ?? []
+        }
+    }
+
+    private var selectedRoot: LibraryRoot? {
+        guard library.isAtRootList, let selection else { return nil }
+        return library.roots.first { $0.url == selection }
+    }
+
+    private var selectedEntry: BrowserEntry? {
+        guard !library.isAtRootList, let selection else { return nil }
+        return library.entries.first { $0.url == selection }
     }
 
     @ViewBuilder

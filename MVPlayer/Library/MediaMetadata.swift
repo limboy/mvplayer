@@ -8,7 +8,13 @@ struct MediaMetadata: Equatable, Sendable {
     let height: Int?
     let frameRate: Double?
 
-    var detailText: String {
+    /// What is worth saying about the file, in reading order, leaving out
+    /// anything it did not answer for.
+    ///
+    /// Kept as pieces rather than one string because the status bar showing
+    /// them drops the later ones when the window is too narrow to hold them
+    /// all, and the running time is the one to keep longest.
+    var summaryParts: [String] {
         var parts: [String] = []
         if let duration, duration.isFinite, duration > 0 {
             parts.append(Self.timeString(duration))
@@ -19,7 +25,10 @@ struct MediaMetadata: Equatable, Sendable {
         if let frameRate, frameRate.isFinite, frameRate > 0 {
             parts.append(String(format: "%.2g fps", frameRate))
         }
-        return parts.joined(separator: "  ·  ")
+        if fileSize > 0 {
+            parts.append(ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file))
+        }
+        return parts
     }
 
     private static func timeString(_ seconds: Double) -> String {

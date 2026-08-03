@@ -42,7 +42,7 @@ private struct PlayerLayout: View {
             .frame(minHeight: 280)
 
             FolderBrowserView(appModel: appModel)
-                .frame(minHeight: 190, idealHeight: 260)
+                .frame(minHeight: 215, idealHeight: 285)
         }
         .background(Color.black)
         .onAppear {
