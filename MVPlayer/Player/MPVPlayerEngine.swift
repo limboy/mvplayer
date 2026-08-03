@@ -102,7 +102,7 @@ final class MPVPlayerEngine: @unchecked Sendable {
             }
 
         case MVP_MPV_EVENT_FILE_LOADED:
-            refreshTracks()
+            refreshTracks(selectFirstSubtitle: true)
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.state.isLoading = false
@@ -145,7 +145,7 @@ final class MPVPlayerEngine: @unchecked Sendable {
         }
     }
 
-    private func refreshTracks() {
+    private func refreshTracks(selectFirstSubtitle: Bool = false) {
         let count = mvp_mpv_copy_subtitle_tracks(handle, nil, 0)
         let audioCount = mvp_mpv_copy_audio_tracks(handle, nil, 0)
         guard count >= 0, audioCount >= 0 else { return }
@@ -168,7 +168,7 @@ final class MPVPlayerEngine: @unchecked Sendable {
         }
         guard copiedAudio >= 0 else { return }
 
-        let subtitles = subtitleValues.prefix(Int(copiedSubtitles)).map { value -> SubtitleTrack in
+        var subtitles = subtitleValues.prefix(Int(copiedSubtitles)).map { value -> SubtitleTrack in
             var mutableValue = value
             let title = swiftString(from: &mutableValue.title)
             let language = swiftString(from: &mutableValue.language)
@@ -181,6 +181,20 @@ final class MPVPlayerEngine: @unchecked Sendable {
                 isExternal: value.external,
                 isSelected: value.selected
             )
+        }
+
+        if selectFirstSubtitle, let firstSubtitleID = subtitles.first?.id {
+            setSubtitle(id: firstSubtitleID)
+            subtitles = subtitles.map { track in
+                SubtitleTrack(
+                    id: track.id,
+                    title: track.title,
+                    language: track.language,
+                    codec: track.codec,
+                    isExternal: track.isExternal,
+                    isSelected: track.id == firstSubtitleID
+                )
+            }
         }
 
         let audioTracks = audioValues.prefix(Int(copiedAudio)).map { value -> AudioTrack in
