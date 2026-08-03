@@ -69,6 +69,11 @@ final class PlayerState: ObservableObject {
         currentURL = url
         currentTime = 0
         duration = 0
+        // Loading a file always asks mpv for `pause=no`, but mpv only reports
+        // `pause` when the value actually flips, so an already-unpaused player
+        // answers with silence. Seed the mirror here or a stale `true` left by
+        // reset() survives into playback and the button keeps showing "Play".
+        isPaused = false
         isLoading = true
         errorMessage = nil
         subtitles = []
