@@ -82,7 +82,7 @@ struct PlayerContainerView: View {
                     .offset(y: controlsVisible ? 0 : 14)
                     .allowsHitTesting(controlsVisible)
                     .padding(.horizontal, 18)
-                    .padding(.bottom, windowState.isFullscreen ? 24 : 14)
+                    .padding(.bottom, 14)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
