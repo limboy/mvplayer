@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		07358321184D254941F4C351 /* MVVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40124688AF78AB586D9CD21C /* MVVideoView.swift */; };
 		07BB547D706EFC820F6EDC44 /* VideoSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAC07C51A49B82DA05357675 /* VideoSurface.swift */; };
+		0E7825A96285DF097A08CBC6 /* MediaThumbnailProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4057FD7C81982F4343C36F5C /* MediaThumbnailProviderTests.swift */; };
+		1764362694E6533DC3206F29 /* ExternalThumbnailRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9FE539388822415A5C9AF9 /* ExternalThumbnailRenderer.swift */; };
+		751FDC7B84BE4F17A8C542D5 /* ThumbnailFilmstrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F93AF34C814FB8878F67A2 /* ThumbnailFilmstrip.swift */; };
 		1A96B555B852C8ADED3063F9 /* MVPlayerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A734080EC5730DBF0918ED0 /* MVPlayerApp.swift */; };
 		224693807487630483B03359 /* PlayerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB70673E49BA482CE7855569 /* PlayerState.swift */; };
 		2CD1C7D40A5B25C06B7705A6 /* LibMPVSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52736CD6487176F53273DFA7 /* LibMPVSetupView.swift */; };
@@ -39,6 +42,8 @@
 		D1686F68229307FB773F9FFB /* WindowStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0C9877A4FBADC73A1D2CDD /* WindowStateTests.swift */; };
 		D7D47E9348AB97AD6B719CB6 /* CMPVShim.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A6B7A073254AD11C705C72BD /* CMPVShim.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DC5397814A9061D9358E8F24 /* PlaybackQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0DEA414CD839046A142BE1 /* PlaybackQueue.swift */; };
+		F25FEA260D3F99AD5ABABE5A /* ExternalThumbnailRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30502862EAE15F85545A309 /* ExternalThumbnailRendererTests.swift */; };
+		46BF7D61B2884A42A5BA11C0 /* ThumbnailFilmstripTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFDA47BF567148D288056327 /* ThumbnailFilmstripTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,15 +104,20 @@
 		355615EF1E55E543084C35E1 /* FullscreenPlayerPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenPlayerPresenter.swift; sourceTree = "<group>"; };
 		3CF3DBD7509BA5383ACC0B78 /* LibMPVLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibMPVLoader.swift; sourceTree = "<group>"; };
 		40124688AF78AB586D9CD21C /* MVVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MVVideoView.swift; sourceTree = "<group>"; };
+		4057FD7C81982F4343C36F5C /* MediaThumbnailProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaThumbnailProviderTests.swift; sourceTree = "<group>"; };
 		4A0C9877A4FBADC73A1D2CDD /* WindowStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowStateTests.swift; sourceTree = "<group>"; };
 		52736CD6487176F53273DFA7 /* LibMPVSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibMPVSetupView.swift; sourceTree = "<group>"; };
 		5394F98A7D523C014ADFB6F6 /* PlaybackProgressStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackProgressStore.swift; sourceTree = "<group>"; };
 		54248B372A6C3479C6F3BE4C /* MPVPlayerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPVPlayerEngine.swift; sourceTree = "<group>"; };
 		5A734080EC5730DBF0918ED0 /* MVPlayerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MVPlayerApp.swift; sourceTree = "<group>"; };
 		7FF109F6FEADAED14509CD98 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		8B9FE539388822415A5C9AF9 /* ExternalThumbnailRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalThumbnailRenderer.swift; sourceTree = "<group>"; };
+		27F93AF34C814FB8878F67A2 /* ThumbnailFilmstrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailFilmstrip.swift; sourceTree = "<group>"; };
 		8B9FEE97B7E30264055B6611 /* mvplayer.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = mvplayer.icon; sourceTree = "<group>"; };
 		9B0A64AA22AE8287477B9CB1 /* LibMPVLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibMPVLoaderTests.swift; sourceTree = "<group>"; };
 		9C5E3C24BFFBDB6A9C17B81D /* FolderBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderBrowserView.swift; sourceTree = "<group>"; };
+		A30502862EAE15F85545A309 /* ExternalThumbnailRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalThumbnailRendererTests.swift; sourceTree = "<group>"; };
+		FFDA47BF567148D288056327 /* ThumbnailFilmstripTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailFilmstripTests.swift; sourceTree = "<group>"; };
 		A6B7A073254AD11C705C72BD /* CMPVShim.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CMPVShim.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9FE8521908012F2D790BA23 /* PlayerContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerContainerView.swift; sourceTree = "<group>"; };
 		B0F5DCDC250DD95C1ECC84E7 /* PlaybackQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackQueueTests.swift; sourceTree = "<group>"; };
@@ -198,10 +208,12 @@
 		B791DDE53A55EEABC243BC44 /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				8B9FE539388822415A5C9AF9 /* ExternalThumbnailRenderer.swift */,
 				E0CEE9DC83112344B6879958 /* FolderLibrary.swift */,
 				B53BB1FECCFDB22DC4EA4792 /* FolderWatcher.swift */,
 				31A764DAAE610C2E1EC24B46 /* MediaMetadata.swift */,
 				1517D91C6721AA144D378574 /* MediaThumbnailProvider.swift */,
+				27F93AF34C814FB8878F67A2 /* ThumbnailFilmstrip.swift */,
 				5394F98A7D523C014ADFB6F6 /* PlaybackProgressStore.swift */,
 				DB0DEA414CD839046A142BE1 /* PlaybackQueue.swift */,
 			);
@@ -254,8 +266,11 @@
 		DBBA43F6884D955F0ECD042B /* MVPlayerTests */ = {
 			isa = PBXGroup;
 			children = (
+				A30502862EAE15F85545A309 /* ExternalThumbnailRendererTests.swift */,
 				178121889E8D5B2D2E4E5835 /* FolderLibraryTests.swift */,
 				9B0A64AA22AE8287477B9CB1 /* LibMPVLoaderTests.swift */,
+				4057FD7C81982F4343C36F5C /* MediaThumbnailProviderTests.swift */,
+				FFDA47BF567148D288056327 /* ThumbnailFilmstripTests.swift */,
 				DC4D8544757EF28DEDCB81C0 /* PlaybackProgressStoreTests.swift */,
 				B0F5DCDC250DD95C1ECC84E7 /* PlaybackQueueTests.swift */,
 				4A0C9877A4FBADC73A1D2CDD /* WindowStateTests.swift */,
@@ -404,6 +419,7 @@
 			files = (
 				B369F2B940C260E43C2DF5E6 /* AppModel.swift in Sources */,
 				4500916E4C767AF575F92A05 /* ContentView.swift in Sources */,
+				1764362694E6533DC3206F29 /* ExternalThumbnailRenderer.swift in Sources */,
 				901251B986400022D1C75058 /* FolderBrowserView.swift in Sources */,
 				500B7B34711E3ACAF19AD6AD /* FolderLibrary.swift in Sources */,
 				3E92CA8DECBD10B7277AD283 /* FolderWatcher.swift in Sources */,
@@ -415,6 +431,7 @@
 				07358321184D254941F4C351 /* MVVideoView.swift in Sources */,
 				B170249BFDF346B103A9E6F1 /* MediaMetadata.swift in Sources */,
 				7507A320F5672C4973B540CB /* MediaThumbnailProvider.swift in Sources */,
+				751FDC7B84BE4F17A8C542D5 /* ThumbnailFilmstrip.swift in Sources */,
 				485DDAF467C1BBE3F8EA1DDE /* PlaybackProgressStore.swift in Sources */,
 				DC5397814A9061D9358E8F24 /* PlaybackQueue.swift in Sources */,
 				5CB72F36D777FC0007486AE3 /* PlayerContainerView.swift in Sources */,
@@ -429,8 +446,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F25FEA260D3F99AD5ABABE5A /* ExternalThumbnailRendererTests.swift in Sources */,
 				672A01DCBC0F2FF4B70CDD69 /* FolderLibraryTests.swift in Sources */,
 				9FB2F1E46CEE3F2E2F82C65D /* LibMPVLoaderTests.swift in Sources */,
+				0E7825A96285DF097A08CBC6 /* MediaThumbnailProviderTests.swift in Sources */,
+				46BF7D61B2884A42A5BA11C0 /* ThumbnailFilmstripTests.swift in Sources */,
 				8DAAC6A01DFF01AA984D8F0F /* PlaybackProgressStoreTests.swift in Sources */,
 				3052004CBAC853FF3305E4D9 /* PlaybackQueueTests.swift in Sources */,
 				D1686F68229307FB773F9FFB /* WindowStateTests.swift in Sources */,

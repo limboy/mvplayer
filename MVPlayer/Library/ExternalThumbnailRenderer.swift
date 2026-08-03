@@ -1,0 +1,377 @@
+import AppKit
+import Foundation
+
+/// A command line frame extractor discovered on the host.
+enum ThumbnailTool: Equatable, Sendable {
+    case ffmpeg(URL)
+    case mpv(URL)
+}
+
+/// One frame of a filmstrip, tagged with its slot so callers can place it on
+/// the timeline without tracking how many frames they have seen.
+struct FilmstripFrame: @unchecked Sendable {
+    let index: Int
+    let image: NSImage
+}
+
+/// Extracts preview frames with the Homebrew command line tools installed
+/// alongside libmpv. AVFoundation cannot open most Matroska, AVI, or WebM
+/// files, so for those containers this is the only source of previews.
+final class ExternalThumbnailRenderer: Sendable {
+    static let ffmpegPathVariable = "MVPLAYER_FFMPEG_PATH"
+    static let mpvPathVariable = "MVPLAYER_MPV_PATH"
+
+    // One frame at a time. Scrubbing cancels and replaces requests quickly,
+    // and a serial queue keeps that from turning into a burst of processes.
+    private static let workQueue = DispatchQueue(
+        label: "com.example.MVPlayer.ExternalThumbnailRenderer",
+        qos: .userInitiated
+    )
+
+    // Filmstrips run for as long as it takes to read a whole file, so they get
+    // their own queue instead of blocking the single frame requests behind it.
+    private static let filmstripQueue = DispatchQueue(
+        label: "com.example.MVPlayer.ExternalThumbnailRenderer.filmstrip",
+        qos: .utility
+    )
+
+    let tool: ThumbnailTool?
+
+    init(tool: ThumbnailTool? = ExternalThumbnailRenderer.locateTool()) {
+        self.tool = tool
+    }
+
+    var isAvailable: Bool { tool != nil }
+
+    /// Whether filmstrips are possible. mpv writes frames one file at a time,
+    /// so only ffmpeg can stream a whole strip from a single pass.
+    var isFFmpegAvailable: Bool {
+        if case .ffmpeg = tool { return true }
+        return false
+    }
+
+    func image(for url: URL, at seconds: Int, maximumWidth: Int = 480) async -> NSImage? {
+        switch tool {
+        case .ffmpeg(let executable):
+            let arguments = Self.ffmpegArguments(
+                for: url,
+                at: seconds,
+                maximumWidth: maximumWidth
+            )
+            guard
+                let data = await Self.run(executable: executable, arguments: arguments),
+                !data.isEmpty
+            else {
+                return nil
+            }
+            return NSImage(data: data)
+        case .mpv(let executable):
+            return await Self.mpvImage(executable: executable, url: url, seconds: seconds)
+        case nil:
+            return nil
+        }
+    }
+
+    /// Streams evenly spaced frames covering the whole file, in order, as one
+    /// process writes them. A single pass costs about as much as a handful of
+    /// individual seeks, so this is how previews become instant instead of
+    /// waiting on a process per hovered position.
+    ///
+    /// The frame at `index` is the one at `Double(index) * interval` seconds.
+    /// Only ffmpeg can do this; other tools produce an empty strip and leave
+    /// callers on the single frame path.
+    func filmstripFrames(
+        for url: URL,
+        interval: Double,
+        maximumWidth: Int = 480
+    ) -> AsyncStream<FilmstripFrame> {
+        guard case .ffmpeg(let executable) = tool, interval > 0, interval.isFinite else {
+            return AsyncStream { $0.finish() }
+        }
+        let arguments = Self.filmstripArguments(
+            for: url,
+            interval: interval,
+            maximumWidth: maximumWidth
+        )
+        return AsyncStream { continuation in
+            let box = ProcessBox()
+            continuation.onTermination = { _ in box.cancel() }
+            Self.filmstripQueue.async {
+                let process = Process()
+                process.executableURL = executable
+                process.arguments = arguments
+                let output = Pipe()
+                process.standardOutput = output
+                process.standardError = FileHandle.nullDevice
+                process.standardInput = FileHandle.nullDevice
+
+                guard !box.isCancelled, (try? process.run()) != nil else {
+                    return continuation.finish()
+                }
+                guard box.adopt(process) else {
+                    process.terminate()
+                    process.waitUntilExit()
+                    return continuation.finish()
+                }
+
+                let handle = output.fileHandleForReading
+                var buffer = Data()
+                var index = 0
+                while
+                    let chunk = try? handle.read(upToCount: 64 * 1_024),
+                    !chunk.isEmpty
+                {
+                    buffer.append(chunk)
+                    while let frame = Self.takeJPEG(from: &buffer) {
+                        if let image = NSImage(data: frame) {
+                            continuation.yield(FilmstripFrame(index: index, image: image))
+                        }
+                        index += 1
+                    }
+                }
+
+                process.waitUntilExit()
+                box.finish()
+                continuation.finish()
+            }
+        }
+    }
+
+    /// Removes the first complete JPEG from `buffer`, or returns `nil` when one
+    /// has not arrived yet. Entropy coded data escapes its own `FF` bytes, so
+    /// an end of image marker can only ever mean the end of a frame.
+    static func takeJPEG(from buffer: inout Data) -> Data? {
+        let start = Data([0xFF, 0xD8])
+        let end = Data([0xFF, 0xD9])
+        guard
+            let startRange = buffer.firstRange(of: start),
+            let endRange = buffer.firstRange(of: end, in: startRange.upperBound..<buffer.endIndex)
+        else {
+            return nil
+        }
+        let frame = buffer[startRange.lowerBound..<endRange.upperBound]
+        buffer.removeSubrange(buffer.startIndex..<endRange.upperBound)
+        return Data(frame)
+    }
+
+    static func filmstripArguments(
+        for url: URL,
+        interval: Double,
+        maximumWidth: Int
+    ) -> [String] {
+        [
+            "-nostdin",
+            "-hide_banner",
+            "-loglevel", "error",
+            // Decoding key frames only turns a full pass over the file into a
+            // fraction of a second. The frames land on the nearest key frame
+            // rather than the exact instant, which is what a scrubbing preview
+            // wants anyway.
+            "-skip_frame", "nokey",
+            "-i", url.path,
+            "-an", "-sn", "-dn",
+            "-vf", "fps=1/\(String(format: "%g", interval)),"
+                + "scale=w='min(iw,\(maximumWidth))':h=-2",
+            // JPEG rather than PNG: a strip is hundreds of frames, and at this
+            // size the compression artefacts are invisible.
+            "-q:v", "6",
+            "-f", "image2pipe",
+            "-vcodec", "mjpeg",
+            "pipe:1",
+        ]
+    }
+
+    static func locateTool(
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        fileManager: FileManager = .default
+    ) -> ThumbnailTool? {
+        let ffmpegCandidates = [environment[ffmpegPathVariable]].compactMap { $0 } + [
+            "/opt/homebrew/bin/ffmpeg",
+            "/opt/homebrew/opt/ffmpeg/bin/ffmpeg",
+            "/usr/local/bin/ffmpeg",
+        ]
+        if let path = ffmpegCandidates.first(where: fileManager.isExecutableFile(atPath:)) {
+            return .ffmpeg(URL(fileURLWithPath: path))
+        }
+
+        let mpvCandidates = [environment[mpvPathVariable]].compactMap { $0 } + [
+            "/opt/homebrew/bin/mpv",
+            "/opt/homebrew/opt/mpv/bin/mpv",
+            "/usr/local/bin/mpv",
+        ]
+        if let path = mpvCandidates.first(where: fileManager.isExecutableFile(atPath:)) {
+            return .mpv(URL(fileURLWithPath: path))
+        }
+
+        return nil
+    }
+
+    static func ffmpegArguments(
+        for url: URL,
+        at seconds: Int,
+        maximumWidth: Int
+    ) -> [String] {
+        [
+            "-nostdin",
+            "-hide_banner",
+            "-loglevel", "error",
+            // Seeking before the input decodes from the preceding key frame
+            // instead of from the start of the file, which is what keeps
+            // scrubbing previews fast.
+            "-ss", String(seconds),
+            "-i", url.path,
+            "-frames:v", "1",
+            "-an", "-sn", "-dn",
+            "-vf", "scale=w='min(iw,\(maximumWidth))':h=-2",
+            "-f", "image2pipe",
+            "-vcodec", "png",
+            "pipe:1",
+        ]
+    }
+
+    static func mpvArguments(
+        for url: URL,
+        at seconds: Int,
+        outputDirectory: URL
+    ) -> [String] {
+        [
+            "--no-config",
+            "--really-quiet",
+            "--no-audio",
+            "--no-sub",
+            "--frames=1",
+            "--start=\(seconds)",
+            "--vo=image",
+            "--vo-image-format=png",
+            "--vo-image-outdir=\(outputDirectory.path)",
+            "--",
+            url.path,
+        ]
+    }
+
+    /// mpv can only write frames into a directory, so the fallback renders
+    /// into a scratch directory and reads the single frame back.
+    private static func mpvImage(
+        executable: URL,
+        url: URL,
+        seconds: Int
+    ) async -> NSImage? {
+        let fileManager = FileManager.default
+        let directory = fileManager.temporaryDirectory
+            .appendingPathComponent("MVPlayerThumbnails", isDirectory: true)
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        do {
+            try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        } catch {
+            return nil
+        }
+        defer { try? fileManager.removeItem(at: directory) }
+
+        let arguments = mpvArguments(for: url, at: seconds, outputDirectory: directory)
+        guard await run(executable: executable, arguments: arguments) != nil else {
+            return nil
+        }
+
+        let contents = (try? fileManager.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        )) ?? []
+        guard let frame = contents.first(where: { $0.pathExtension.lowercased() == "png" }) else {
+            return nil
+        }
+        return NSImage(contentsOf: frame)
+    }
+
+    /// Runs `executable` and returns its standard output, or `nil` when the
+    /// process fails, is cancelled, or cannot be started.
+    private static func run(executable: URL, arguments: [String]) async -> Data? {
+        let box = ProcessBox()
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Data?, Never>) in
+                workQueue.async {
+                    let process = Process()
+                    process.executableURL = executable
+                    process.arguments = arguments
+                    let output = Pipe()
+                    process.standardOutput = output
+                    process.standardError = FileHandle.nullDevice
+                    process.standardInput = FileHandle.nullDevice
+
+                    guard !box.isCancelled else {
+                        continuation.resume(returning: nil)
+                        return
+                    }
+
+                    do {
+                        try process.run()
+                    } catch {
+                        continuation.resume(returning: nil)
+                        return
+                    }
+
+                    // The process is handed over only once it is running,
+                    // because terminating an unlaunched process raises. A
+                    // failed adoption means the task was cancelled while the
+                    // process was starting, so it is stopped here instead.
+                    guard box.adopt(process) else {
+                        process.terminate()
+                        process.waitUntilExit()
+                        continuation.resume(returning: nil)
+                        return
+                    }
+
+                    // Drain the pipe before waiting so a frame larger than the
+                    // pipe buffer cannot deadlock the process.
+                    let data = (try? output.fileHandleForReading.readToEnd()) ?? Data()
+                    process.waitUntilExit()
+                    let status = process.terminationStatus
+                    box.finish()
+                    continuation.resume(returning: status == 0 ? data : nil)
+                }
+            }
+        } onCancel: {
+            box.cancel()
+        }
+    }
+}
+
+/// Shares a running process with the cancellation handler, which runs outside
+/// the queue that owns the process.
+private final class ProcessBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var process: Process?
+    private var cancelled = false
+
+    var isCancelled: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return cancelled
+    }
+
+    /// Takes ownership of an already launched process. Returns `false` when
+    /// the task was cancelled while it was starting, leaving the caller to
+    /// stop it.
+    func adopt(_ process: Process) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !cancelled else { return false }
+        self.process = process
+        return true
+    }
+
+    func cancel() {
+        lock.lock()
+        cancelled = true
+        let running = process
+        process = nil
+        lock.unlock()
+        guard let running, running.isRunning else { return }
+        running.terminate()
+    }
+
+    func finish() {
+        lock.lock()
+        process = nil
+        lock.unlock()
+    }
+}

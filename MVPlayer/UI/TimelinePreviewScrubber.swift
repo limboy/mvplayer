@@ -11,11 +11,27 @@ struct TimelinePreviewScrubber: View {
 
     @State private var previewTime: Double?
     @State private var previewImage: NSImage?
+    @State private var previewsUnavailable = false
     @State private var thumbnailTask: Task<Void, Never>?
     @State private var committedSeekTarget: Double?
     @State private var seekCompletionTask: Task<Void, Never>?
 
     private let thumbnailProvider = MediaThumbnailProvider.shared
+
+    /// The preview frame, at 16:9. Big enough to read the shot at a glance
+    /// rather than having to look for it. Frames are extracted at twice this
+    /// width so the card stays sharp on a Retina display.
+    private static let previewFrameSize = CGSize(width: 240, height: 135)
+
+    /// The time label, the spacing above it, and the card padding, which sit
+    /// below the frame and so push the whole card further up.
+    private static let previewCardChrome: CGFloat = 27
+
+    /// Where the card's centre goes, keeping a constant gap above the bar
+    /// whatever size the frame is.
+    private static var previewCardCenterY: CGFloat {
+        -((previewFrameSize.height + previewCardChrome) / 2 + 9)
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -75,10 +91,16 @@ struct TimelinePreviewScrubber: View {
                     )
 
                 if let previewTime {
+                    // Half the card width keeps it inside the bar at either
+                    // end instead of hanging off the edge of the controls.
+                    let inset = Self.previewFrameSize.width / 2 + 5
                     previewCard(time: previewTime)
                         .position(
-                            x: min(max(width * ratio(for: previewTime), 52), width - 52),
-                            y: -54
+                            x: min(
+                                max(width * ratio(for: previewTime), inset),
+                                max(width - inset, inset)
+                            ),
+                            y: Self.previewCardCenterY
                         )
                         .allowsHitTesting(false)
                 }
@@ -88,15 +110,21 @@ struct TimelinePreviewScrubber: View {
         // Keep the scrubber compact so the surrounding control capsule does
         // not grow to fill the entire player.
         .frame(minWidth: 80, minHeight: 28, maxHeight: 28)
+        .onAppear { prepareFilmstrip() }
         .onDisappear {
             clearPreview()
             seekCompletionTask?.cancel()
         }
         .onChange(of: url) { _, _ in
             clearPreview()
+            previewsUnavailable = false
+            prepareFilmstrip()
         }
         .onChange(of: duration) { _, _ in
             clearPreview()
+            // The duration only settles once the file is open, which is the
+            // first moment the strip knows how far apart its frames go.
+            prepareFilmstrip()
         }
         .onChange(of: currentTime) { _, newTime in
             guard let target = committedSeekTarget else { return }
@@ -124,13 +152,36 @@ struct TimelinePreviewScrubber: View {
             seekValue = time
         }
         previewTime = time
+
+        // The filmstrip covers the whole file, so this normally hits and the
+        // preview tracks the pointer with no delay at all. Extracting a frame
+        // costs a process launch, which the next pointer move would cancel
+        // before it ever finished.
+        if let ready = thumbnailProvider.cachedImage(for: url, at: time) {
+            thumbnailTask?.cancel()
+            thumbnailTask = nil
+            previewsUnavailable = false
+            previewImage = ready
+            return time
+        }
+
         thumbnailTask?.cancel()
         thumbnailTask = Task { @MainActor in
             let image = await thumbnailProvider.image(for: url, at: time)
             guard !Task.isCancelled else { return }
-            previewImage = image
+            // Keep the previous frame on screen when a request comes back
+            // empty so the card does not flicker mid-scrub.
+            previewsUnavailable = image == nil
+            if let image {
+                previewImage = image
+            }
         }
         return time
+    }
+
+    private func prepareFilmstrip() {
+        guard let url, duration > 0 else { return }
+        thumbnailProvider.prepare(for: url, duration: duration)
     }
 
     private func clearPreview() {
@@ -159,13 +210,24 @@ struct TimelinePreviewScrubber: View {
     @ViewBuilder
     private func previewCard(time: Double) -> some View {
         VStack(spacing: 4) {
-            if let previewImage {
-                Image(nsImage: previewImage)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 104, height: 64)
-                    .clipped()
-                    .clipShape(RoundedRectangle(cornerRadius: 5))
+            if previewImage != nil || !previewsUnavailable {
+                ZStack {
+                    // A placeholder of the same size keeps the card from
+                    // resizing while the first frame is being extracted.
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Color.white.opacity(0.12))
+                    if let previewImage {
+                        Image(nsImage: previewImage)
+                            .resizable()
+                            .scaledToFill()
+                    }
+                }
+                .frame(
+                    width: Self.previewFrameSize.width,
+                    height: Self.previewFrameSize.height
+                )
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 5))
             }
             Text(timeString(time))
                 .font(.caption2.monospacedDigit())

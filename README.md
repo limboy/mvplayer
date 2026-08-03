@@ -15,7 +15,9 @@ MVPlayer is a native SwiftUI macOS video player backed by Homebrew's
 - Embedded audio track selection.
 - Persistent playback progress with automatic resume.
 - Asynchronous duration, resolution, and frame-rate metadata.
-- Timeline scrubbing with best-effort frame previews for AVFoundation-readable files.
+- Timeline scrubbing with hover frame previews for every playable format,
+  using AVFoundation when it can read the file and Homebrew `ffmpeg` or `mpv`
+  for the containers it cannot, such as MKV, AVI, and WebM.
 - macOS Now Playing information and media-key/remote playback controls.
 - Full-screen playback with a dedicated video window.
 - Keyboard shortcuts for playback, seeking, volume, and full screen.
@@ -38,6 +40,17 @@ overlays and online-video hooks. It is designed for local video playback.
 
 The app loads libmpv at runtime from `/opt/homebrew`. If it is unavailable,
 MVPlayer opens a setup screen instead of failing at launch.
+
+Scrubber previews use the `ffmpeg` command line tool that Homebrew installs
+with mpv, falling back to the `mpv` binary. Set `MVPLAYER_FFMPEG_PATH` or
+`MVPLAYER_MPV_PATH` to point at an installation elsewhere. Without either
+tool, previews are limited to files AVFoundation can decode.
+
+Opening a file starts one background pass that extracts a strip of preview
+frames covering the whole timeline, so hovering reads from memory and keeps up
+with the pointer. With `ffmpeg` the pass decodes key frames only, which covers
+a ten minute file in well under a second; positions it has not reached yet fall
+back to extracting a single frame on demand.
 
 ## Build
 
