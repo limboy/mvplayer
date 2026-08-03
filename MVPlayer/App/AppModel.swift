@@ -16,9 +16,11 @@ final class AppModel: ObservableObject {
     @Published private(set) var progressRevision = 0
 
     private var queueDirectory: URL?
-    private var pendingResumeURL: URL?
-    private var pendingResumeTime: Double?
     private var cancellables = Set<AnyCancellable>()
+
+    /// Held while a video is playing, to keep the display awake. Nil whenever
+    /// nothing is playing, which is also how the state is read.
+    private var playbackActivity: NSObjectProtocol?
 
     init(
         folderLibrary: FolderLibrary = FolderLibrary(),
@@ -50,13 +52,6 @@ final class AppModel: ObservableObject {
             let engine = try MPVPlayerEngine(state: playerState)
             engine.onPlaybackEnded = { [weak self] in
                 self?.advanceAfterEnd()
-            }
-            engine.onFileLoaded = { [weak self] in
-                Task { @MainActor [weak self] in
-                    try? await Task.sleep(for: .milliseconds(120))
-                    guard !Task.isCancelled else { return }
-                    self?.applyPendingResume()
-                }
             }
             self.engine = engine
             videoView = MVVideoView(engine: engine)
@@ -120,8 +115,6 @@ final class AppModel: ObservableObject {
         if playerState.hasMedia {
             saveCurrentProgress()
         }
-        pendingResumeURL = nil
-        pendingResumeTime = nil
         queueDirectory = nil
         folderLibrary.selectedVideo = nil
         playbackQueue.clear()
@@ -147,26 +140,25 @@ final class AppModel: ObservableObject {
     }
 
     private func loadVideo(_ url: URL) {
-        pendingResumeURL = url.standardizedFileURL
-        pendingResumeTime = progressStore.progress(for: url)?.position
         videoView?.setVideoRenderingEnabled(true)
-        engine?.load(url)
+        engine?.load(url, startAt: resumePosition(for: url))
         updateNowPlaying()
     }
 
-    private func applyPendingResume() {
-        guard let url = pendingResumeURL,
-              url == playerState.currentURL?.standardizedFileURL,
-              let time = pendingResumeTime
-        else {
-            pendingResumeURL = nil
-            pendingResumeTime = nil
-            return
+    /// Where a video should pick up, or nil to start it from the beginning.
+    ///
+    /// The running time comes from the stored progress rather than from the
+    /// player, because the decision is made before the file is open and mpv has
+    /// not reported a duration yet. The store records both together, so it
+    /// already knows how far in the position was.
+    private func resumePosition(for url: URL) -> Double? {
+        guard let progress = progressStore.progress(for: url) else { return nil }
+        // Far enough in to be worth returning to, and far enough from the end
+        // that there is something left to watch.
+        guard progress.position >= 15, progress.duration > progress.position + 30 else {
+            return nil
         }
-        guard time >= 15, playerState.duration > time + 30 else { return }
-        pendingResumeURL = nil
-        pendingResumeTime = nil
-        engine?.seek(to: time)
+        return progress.position
     }
 
     private func observePlayerState() {
@@ -174,7 +166,6 @@ final class AppModel: ObservableObject {
             .combineLatest(playerState.$duration, playerState.$currentURL)
             .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] _, _, _ in
-                self?.applyPendingResume()
                 self?.saveCurrentProgress()
                 self?.updateNowPlaying()
             }
@@ -183,12 +174,32 @@ final class AppModel: ObservableObject {
         playerState.$isPaused
             .sink { [weak self] _ in self?.updateNowPlaying() }
             .store(in: &cancellables)
-        playerState.$duration
-            .sink { [weak self] _ in self?.applyPendingResume() }
-            .store(in: &cancellables)
         playerState.$volume
             .sink { [weak self] _ in self?.updateNowPlaying() }
             .store(in: &cancellables)
+
+        // The published values, not the properties: @Published fires before the
+        // new value is stored, so reading playerState here would see the old one.
+        playerState.$isPaused
+            .combineLatest(playerState.$currentURL)
+            .sink { [weak self] isPaused, url in
+                self?.setPlaybackKeepingDisplayAwake(url != nil && !isPaused)
+            }
+            .store(in: &cancellables)
+    }
+
+    /// Keeps the display awake while a video is playing, and lets it sleep
+    /// again as soon as one is not.
+    private func setPlaybackKeepingDisplayAwake(_ isPlaying: Bool) {
+        if isPlaying, playbackActivity == nil {
+            playbackActivity = ProcessInfo.processInfo.beginActivity(
+                options: [.idleDisplaySleepDisabled, .idleSystemSleepDisabled],
+                reason: "Playing video"
+            )
+        } else if !isPlaying, let playbackActivity {
+            ProcessInfo.processInfo.endActivity(playbackActivity)
+            self.playbackActivity = nil
+        }
     }
 
     private func saveCurrentProgress() {

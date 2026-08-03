@@ -332,9 +332,23 @@ final class MPVPlayerEngine: @unchecked Sendable {
     }
 
     @MainActor
-    func load(_ url: URL) {
+    /// Opens `url`, optionally beginning at `startAt` seconds rather than at
+    /// the start.
+    ///
+    /// The position goes through mpv's `start` option instead of a seek issued
+    /// once the file is open, so the first frame drawn is already the right one
+    /// and there is no window in which the beginning of the file is on screen.
+    /// It is set on every load, never cleared, because mpv reads it when a file
+    /// begins and would otherwise carry it into the next one.
+    ///
+    /// `loadfile` could take the same thing as a per-file option, but the
+    /// argument it goes in moved when mpv 0.38 inserted an index before it, and
+    /// this app loads whichever libmpv Homebrew has installed. `start` has been
+    /// spelled the same way throughout.
+    func load(_ url: URL, startAt seconds: Double? = nil) {
         state.resetForLoad(url)
         discardPendingTimePosition()
+        command(["set", "start", seconds.map { String($0) } ?? "none"])
         command(["loadfile", url.path, "replace"])
         setPaused(false)
     }

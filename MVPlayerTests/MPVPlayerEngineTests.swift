@@ -92,6 +92,56 @@ final class MPVPlayerEngineTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(500))
     }
 
+    func testLoadingWithAStartPositionBeginsThereRatherThanSeekingAfterwards() async throws {
+        let engine = try makeEngine()
+        let sample = try makeSample(audioOnly: true)
+        defer { try? FileManager.default.removeItem(at: sample) }
+
+        var positions: [Double] = []
+        let subscription = engine.state.$currentTime
+            .sink { if $0 > 0 { positions.append($0) } }
+        defer { subscription.cancel() }
+
+        engine.load(sample, startAt: 6)
+        try await waitUntil { engine.state.currentTime > 0 }
+
+        XCTAssertGreaterThan(engine.state.currentTime, 5)
+        // The file is never at its beginning: mpv starts it at the offset
+        // instead of playing from zero and being seeked once it is open.
+        XCTAssertEqual(positions.first ?? 0, 6, accuracy: 1)
+    }
+
+    func testAStartPositionDoesNotCarryIntoTheNextFile() async throws {
+        let engine = try makeEngine()
+        let sample = try makeSample(audioOnly: true)
+        defer { try? FileManager.default.removeItem(at: sample) }
+
+        engine.load(sample, startAt: 6)
+        try await waitUntil { engine.state.currentTime > 0 }
+        XCTAssertGreaterThan(engine.state.currentTime, 5, "the first load ignored its offset")
+
+        // mpv reads `start` whenever a file begins, so a load without an offset
+        // has to say so rather than leaving the previous one in place. Loading
+        // resets the clock, so the next position to arrive is the new file's.
+        engine.load(sample)
+        try await waitUntil { engine.state.currentTime > 0 }
+
+        XCTAssertLessThan(engine.state.currentTime, 3, "the offset leaked into the next file")
+    }
+
+    /// Polls rather than sleeping a fixed span: opening a file and getting the
+    /// first position back takes a second or so, and the position itself only
+    /// lands four times a second.
+    private func waitUntil(
+        _ condition: () -> Bool,
+        upTo seconds: TimeInterval = 10
+    ) async throws {
+        let deadline = Date().addingTimeInterval(seconds)
+        while Date() < deadline, !condition() {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+    }
+
     private func makeEngine() throws -> MPVPlayerEngine {
         do {
             return try MPVPlayerEngine(state: PlayerState())
