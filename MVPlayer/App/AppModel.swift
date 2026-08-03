@@ -1,12 +1,15 @@
 import AppKit
 import Combine
 import Foundation
-import MediaPlayer
 
 @MainActor
 final class AppModel: ObservableObject {
     let playerState = PlayerState()
-    let folderLibrary: FolderLibrary
+
+    /// The browser's library, or nil in a window that was opened on a single
+    /// file and has no browser of its own.
+    let folderLibrary: FolderLibrary?
+
     let playbackQueue: PlaybackQueue
     let progressStore: PlaybackProgressStore
 
@@ -18,20 +21,31 @@ final class AppModel: ObservableObject {
     private var queueDirectory: URL?
     private var cancellables = Set<AnyCancellable>()
 
+    /// A file asked for before there was anything to draw it with.
+    ///
+    /// mpv initializes a file's video stream against the render context as the
+    /// file is opened, and the context only exists once the video view has
+    /// drawn. A window that opens onto a file asks for it while the window is
+    /// still being built, which is well before that: the file would play with no
+    /// picture, or — having no audio to fall back on — end at once with
+    /// `MPV_ERROR_NOTHING_TO_PLAY`. It waits here instead, and goes to mpv on
+    /// the first draw.
+    private var pendingLoad: (url: URL, startAt: Double?)?
+
     /// Held while a video is playing, to keep the display awake. Nil whenever
     /// nothing is playing, which is also how the state is read.
     private var playbackActivity: NSObjectProtocol?
 
     init(
-        folderLibrary: FolderLibrary = FolderLibrary(),
+        folderLibrary: FolderLibrary?,
         playbackQueue: PlaybackQueue = PlaybackQueue(),
-        progressStore: PlaybackProgressStore = PlaybackProgressStore()
+        progressStore: PlaybackProgressStore = .shared
     ) {
         self.folderLibrary = folderLibrary
         self.playbackQueue = playbackQueue
         self.progressStore = progressStore
 
-        folderLibrary.onVisibleVideosChanged = { [weak self] directory, videos in
+        folderLibrary?.onVisibleVideosChanged = { [weak self] directory, videos in
             guard let self else { return }
             guard let directory else {
                 self.closeVideo()
@@ -41,7 +55,6 @@ final class AppModel: ObservableObject {
             self.playbackQueue.updateVideos(videos)
         }
         observePlayerState()
-        configureRemoteCommands()
         retryLibMPV()
     }
 
@@ -54,12 +67,35 @@ final class AppModel: ObservableObject {
                 self?.advanceAfterEnd()
             }
             self.engine = engine
-            videoView = MVVideoView(engine: engine)
+            let videoView = MVVideoView(engine: engine)
+            videoView.onRendererReady = { [weak self] in
+                self?.loadPendingVideo()
+            }
+            self.videoView = videoView
         } catch {
             startupError = error.localizedDescription
             engine = nil
             videoView = nil
         }
+    }
+
+    /// Lets go of everything the window owned, for a window that is closing.
+    ///
+    /// A window whose views simply disappeared would leave mpv decoding — and
+    /// playing sound — behind a picture nobody can see, and would go on
+    /// answering the media keys from nowhere.
+    func shutdown() {
+        closeVideo()
+        NowPlayingCenter.shared.resign(self)
+        teardownPlayer()
+        cancellables.removeAll()
+    }
+
+    /// Pauses so that another window can be heard. Keeps the file and the
+    /// position, so playing this window again carries on from here.
+    func yieldPlayback() {
+        guard playerState.hasMedia, !playerState.isPaused else { return }
+        engine?.setPaused(true)
     }
 
     /// Releases the renderer before the engine, in that order. mpv holds an
@@ -78,7 +114,7 @@ final class AppModel: ObservableObject {
         guard engine != nil else { return }
         saveCurrentProgress()
         queueDirectory = directory
-        folderLibrary.selectVideo(url)
+        folderLibrary?.selectVideo(url)
         playbackQueue.select(url, from: videos)
         loadVideo(url)
     }
@@ -86,14 +122,14 @@ final class AppModel: ObservableObject {
     func playNext() {
         guard let next = playbackQueue.next() else { return }
         saveCurrentProgress()
-        folderLibrary.selectVideo(next)
+        folderLibrary?.selectVideo(next)
         loadVideo(next)
     }
 
     func playPrevious() {
         guard let previous = playbackQueue.previous() else { return }
         saveCurrentProgress()
-        folderLibrary.selectVideo(previous)
+        folderLibrary?.selectVideo(previous)
         loadVideo(previous)
     }
 
@@ -116,7 +152,8 @@ final class AppModel: ObservableObject {
             saveCurrentProgress()
         }
         queueDirectory = nil
-        folderLibrary.selectedVideo = nil
+        pendingLoad = nil
+        folderLibrary?.selectedVideo = nil
         playbackQueue.clear()
         engine?.stop()
         videoView?.setVideoRenderingEnabled(false)
@@ -128,22 +165,51 @@ final class AppModel: ObservableObject {
         progressStore.progress(for: url)
     }
 
+    /// Whether a file has been asked for that mpv has not been given yet,
+    /// because the view it would be drawn in has not drawn once.
+    var isWaitingForRenderer: Bool {
+        pendingLoad != nil
+    }
+
     private func advanceAfterEnd() {
         if let currentURL = playerState.currentURL {
             progressStore.markFinished(url: currentURL, duration: playerState.duration)
-            progressRevision &+= 1
         }
         guard let next = playbackQueue.next(automatic: true) else { return }
         saveCurrentProgress()
-        folderLibrary.selectVideo(next)
+        folderLibrary?.selectVideo(next)
         loadVideo(next)
     }
 
     private func loadVideo(_ url: URL) {
+        // Opening a file is what makes this window the one being watched, and
+        // so the one the media keys and the Now Playing panel belong to.
+        NowPlayingCenter.shared.activate(self)
         videoView?.setVideoRenderingEnabled(true)
+
+        let startAt = resumePosition(for: url)
+        guard videoView?.isRendererReady == true else {
+            pendingLoad = (url, startAt)
+            // The file is what the window is showing from this moment, even
+            // though mpv has not been given it yet: the title, the row's
+            // highlight and the spinner all read this.
+            playerState.resetForLoad(url)
+            updateNowPlaying()
+            return
+        }
+
+        pendingLoad = nil
+        engine?.load(url, startAt: startAt, selectsSubtitles: SubtitlePreference.isEnabled)
+        updateNowPlaying()
+    }
+
+    /// Hands mpv the file that was waiting for a renderer, once there is one.
+    private func loadPendingVideo() {
+        guard let pendingLoad else { return }
+        self.pendingLoad = nil
         engine?.load(
-            url,
-            startAt: resumePosition(for: url),
+            pendingLoad.url,
+            startAt: pendingLoad.startAt,
             selectsSubtitles: SubtitlePreference.isEnabled
         )
         updateNowPlaying()
@@ -166,6 +232,16 @@ final class AppModel: ObservableObject {
     }
 
     private func observePlayerState() {
+        // The store is shared by every window, so the browser's ticks and bars
+        // follow a file watched in a window of its own as closely as one watched
+        // here. It is the only thing that writes progress, which makes it the
+        // one place worth watching for a change to it.
+        progressStore.objectWillChange
+            .sink { [weak self] _ in
+                self?.progressRevision &+= 1
+            }
+            .store(in: &cancellables)
+
         playerState.$currentTime
             .combineLatest(playerState.$duration, playerState.$currentURL)
             .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: true)
@@ -215,83 +291,9 @@ final class AppModel: ObservableObject {
             position: playerState.currentTime,
             duration: playerState.duration
         )
-        progressRevision &+= 1
-    }
-
-    private func configureRemoteCommands() {
-        let center = MPRemoteCommandCenter.shared()
-        center.togglePlayPauseCommand.isEnabled = true
-        center.playCommand.isEnabled = true
-        center.pauseCommand.isEnabled = true
-        center.nextTrackCommand.isEnabled = true
-        center.previousTrackCommand.isEnabled = true
-        center.skipForwardCommand.isEnabled = true
-        center.skipBackwardCommand.isEnabled = true
-        center.changePlaybackPositionCommand.isEnabled = true
-        center.skipForwardCommand.preferredIntervals = [5]
-        center.skipBackwardCommand.preferredIntervals = [5]
-
-        center.togglePlayPauseCommand.addTarget { [weak self] _ in
-            Task { @MainActor [weak self] in self?.togglePlayPause() }
-            return .success
-        }
-        center.playCommand.addTarget { [weak self] _ in
-            Task { @MainActor [weak self] in self?.engine?.setPaused(false) }
-            return .success
-        }
-        center.pauseCommand.addTarget { [weak self] _ in
-            Task { @MainActor [weak self] in self?.engine?.setPaused(true) }
-            return .success
-        }
-        center.nextTrackCommand.addTarget { [weak self] _ in
-            Task { @MainActor [weak self] in self?.playNext() }
-            return .success
-        }
-        center.previousTrackCommand.addTarget { [weak self] _ in
-            Task { @MainActor [weak self] in self?.playPrevious() }
-            return .success
-        }
-        center.skipForwardCommand.addTarget { [weak self] _ in
-            Task { @MainActor [weak self] in self?.seek(by: 5) }
-            return .success
-        }
-        center.skipBackwardCommand.addTarget { [weak self] _ in
-            Task { @MainActor [weak self] in self?.seek(by: -5) }
-            return .success
-        }
-        center.changePlaybackPositionCommand.addTarget { [weak self] event in
-            guard let event = event as? MPChangePlaybackPositionCommandEvent else {
-                return .commandFailed
-            }
-            Task { @MainActor [weak self] in
-                self?.engine?.seek(to: event.positionTime)
-            }
-            return .success
-        }
     }
 
     private func updateNowPlaying() {
-        let commandCenter = MPRemoteCommandCenter.shared()
-        guard let url = playerState.currentURL else {
-            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-            MPNowPlayingInfoCenter.default().playbackState = .stopped
-            commandCenter.nextTrackCommand.isEnabled = false
-            commandCenter.previousTrackCommand.isEnabled = false
-            return
-        }
-
-        var info: [String: Any] = [
-            MPMediaItemPropertyTitle: url.deletingPathExtension().lastPathComponent,
-            MPMediaItemPropertyAssetURL: url,
-            MPNowPlayingInfoPropertyElapsedPlaybackTime: playerState.currentTime,
-            MPNowPlayingInfoPropertyPlaybackRate: playerState.isPaused ? 0 : 1
-        ]
-        if playerState.duration > 0 {
-            info[MPMediaItemPropertyPlaybackDuration] = playerState.duration
-        }
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-        MPNowPlayingInfoCenter.default().playbackState = playerState.isPaused ? .paused : .playing
-        commandCenter.nextTrackCommand.isEnabled = playbackQueue.videos.count > 1
-        commandCenter.previousTrackCommand.isEnabled = playbackQueue.videos.count > 1
+        NowPlayingCenter.shared.update(from: self)
     }
 }

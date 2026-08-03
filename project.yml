@@ -45,6 +45,53 @@ targets:
         buildPhase: resources
     dependencies:
       - target: CMPVShim
+    info:
+      path: MVPlayer/Support/Info.plist
+      properties:
+        # Lets the Finder hand video files to MVPlayer, through Open With or by
+        # dropping them on the icon. The rank is Alternate deliberately: the app
+        # offers to open these, it does not claim them from whatever the Mac
+        # already opens them with.
+        #
+        # The first entry covers everything the system knows is video. The
+        # second lists the containers it has no type for and only mpv can read,
+        # and is kept in step with FolderLibrary.videoExtensions.
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Video
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - public.movie
+              - public.audiovisual-content
+          - CFBundleTypeName: Video File
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            CFBundleTypeExtensions:
+              - 3g2
+              - 3gp
+              - asf
+              - avi
+              - divx
+              - dv
+              - f4v
+              - flv
+              - m2t
+              - m2ts
+              - m4v
+              - mkv
+              - mov
+              - mp4
+              - mpeg
+              - mpg
+              - mts
+              - ogm
+              - ogv
+              - rm
+              - rmvb
+              - ts
+              - vob
+              - webm
+              - wmv
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: mvplayer

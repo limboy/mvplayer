@@ -1,17 +1,25 @@
+import AppKit
 import SwiftUI
 
 @main
 struct MVPlayerApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var appModel: AppModel
     @StateObject private var windowState = WindowState()
 
+    /// Held here rather than inside the model, because the browser is the
+    /// window's and a window opened on one file has neither.
+    private let library: FolderLibrary
+
     init() {
-        _appModel = StateObject(wrappedValue: AppModel())
+        let library = FolderLibrary()
+        self.library = library
+        _appModel = StateObject(wrappedValue: AppModel(folderLibrary: library))
     }
 
     var body: some Scene {
         WindowGroup("MVPlayer") {
-            ContentView(appModel: appModel, windowState: windowState)
+            ContentView(appModel: appModel, windowState: windowState, library: library)
                 .frame(minWidth: 560, minHeight: 560)
                 .background {
                     WindowFrameAutosave(key: "MainWindowFrame")
@@ -19,13 +27,59 @@ struct MVPlayerApp: App {
                 }
         }
         .defaultSize(width: 1_080, height: 760)
+        // A window group answers every file the app is asked to open by opening
+        // one of itself, on top of the folder window already up and beside the
+        // window the file is really going to. The files are the delegate's to
+        // handle, so this group is told to expect none of them.
+        .handlesExternalEvents(matching: [])
         .commands {
-            PlaybackCommands(appModel: appModel, windowState: windowState)
+            FileCommands()
+            PlaybackCommands()
+        }
+    }
+}
+
+/// Opening files from the Finder: a double click, a drop on the icon in the
+/// Dock, or Open With.
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls where FolderLibrary.isVideo(url) {
+            FilePlayerWindows.shared.open(url)
+        }
+    }
+}
+
+/// The File menu.
+///
+/// It replaces the New Window item it is built on rather than joining it. The
+/// folder window owns the library, the browser and one player, and there is only
+/// ever one of it; a second copy would show the same picture in neither window.
+/// Opening a file is what the second window is for.
+struct FileCommands: Commands {
+    var body: some Commands {
+        CommandGroup(replacing: .newItem) {
+            Button("Open File…") {
+                FilePlayerWindows.shared.chooseFile()
+            }
+            .keyboardShortcut("o")
         }
     }
 }
 
 /// The Playback menu.
+///
+/// The items act on the player in the frontmost window, which is why they read
+/// `ActivePlayer` rather than holding a model of their own: there is one menu bar
+/// and there may be several players. The window is looked up when the item is
+/// chosen, not when the menu is built, so an item chosen in one window never
+/// reaches the player in another.
+///
+/// Nothing here is disabled when there is no player to act on. A `disabled` in
+/// the main menu holds the value it was first built with — the menu is built
+/// before any window has come to the front, so every item would stay grey for
+/// the rest of the run. The actions do nothing when there is nothing to do,
+/// which is the same as choosing them with no video open ever did.
 ///
 /// Only full screen carries a key equivalent, and it is the system one. The
 /// space bar, the arrows and a bare `f` all work too, but they are watched by
@@ -33,37 +87,44 @@ struct MVPlayerApp: App {
 /// matched before the key event reaches the window, so binding an unmodified
 /// key in the menu takes it away from every view in the app for good.
 struct PlaybackCommands: Commands {
-    @ObservedObject var appModel: AppModel
-    @ObservedObject var windowState: WindowState
+    @ObservedObject private var activePlayer = ActivePlayer.shared
 
     var body: some Commands {
         CommandMenu("Playback") {
             Button("Play/Pause") {
-                appModel.togglePlayPause()
+                target?.appModel.togglePlayPause()
             }
 
             Button("Seek Backward 5 Seconds") {
-                appModel.seek(by: -5)
+                target?.appModel.seek(by: -5)
             }
 
             Button("Seek Forward 5 Seconds") {
-                appModel.seek(by: 5)
+                target?.appModel.seek(by: 5)
             }
 
             Button("Volume Up") {
-                appModel.changeVolume(by: 5)
+                target?.appModel.changeVolume(by: 5)
             }
 
             Button("Volume Down") {
-                appModel.changeVolume(by: -5)
+                target?.appModel.changeVolume(by: -5)
             }
 
             Divider()
 
-            Button(windowState.isFullscreen ? "Exit Full Screen" : "Enter Full Screen") {
-                windowState.toggleFullscreen()
+            Button(isFullscreen ? "Exit Full Screen" : "Enter Full Screen") {
+                target?.windowState.toggleFullscreen()
             }
             .keyboardShortcut("f", modifiers: [.command, .control])
         }
+    }
+
+    private var target: PlayerTarget? {
+        activePlayer.target
+    }
+
+    private var isFullscreen: Bool {
+        target?.windowState.isFullscreen == true
     }
 }

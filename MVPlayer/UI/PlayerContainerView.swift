@@ -9,6 +9,11 @@ struct PlayerContainerView: View {
     @ObservedObject var windowState: WindowState
     let isVideoSurfaceActive: Bool
 
+    /// Whether there is a queue to move through. A window opened on one file has
+    /// nothing to go on to, so it is shown neither a way there nor a way to
+    /// shuffle a list of one.
+    let showsQueueControls: Bool
+
     @ObservedObject private var state: PlayerState
     @ObservedObject private var queue: PlaybackQueue
     @State private var controlsVisible = true
@@ -22,13 +27,15 @@ struct PlayerContainerView: View {
         engine: MPVPlayerEngine,
         videoView: MVVideoView,
         windowState: WindowState,
-        isVideoSurfaceActive: Bool = true
+        isVideoSurfaceActive: Bool = true,
+        showsQueueControls: Bool = true
     ) {
         self.appModel = appModel
         self.engine = engine
         self.videoView = videoView
         self.windowState = windowState
         self.isVideoSurfaceActive = isVideoSurfaceActive
+        self.showsQueueControls = showsQueueControls
         _state = ObservedObject(wrappedValue: appModel.playerState)
         _queue = ObservedObject(wrappedValue: appModel.playbackQueue)
     }
@@ -76,6 +83,7 @@ struct PlayerContainerView: View {
                         windowState: windowState,
                         state: state,
                         queue: queue,
+                        showsQueueControls: showsQueueControls,
                         isSeeking: $isSeeking,
                         seekValue: $seekValue
                     )
@@ -199,6 +207,7 @@ private struct PlayerControlsView: View {
     @ObservedObject var windowState: WindowState
     @ObservedObject var state: PlayerState
     @ObservedObject var queue: PlaybackQueue
+    let showsQueueControls: Bool
     @Binding var isSeeking: Bool
     @Binding var seekValue: Double
     @State private var isVolumePopoverPresented = false
@@ -268,8 +277,10 @@ private struct PlayerControlsView: View {
     @ViewBuilder
     private var transportControls: some View {
         Group {
-            controlButton("backward.end.fill", help: "Previous video") {
-                appModel.playPrevious()
+            if showsQueueControls {
+                controlButton("backward.end.fill", help: "Previous video") {
+                    appModel.playPrevious()
+                }
             }
 
             controlButton(
@@ -280,8 +291,10 @@ private struct PlayerControlsView: View {
                 appModel.togglePlayPause()
             }
 
-            controlButton("forward.end.fill", help: "Next video") {
-                appModel.playNext()
+            if showsQueueControls {
+                controlButton("forward.end.fill", help: "Next video") {
+                    appModel.playNext()
+                }
             }
         }
     }
@@ -320,12 +333,14 @@ private struct PlayerControlsView: View {
             audioMenu
             subtitleMenu
 
-            controlButton(
-                "shuffle",
-                foregroundStyle: queue.isShuffled ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(Color.primary),
-                help: queue.isShuffled ? "Shuffle On" : "Shuffle Off"
-            ) {
-                queue.isShuffled.toggle()
+            if showsQueueControls {
+                controlButton(
+                    "shuffle",
+                    foregroundStyle: queue.isShuffled ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(Color.primary),
+                    help: queue.isShuffled ? "Shuffle On" : "Shuffle Off"
+                ) {
+                    queue.isShuffled.toggle()
+                }
             }
 
             controlButton(

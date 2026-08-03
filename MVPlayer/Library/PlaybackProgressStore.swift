@@ -17,6 +17,11 @@ struct PlaybackProgress: Codable, Equatable, Identifiable, Sendable {
 
 @MainActor
 final class PlaybackProgressStore: ObservableObject {
+    /// The app's store. Every window records into this one: how far into a file
+    /// the viewer is belongs to the file, not to the window it was watched in,
+    /// and two stores over one file on disk would each overwrite the other.
+    static let shared = PlaybackProgressStore()
+
     @Published private(set) var entries: [PlaybackProgress] = []
 
     /// The same entries keyed for lookup. The browser asks for progress once

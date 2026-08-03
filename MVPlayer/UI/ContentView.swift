@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @ObservedObject var appModel: AppModel
     @ObservedObject var windowState: WindowState
+    let library: FolderLibrary
 
     var body: some View {
         Group {
@@ -11,7 +12,8 @@ struct ContentView: View {
                     appModel: appModel,
                     engine: engine,
                     videoView: videoView,
-                    windowState: windowState
+                    windowState: windowState,
+                    library: library
                 )
             } else {
                 LibMPVSetupView(
@@ -21,6 +23,12 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .background {
+            ActivePlayerTracker(
+                target: PlayerTarget(appModel: appModel, windowState: windowState)
+            )
+            .frame(width: 0, height: 0)
+        }
     }
 }
 
@@ -29,6 +37,7 @@ private struct PlayerLayout: View {
     let engine: MPVPlayerEngine
     let videoView: MVVideoView
     @ObservedObject var windowState: WindowState
+    let library: FolderLibrary
 
     var body: some View {
         VSplitView {
@@ -41,7 +50,7 @@ private struct PlayerLayout: View {
             )
             .frame(minHeight: 280)
 
-            FolderBrowserView(appModel: appModel)
+            FolderBrowserView(appModel: appModel, library: library)
                 .frame(minHeight: 215, idealHeight: 285)
         }
         .background(Color.black)
@@ -49,24 +58,13 @@ private struct PlayerLayout: View {
             windowState.attachVideoView(videoView)
         }
         .background {
-            FullscreenPlayerPresenter(
-                isPresented: windowState.isFullscreen,
-                exitRequest: windowState.fullscreenExitRequest,
-                sourceFrame: windowState.fullscreenSourceFrame
-            ) {
-                PlayerContainerView(
-                    appModel: appModel,
-                    engine: engine,
-                    videoView: videoView,
-                    windowState: windowState,
-                    isVideoSurfaceActive: true
-                )
-                .ignoresSafeArea()
-                .preferredColorScheme(.dark)
-            } onDismiss: {
-                windowState.fullscreenDidExit()
-            }
-            .frame(width: 0, height: 0)
+            FullscreenPlayerLayer(
+                appModel: appModel,
+                engine: engine,
+                videoView: videoView,
+                windowState: windowState,
+                showsQueueControls: true
+            )
         }
     }
 }

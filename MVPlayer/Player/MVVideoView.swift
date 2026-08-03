@@ -161,7 +161,18 @@ final class MVVideoView: NSOpenGLView {
     let engine: MPVPlayerEngine
     fileprivate nonisolated(unsafe) let openGLLibrary: UnsafeMutableRawPointer?
     private let renderWorker: MVOpenGLRenderWorker
-    private var rendererInitialized = false
+
+    /// Whether mpv has a render context to open files against, and the one
+    /// notification of it being made.
+    ///
+    /// mpv initializes a file's video stream against the render context as the
+    /// file is opened. Asked for a file before there is one, it plays whatever
+    /// else the file holds and no picture, and a file holding nothing else ends
+    /// at once with `MPV_ERROR_NOTHING_TO_PLAY`. The context is made in
+    /// `prepareOpenGL`, which AppKit calls no earlier than the first draw, so a
+    /// window that opens onto a file has to wait for this.
+    private(set) var isRendererReady = false
+    var onRendererReady: (@MainActor () -> Void)?
     private nonisolated let displayRequestLock = NSLock()
     private nonisolated(unsafe) var displayRequestPending = false
 
@@ -205,7 +216,7 @@ final class MVVideoView: NSOpenGLView {
 
     override func prepareOpenGL() {
         super.prepareOpenGL()
-        guard !rendererInitialized else { return }
+        guard !isRendererReady else { return }
         guard let openGLContext else { return }
         openGLContext.makeCurrentContext()
 
@@ -240,7 +251,7 @@ final class MVVideoView: NSOpenGLView {
         }
 
         self.procAddressContext = procAddressContext
-        rendererInitialized = true
+        isRendererReady = true
         renderWorker.activate(context: openGLContext)
         let renderUpdateContext = MPVCallbackContext<MVVideoView>.passRetained(self)
         self.renderUpdateContext = renderUpdateContext
@@ -249,6 +260,12 @@ final class MVVideoView: NSOpenGLView {
             mpvRenderUpdate,
             renderUpdateContext
         )
+
+        // AppKit draws on the main thread, which is where whatever was waiting
+        // for a picture has to be answered.
+        MainActor.assumeIsolated {
+            onRendererReady?()
+        }
     }
 
     override func reshape() {
@@ -264,7 +281,7 @@ final class MVVideoView: NSOpenGLView {
     }
 
     override func draw(_ dirtyRect: NSRect) {
-        guard rendererInitialized, openGLContext != nil else {
+        guard isRendererReady, openGLContext != nil else {
             NSColor.black.setFill()
             dirtyRect.fill()
             return
@@ -301,9 +318,9 @@ final class MVVideoView: NSOpenGLView {
     }
 
     func detachRenderer() {
-        guard rendererInitialized else { return }
+        guard isRendererReady else { return }
         mvp_mpv_set_render_update_callback(engine.rawHandle, nil, nil)
-        rendererInitialized = false
+        isRendererReady = false
         // Returns once the render context is destroyed, which is the point
         // after which neither callback can be entered again and the boxes
         // holding this view can be let go.

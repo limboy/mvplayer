@@ -17,9 +17,9 @@ struct FolderBrowserView: View {
     /// itself would rebuild every row in the folder each time the clock ticks.
     private let state: PlayerState
 
-    init(appModel: AppModel) {
+    init(appModel: AppModel, library: FolderLibrary) {
         self.appModel = appModel
-        _library = ObservedObject(wrappedValue: appModel.folderLibrary)
+        _library = ObservedObject(wrappedValue: library)
         state = appModel.playerState
     }
 
@@ -41,13 +41,27 @@ struct FolderBrowserView: View {
             }
         }
         .dropDestination(for: URL.self) { urls, _ in
-            library.addFolders(urls)
+            accept(urls)
         } isTargeted: { targeted in
             isDropTargeted = targeted
         }
         .onChange(of: library.entries) { _, _ in normalizeSelection() }
         .onChange(of: library.roots) { _, _ in normalizeSelection() }
         .onAppear(perform: normalizeSelection)
+    }
+
+    /// Takes what was dropped on the browser: folders join the library, and a
+    /// video file opens in a window of its own rather than pushing aside what is
+    /// playing here.
+    private func accept(_ urls: [URL]) -> Bool {
+        let videos = urls.filter(FolderLibrary.isVideo)
+        let folders = urls.filter { !videos.contains($0) }
+
+        let added = library.addFolders(folders)
+        for video in videos {
+            FilePlayerWindows.shared.open(video)
+        }
+        return added || !videos.isEmpty
     }
 
     /// Keeps the arrow keys pointed at a row that is still there, and gives

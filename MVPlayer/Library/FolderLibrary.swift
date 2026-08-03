@@ -45,7 +45,10 @@ final class FolderLibrary: ObservableObject {
     private var refreshTask: Task<Void, Never>?
     private var metadataTasks: [URL: Task<Void, Never>] = [:]
 
-    private nonisolated static let fallbackVideoExtensions: Set<String> = [
+    /// What is taken for video when the system has no content type for the file,
+    /// which is most of what only mpv can open. Also what the open panel and the
+    /// app's document types are built from, so all three agree.
+    nonisolated static let videoExtensions: Set<String> = [
         "3g2", "3gp", "asf", "avi", "divx", "dv", "f4v", "flv", "m2t", "m2ts",
         "m4v", "mkv", "mov", "mp4", "mpeg", "mpg", "mts", "ogm", "ogv", "rm",
         "rmvb", "ts", "vob", "webm", "wmv"
@@ -273,7 +276,7 @@ final class FolderLibrary: ObservableObject {
         {
             return true
         }
-        return fallbackVideoExtensions.contains(url.pathExtension.lowercased())
+        return videoExtensions.contains(url.pathExtension.lowercased())
     }
 
     private static func makeEntry(_ url: URL) -> BrowserEntry? {

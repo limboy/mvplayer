@@ -7,13 +7,15 @@ MVPlayer is a native SwiftUI macOS video player backed by Homebrew's
 
 - Native macOS interface built with SwiftUI.
 - Folder-based video library with drag-and-drop folder importing.
+- Single files opened in a window of their own, from the File menu, the Finder,
+  or a drop on the browser, leaving the folder window's queue untouched.
 - Persistent folder bookmarks and automatic filesystem change detection.
 - Click-to-play browsing with automatic playback when a video is selected.
 - Queue controls with previous, next, shuffle, repeat all, and repeat one.
 - Responsive playback controls for seeking, volume, mute, and play/pause.
 - Embedded subtitle track selection and external subtitle loading.
 - Embedded audio track selection.
-- Persistent playback progress with automatic resume.
+- Persistent playback progress with automatic resume, shared by every window.
 - Asynchronous duration, resolution, and frame-rate metadata.
 - Timeline scrubbing with hover frame previews for every playable format,
   using AVFoundation when it can read the file and Homebrew `ffmpeg` or `mpv`
@@ -97,6 +99,11 @@ open "build/Build/Products/Release/MVPlayer.app"
 
 - Drag one or more folders into the lower browser; when the library is empty,
   use the Choose Folder action.
+- Use File ▸ Open File… to watch a single file. It opens in a window of its
+  own, playing only that file, so the folder window keeps its queue and its
+  place in it. Opening a video from the Finder, or dropping one on the browser,
+  does the same. Only one window plays at a time: starting a video pauses
+  whichever window was playing, where it had got to.
 - Click folders to navigate, and use the back button to return.
 - Click a video to select it and begin playback automatically.
 - Use the subtitle menu to select an embedded track, turn subtitles off, or
