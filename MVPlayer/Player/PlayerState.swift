@@ -22,6 +22,28 @@ struct SubtitleTrack: Identifiable, Equatable, Sendable {
     }
 }
 
+struct AudioTrack: Identifiable, Equatable, Sendable {
+    let id: Int64
+    let title: String
+    let language: String?
+    let codec: String?
+    let isExternal: Bool
+    let isSelected: Bool
+
+    var displayName: String {
+        if !title.isEmpty {
+            return title
+        }
+        if let language, !language.isEmpty {
+            return language.uppercased()
+        }
+        if let codec, !codec.isEmpty {
+            return codec.uppercased()
+        }
+        return "Audio (id)"
+    }
+}
+
 @MainActor
 final class PlayerState: ObservableObject {
     @Published var isPaused = true
@@ -32,6 +54,7 @@ final class PlayerState: ObservableObject {
     @Published var volume: Double = 100
     @Published var currentURL: URL?
     @Published var subtitles: [SubtitleTrack] = []
+    @Published var audioTracks: [AudioTrack] = []
     @Published var errorMessage: String?
 
     var hasMedia: Bool {
@@ -49,5 +72,6 @@ final class PlayerState: ObservableObject {
         isLoading = true
         errorMessage = nil
         subtitles = []
+        audioTracks = []
     }
 }

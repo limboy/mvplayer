@@ -56,9 +56,6 @@ struct FolderBrowserView: View {
             .disabled(library.isAtRootList)
             .help("Back")
 
-            Image(systemName: library.isAtRootList ? "square.stack.3d.up" : "folder.fill")
-                .foregroundStyle(library.isAtRootList ? Color.secondary : Color.accentColor)
-
             Text(library.currentTitle)
                 .font(.headline)
                 .lineLimit(1)
@@ -72,23 +69,6 @@ struct FolderBrowserView: View {
                     .fixedSize()
             }
 
-            Button {
-                library.refreshAll()
-            } label: {
-                Image(systemName: "arrow.clockwise")
-                    .frame(width: 22, height: 22)
-            }
-            .buttonStyle(.plain)
-            .help("Refresh")
-
-            Button {
-                chooseFolders()
-            } label: {
-                Image(systemName: "plus")
-                    .frame(width: 22, height: 22)
-            }
-            .buttonStyle(.plain)
-            .help("Add Folder")
         }
     }
 
@@ -99,7 +79,7 @@ struct FolderBrowserView: View {
                 ContentUnavailableView {
                     Label("Add a Video Folder", systemImage: "folder.badge.plus")
                 } description: {
-                    Text("Drag a folder here, or click +.")
+                    Text("Drag a folder here, or use Choose Folder.")
                 } actions: {
                     Button("Choose Folder…") {
                         chooseFolders()
@@ -208,21 +188,26 @@ struct FolderBrowserView: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: entry.kind == .folder ? "folder.fill" : "film")
-                    .foregroundStyle(entry.kind == .folder ? Color.accentColor : Color.secondary)
-                    .frame(width: 22)
+                if entry.kind == .folder {
+                    Image(systemName: "folder.fill")
+                        .foregroundStyle(Color.accentColor)
+                        .frame(width: 22, height: 22)
+                }
                 Text(entry.name)
                     .lineLimit(1)
                 Spacer()
                 if entry.kind == .folder {
                     Image(systemName: "chevron.right")
                         .foregroundStyle(.tertiary)
-                } else if state.currentURL == entry.url {
-                    Image(systemName: state.isPaused ? "pause.fill" : "speaker.wave.2.fill")
-                        .foregroundStyle(Color.accentColor)
+                } else {
+                    Text(progressText(for: entry.url))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .frame(minWidth: 44, alignment: .trailing)
                 }
             }
             .contentShape(Rectangle())
+            .padding(.vertical, 4)
         }
         .buttonStyle(.plain)
         .listRowBackground(
@@ -230,6 +215,23 @@ struct FolderBrowserView: View {
                 ? Color.accentColor.opacity(0.18)
                 : Color.clear
         )
+    }
+
+    private func progressText(for url: URL) -> String {
+        "\(Int((displayedProgress(for: url) * 100).rounded(.down)))%"
+    }
+
+    private func displayedProgress(for url: URL) -> Double {
+        if state.currentURL?.standardizedFileURL == url.standardizedFileURL,
+           state.duration.isFinite,
+           state.duration > 0
+        {
+            let fraction = min(max(state.currentTime / state.duration, 0), 1)
+            return fraction
+        }
+
+        let progress = appModel.playbackProgress(for: url)
+        return progress?.fraction ?? 0
     }
 
     private func chooseFolders() {

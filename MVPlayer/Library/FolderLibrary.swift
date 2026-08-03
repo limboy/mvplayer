@@ -33,6 +33,7 @@ final class FolderLibrary: ObservableObject {
     @Published private(set) var roots: [LibraryRoot] = []
     @Published private(set) var navigationPath: [URL] = []
     @Published private(set) var entries: [BrowserEntry] = []
+    @Published private(set) var metadata: [URL: MediaMetadata] = [:]
     @Published var selectedVideo: URL?
     @Published var errorMessage: String?
 
@@ -42,8 +43,9 @@ final class FolderLibrary: ObservableObject {
     private let storageURL: URL
     private var watcher: FolderWatcher?
     private var refreshTask: Task<Void, Never>?
+    private var metadataTasks: [URL: Task<Void, Never>] = [:]
 
-    private static let fallbackVideoExtensions: Set<String> = [
+    private nonisolated static let fallbackVideoExtensions: Set<String> = [
         "3g2", "3gp", "asf", "avi", "divx", "dv", "f4v", "flv", "m2t", "m2ts",
         "m4v", "mkv", "mov", "mp4", "mpeg", "mpg", "mts", "ogm", "ogv", "rm",
         "rmvb", "ts", "vob", "webm", "wmv"
@@ -74,6 +76,7 @@ final class FolderLibrary: ObservableObject {
 
     deinit {
         refreshTask?.cancel()
+        metadataTasks.values.forEach { $0.cancel() }
     }
 
     var currentDirectory: URL? {
@@ -226,6 +229,10 @@ final class FolderLibrary: ObservableObject {
             entries = urls.compactMap(Self.makeEntry)
                 .sorted(by: Self.entrySort)
 
+            loadMetadata(for: entries.compactMap { entry in
+                entry.kind == .video ? entry.url : nil
+            })
+
             if let selectedVideo, !entries.contains(where: { $0.url == selectedVideo }) {
                 self.selectedVideo = nil
             }
@@ -237,7 +244,27 @@ final class FolderLibrary: ObservableObject {
         }
     }
 
-    static func isVideo(_ url: URL) -> Bool {
+    func metadata(for url: URL) -> MediaMetadata? {
+        metadata[url.standardizedFileURL]
+    }
+
+    private func loadMetadata(for urls: [URL]) {
+        let normalizedURLs = Set(urls.map(\.standardizedFileURL))
+        for url in normalizedURLs where metadata[url] == nil && metadataTasks[url] == nil {
+            metadataTasks[url] = Task { [weak self] in
+                let value = await Task.detached(priority: .utility) {
+                    await MediaMetadata.load(for: url)
+                }.value
+                guard !Task.isCancelled else { return }
+                self?.metadataTasks[url] = nil
+                if let value {
+                    self?.metadata[url] = value
+                }
+            }
+        }
+    }
+
+    nonisolated static func isVideo(_ url: URL) -> Bool {
         let resourceValues = try? url.resourceValues(forKeys: [.contentTypeKey, .isRegularFileKey])
         guard resourceValues?.isRegularFile != false else { return false }
         if let contentType = resourceValues?.contentType,

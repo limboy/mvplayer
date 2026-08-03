@@ -22,6 +22,7 @@ final class MPVPlayerEngine: @unchecked Sendable {
     let state: PlayerState
 
     var onPlaybackEnded: (@MainActor () -> Void)?
+    var onFileLoaded: (@MainActor () -> Void)?
 
     private let handle: OpaquePointer
     private let eventQueue = DispatchQueue(label: "com.example.MVPlayer.mpv-events")
@@ -101,13 +102,15 @@ final class MPVPlayerEngine: @unchecked Sendable {
             }
 
         case MVP_MPV_EVENT_FILE_LOADED:
-            refreshSubtitleTracks()
+            refreshTracks()
             Task { @MainActor [weak self] in
-                self?.state.isLoading = false
+                guard let self else { return }
+                self.state.isLoading = false
+                self.onFileLoaded?()
             }
 
         case MVP_MPV_EVENT_TRACKS_CHANGED:
-            refreshSubtitleTracks()
+            refreshTracks()
 
         case MVP_MPV_EVENT_END_FILE:
             let reason = event.end_reason
@@ -142,16 +145,30 @@ final class MPVPlayerEngine: @unchecked Sendable {
         }
     }
 
-    private func refreshSubtitleTracks() {
+    private func refreshTracks() {
         let count = mvp_mpv_copy_subtitle_tracks(handle, nil, 0)
-        guard count >= 0 else { return }
-        var values = [MVPMPVSubtitleTrack](repeating: MVPMPVSubtitleTrack(), count: Int(count))
-        let copied = values.withUnsafeMutableBufferPointer { buffer in
+        let audioCount = mvp_mpv_copy_audio_tracks(handle, nil, 0)
+        guard count >= 0, audioCount >= 0 else { return }
+
+        var subtitleValues = [MVPMPVSubtitleTrack](
+            repeating: MVPMPVSubtitleTrack(),
+            count: Int(count)
+        )
+        let copiedSubtitles = subtitleValues.withUnsafeMutableBufferPointer { buffer in
             mvp_mpv_copy_subtitle_tracks(handle, buffer.baseAddress, Int32(buffer.count))
         }
-        guard copied >= 0 else { return }
+        guard copiedSubtitles >= 0 else { return }
 
-        let tracks = values.prefix(Int(copied)).map { value -> SubtitleTrack in
+        var audioValues = [MVPMPVAudioTrack](
+            repeating: MVPMPVAudioTrack(),
+            count: Int(audioCount)
+        )
+        let copiedAudio = audioValues.withUnsafeMutableBufferPointer { buffer in
+            mvp_mpv_copy_audio_tracks(handle, buffer.baseAddress, Int32(buffer.count))
+        }
+        guard copiedAudio >= 0 else { return }
+
+        let subtitles = subtitleValues.prefix(Int(copiedSubtitles)).map { value -> SubtitleTrack in
             var mutableValue = value
             let title = swiftString(from: &mutableValue.title)
             let language = swiftString(from: &mutableValue.language)
@@ -166,8 +183,24 @@ final class MPVPlayerEngine: @unchecked Sendable {
             )
         }
 
+        let audioTracks = audioValues.prefix(Int(copiedAudio)).map { value -> AudioTrack in
+            var mutableValue = value
+            let title = swiftString(from: &mutableValue.title)
+            let language = swiftString(from: &mutableValue.language)
+            let codec = swiftString(from: &mutableValue.codec)
+            return AudioTrack(
+                id: value.id,
+                title: title,
+                language: language.isEmpty ? nil : language,
+                codec: codec.isEmpty ? nil : codec,
+                isExternal: value.external,
+                isSelected: value.selected
+            )
+        }
+
         Task { @MainActor [weak self] in
-            self?.state.subtitles = tracks
+            self?.state.subtitles = subtitles
+            self?.state.audioTracks = audioTracks
         }
     }
 
@@ -205,6 +238,10 @@ final class MPVPlayerEngine: @unchecked Sendable {
 
     func setSubtitle(id: Int64?) {
         command(["set", "sid", id.map(String.init) ?? "no"])
+    }
+
+    func setAudio(id: Int64?) {
+        command(["set", "aid", id.map(String.init) ?? "no"])
     }
 
     func loadSubtitle(_ url: URL) {

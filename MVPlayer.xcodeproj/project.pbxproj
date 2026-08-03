@@ -17,17 +17,22 @@
 		3E92CA8DECBD10B7277AD283 /* FolderWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53BB1FECCFDB22DC4EA4792 /* FolderWatcher.swift */; };
 		4286CF8B23CF7B8D7520E2AC /* CMPVShim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6B7A073254AD11C705C72BD /* CMPVShim.framework */; };
 		4500916E4C767AF575F92A05 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FF109F6FEADAED14509CD98 /* ContentView.swift */; };
+		485DDAF467C1BBE3F8EA1DDE /* PlaybackProgressStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5394F98A7D523C014ADFB6F6 /* PlaybackProgressStore.swift */; };
 		500B7B34711E3ACAF19AD6AD /* FolderLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CEE9DC83112344B6879958 /* FolderLibrary.swift */; };
 		5CB72F36D777FC0007486AE3 /* PlayerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9FE8521908012F2D790BA23 /* PlayerContainerView.swift */; };
 		672A01DCBC0F2FF4B70CDD69 /* FolderLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 178121889E8D5B2D2E4E5835 /* FolderLibraryTests.swift */; };
 		725103053D42399B2EAF537F /* FullscreenPlayerPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355615EF1E55E543084C35E1 /* FullscreenPlayerPresenter.swift */; };
+		7507A320F5672C4973B540CB /* MediaThumbnailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1517D91C6721AA144D378574 /* MediaThumbnailProvider.swift */; };
 		76AC5DB4BE9F1732F445FDC5 /* MPVPlayerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54248B372A6C3479C6F3BE4C /* MPVPlayerEngine.swift */; };
+		7F88ECB766E892F14DF2D2A4 /* TimelinePreviewScrubber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30754F16E08B668BBB9CEA12 /* TimelinePreviewScrubber.swift */; };
 		85F0244B21B3C839C4C6B6E6 /* CMPVShim.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A6B7A073254AD11C705C72BD /* CMPVShim.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		868A3811C71B8BD182272405 /* CMPVShim.h in Headers */ = {isa = PBXBuildFile; fileRef = F2C91BC1BF21D7334F20FFCD /* CMPVShim.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8DAAC6A01DFF01AA984D8F0F /* PlaybackProgressStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC4D8544757EF28DEDCB81C0 /* PlaybackProgressStoreTests.swift */; };
 		901251B986400022D1C75058 /* FolderBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C5E3C24BFFBDB6A9C17B81D /* FolderBrowserView.swift */; };
 		9FB2F1E46CEE3F2E2F82C65D /* LibMPVLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0A64AA22AE8287477B9CB1 /* LibMPVLoaderTests.swift */; };
 		AF6DFC6430EE7FAB997F4859 /* CMPVShim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6B7A073254AD11C705C72BD /* CMPVShim.framework */; };
 		B0920A887B99A67535EBEFF5 /* LibMPVLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CF3DBD7509BA5383ACC0B78 /* LibMPVLoader.swift */; };
+		B170249BFDF346B103A9E6F1 /* MediaMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A764DAAE610C2E1EC24B46 /* MediaMetadata.swift */; };
 		B369F2B940C260E43C2DF5E6 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D87F49829CC27CC6B077C53F /* AppModel.swift */; };
 		C743950DE9777BCFAE1DC013 /* mvplayer.icon in Resources */ = {isa = PBXBuildFile; fileRef = 8B9FEE97B7E30264055B6611 /* mvplayer.icon */; };
 		CBCABB6247C8BDA2BCFD8E2D /* CMPVShim.c in Sources */ = {isa = PBXBuildFile; fileRef = E1B2A60AF47452C5972F45AD /* CMPVShim.c */; };
@@ -86,13 +91,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1517D91C6721AA144D378574 /* MediaThumbnailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaThumbnailProvider.swift; sourceTree = "<group>"; };
 		178121889E8D5B2D2E4E5835 /* FolderLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderLibraryTests.swift; sourceTree = "<group>"; };
 		21999E2CF5B5221B384B1536 /* MVPlayerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MVPlayerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		30754F16E08B668BBB9CEA12 /* TimelinePreviewScrubber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelinePreviewScrubber.swift; sourceTree = "<group>"; };
+		31A764DAAE610C2E1EC24B46 /* MediaMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaMetadata.swift; sourceTree = "<group>"; };
 		355615EF1E55E543084C35E1 /* FullscreenPlayerPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenPlayerPresenter.swift; sourceTree = "<group>"; };
 		3CF3DBD7509BA5383ACC0B78 /* LibMPVLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibMPVLoader.swift; sourceTree = "<group>"; };
 		40124688AF78AB586D9CD21C /* MVVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MVVideoView.swift; sourceTree = "<group>"; };
 		4A0C9877A4FBADC73A1D2CDD /* WindowStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowStateTests.swift; sourceTree = "<group>"; };
 		52736CD6487176F53273DFA7 /* LibMPVSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibMPVSetupView.swift; sourceTree = "<group>"; };
+		5394F98A7D523C014ADFB6F6 /* PlaybackProgressStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackProgressStore.swift; sourceTree = "<group>"; };
 		54248B372A6C3479C6F3BE4C /* MPVPlayerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPVPlayerEngine.swift; sourceTree = "<group>"; };
 		5A734080EC5730DBF0918ED0 /* MVPlayerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MVPlayerApp.swift; sourceTree = "<group>"; };
 		7FF109F6FEADAED14509CD98 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -109,6 +118,7 @@
 		D37060EDEE2386D81EF2BBE7 /* MVPlayer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MVPlayer.entitlements; sourceTree = "<group>"; };
 		D87F49829CC27CC6B077C53F /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		DB0DEA414CD839046A142BE1 /* PlaybackQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackQueue.swift; sourceTree = "<group>"; };
+		DC4D8544757EF28DEDCB81C0 /* PlaybackProgressStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackProgressStoreTests.swift; sourceTree = "<group>"; };
 		E0CEE9DC83112344B6879958 /* FolderLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderLibrary.swift; sourceTree = "<group>"; };
 		E1B2A60AF47452C5972F45AD /* CMPVShim.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = CMPVShim.c; sourceTree = "<group>"; };
 		F2C91BC1BF21D7334F20FFCD /* CMPVShim.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CMPVShim.h; sourceTree = "<group>"; };
@@ -162,6 +172,7 @@
 				355615EF1E55E543084C35E1 /* FullscreenPlayerPresenter.swift */,
 				52736CD6487176F53273DFA7 /* LibMPVSetupView.swift */,
 				A9FE8521908012F2D790BA23 /* PlayerContainerView.swift */,
+				30754F16E08B668BBB9CEA12 /* TimelinePreviewScrubber.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -189,6 +200,9 @@
 			children = (
 				E0CEE9DC83112344B6879958 /* FolderLibrary.swift */,
 				B53BB1FECCFDB22DC4EA4792 /* FolderWatcher.swift */,
+				31A764DAAE610C2E1EC24B46 /* MediaMetadata.swift */,
+				1517D91C6721AA144D378574 /* MediaThumbnailProvider.swift */,
+				5394F98A7D523C014ADFB6F6 /* PlaybackProgressStore.swift */,
 				DB0DEA414CD839046A142BE1 /* PlaybackQueue.swift */,
 			);
 			path = Library;
@@ -242,6 +256,7 @@
 			children = (
 				178121889E8D5B2D2E4E5835 /* FolderLibraryTests.swift */,
 				9B0A64AA22AE8287477B9CB1 /* LibMPVLoaderTests.swift */,
+				DC4D8544757EF28DEDCB81C0 /* PlaybackProgressStoreTests.swift */,
 				B0F5DCDC250DD95C1ECC84E7 /* PlaybackQueueTests.swift */,
 				4A0C9877A4FBADC73A1D2CDD /* WindowStateTests.swift */,
 			);
@@ -398,9 +413,13 @@
 				76AC5DB4BE9F1732F445FDC5 /* MPVPlayerEngine.swift in Sources */,
 				1A96B555B852C8ADED3063F9 /* MVPlayerApp.swift in Sources */,
 				07358321184D254941F4C351 /* MVVideoView.swift in Sources */,
+				B170249BFDF346B103A9E6F1 /* MediaMetadata.swift in Sources */,
+				7507A320F5672C4973B540CB /* MediaThumbnailProvider.swift in Sources */,
+				485DDAF467C1BBE3F8EA1DDE /* PlaybackProgressStore.swift in Sources */,
 				DC5397814A9061D9358E8F24 /* PlaybackQueue.swift in Sources */,
 				5CB72F36D777FC0007486AE3 /* PlayerContainerView.swift in Sources */,
 				224693807487630483B03359 /* PlayerState.swift in Sources */,
+				7F88ECB766E892F14DF2D2A4 /* TimelinePreviewScrubber.swift in Sources */,
 				07BB547D706EFC820F6EDC44 /* VideoSurface.swift in Sources */,
 				37FF015320A7202B99F29A10 /* WindowState.swift in Sources */,
 			);
@@ -412,6 +431,7 @@
 			files = (
 				672A01DCBC0F2FF4B70CDD69 /* FolderLibraryTests.swift in Sources */,
 				9FB2F1E46CEE3F2E2F82C65D /* LibMPVLoaderTests.swift in Sources */,
+				8DAAC6A01DFF01AA984D8F0F /* PlaybackProgressStoreTests.swift in Sources */,
 				3052004CBAC853FF3305E4D9 /* PlaybackQueueTests.swift in Sources */,
 				D1686F68229307FB773F9FFB /* WindowStateTests.swift in Sources */,
 			);
@@ -531,6 +551,10 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = (
+					"-Xcc",
+					"-DGL_SILENCE_DEPRECATION",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -623,6 +647,10 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_SWIFT_FLAGS = (
+					"-Xcc",
+					"-DGL_SILENCE_DEPRECATION",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;

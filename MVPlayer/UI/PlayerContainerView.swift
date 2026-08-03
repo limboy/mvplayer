@@ -220,6 +220,7 @@ private struct PlayerControlsView: View {
     @ObservedObject var queue: PlaybackQueue
     @Binding var isSeeking: Bool
     @Binding var seekValue: Double
+    @State private var isVolumePopoverPresented = false
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
@@ -239,12 +240,7 @@ private struct PlayerControlsView: View {
             Divider()
                 .frame(height: 18)
 
-            controlButton(
-                volumeSymbol,
-                help: "Cycle Volume"
-            ) {
-                cycleVolume()
-            }
+            volumeControl
 
             currentTimeLabel
             seekSlider
@@ -279,12 +275,7 @@ private struct PlayerControlsView: View {
             HStack(spacing: 14) {
                 transportControls
 
-                controlButton(
-                    volumeSymbol,
-                    help: "Cycle Volume"
-                ) {
-                    cycleVolume()
-                }
+                volumeControl
 
                 Spacer(minLength: 4)
                 secondaryControls
@@ -322,23 +313,15 @@ private struct PlayerControlsView: View {
     }
 
     private var seekSlider: some View {
-        Slider(
-            value: Binding(
-                get: { isSeeking ? seekValue : state.currentTime },
-                set: { seekValue = $0 }
-            ),
-            in: 0...max(state.duration, 0.01),
-            onEditingChanged: { editing in
-                if editing {
-                    seekValue = state.currentTime
-                    isSeeking = true
-                } else {
-                    engine.seek(to: seekValue)
-                    isSeeking = false
-                }
-            }
-        )
-        .disabled(!state.hasMedia || state.duration <= 0)
+        TimelinePreviewScrubber(
+            currentTime: state.currentTime,
+            duration: state.duration,
+            url: state.currentURL,
+            isSeeking: $isSeeking,
+            seekValue: $seekValue
+        ) { value in
+            engine.seek(to: value)
+        }
     }
 
     private var durationLabel: some View {
@@ -352,6 +335,7 @@ private struct PlayerControlsView: View {
     @ViewBuilder
     private var secondaryControls: some View {
         Group {
+            audioMenu
             subtitleMenu
 
             controlButton(
@@ -394,19 +378,50 @@ private struct PlayerControlsView: View {
         return "speaker.wave.3"
     }
 
-    private func cycleVolume() {
-        if state.isMuted {
-            engine.toggleMute()
-            engine.setVolume(100)
-        } else if state.volume > 66 {
-            engine.setVolume(66)
-        } else if state.volume > 33 {
-            engine.setVolume(33)
-        } else if state.volume > 0 {
-            engine.setVolume(0)
-        } else {
-            engine.setVolume(100)
+    private var volumeControl: some View {
+        Button {
+            isVolumePopoverPresented.toggle()
+        } label: {
+            Image(systemName: volumeSymbol)
+                .font(.system(size: 15, weight: .semibold))
+                .frame(width: 24, height: 24)
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .popover(isPresented: $isVolumePopoverPresented, arrowEdge: .bottom) {
+            VStack(spacing: 10) {
+                HStack(spacing: 8) {
+                    Button {
+                        engine.toggleMute()
+                    } label: {
+                        Image(systemName: state.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                            .frame(width: 22, height: 22)
+                    }
+                    .buttonStyle(.plain)
+                    .help(state.isMuted ? "Unmute" : "Mute")
+
+                    Text("Volume")
+                        .font(.headline)
+                    Spacer()
+                    Text("\(Int(state.volume.rounded()))%")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+
+                Slider(value: Binding(
+                    get: { state.volume },
+                    set: {
+                        state.volume = $0
+                        engine.setVolume($0)
+                    }
+                ), in: 0...100)
+                .frame(width: 190)
+            }
+            .padding(14)
+            .frame(width: 220)
+        }
+        .help("Volume")
     }
 
     private var subtitleMenu: some View {
@@ -443,6 +458,32 @@ private struct PlayerControlsView: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .help("Subtitles")
+    }
+
+    private var audioMenu: some View {
+        Menu {
+            if state.audioTracks.isEmpty {
+                Text("No alternate audio tracks")
+            } else {
+                ForEach(state.audioTracks) { track in
+                    Button {
+                        engine.setAudio(id: track.id)
+                    } label: {
+                        subtitleLabel(
+                            track.displayName + (track.isExternal ? " — External" : ""),
+                            selected: track.isSelected
+                        )
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "waveform")
+                .frame(width: 22, height: 22)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Audio Tracks")
     }
 
     private func subtitleLabel(_ title: String, selected: Bool) -> some View {

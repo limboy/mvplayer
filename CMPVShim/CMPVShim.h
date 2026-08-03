@@ -48,6 +48,15 @@ typedef struct MVPMPVSubtitleTrack {
     char codec[64];
 } MVPMPVSubtitleTrack;
 
+typedef struct MVPMPVAudioTrack {
+    int64_t id;
+    bool selected;
+    bool external;
+    char title[256];
+    char language[64];
+    char codec[64];
+} MVPMPVAudioTrack;
+
 typedef void (*MVPMPVCallback)(void *context);
 typedef void *(*MVPMPVGetProcAddress)(void *context, const char *name);
 
@@ -109,6 +118,12 @@ void mvp_mpv_destroy_renderer(MVPMPVPlayer *player);
 int mvp_mpv_copy_subtitle_tracks(
     MVPMPVPlayer *player,
     MVPMPVSubtitleTrack *tracks,
+    int capacity
+);
+
+int mvp_mpv_copy_audio_tracks(
+    MVPMPVPlayer *player,
+    MVPMPVAudioTrack *tracks,
     int capacity
 );
 

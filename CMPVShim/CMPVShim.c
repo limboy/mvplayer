@@ -93,7 +93,8 @@ enum {
     MPV_RENDER_PARAM_API_TYPE = 1,
     MPV_RENDER_PARAM_OPENGL_INIT_PARAMS = 2,
     MPV_RENDER_PARAM_OPENGL_FBO = 3,
-    MPV_RENDER_PARAM_FLIP_Y = 4
+    MPV_RENDER_PARAM_FLIP_Y = 4,
+    MPV_RENDER_PARAM_BLOCK_FOR_TARGET_TIME = 12
 };
 
 typedef unsigned long (*fn_mpv_client_api_version)(void);
@@ -594,9 +595,13 @@ int mvp_mpv_render(
         .internal_format = 0
     };
     int flip = flip_y ? 1 : 0;
+    // The view renders on the main thread. Do not make that thread wait for
+    // mpv's target presentation time; AppKit will schedule the next draw.
+    int block_for_target_time = 0;
     mpv_render_param parameters[] = {
         { MPV_RENDER_PARAM_OPENGL_FBO, &fbo },
         { MPV_RENDER_PARAM_FLIP_Y, &flip },
+        { MPV_RENDER_PARAM_BLOCK_FOR_TARGET_TIME, &block_for_target_time },
         { MPV_RENDER_PARAM_INVALID, NULL }
     };
     return player->render_context_render(player->render_context, parameters);
@@ -681,6 +686,52 @@ int mvp_mpv_copy_subtitle_tracks(
             }
             if (tracks != NULL && count < capacity) {
                 MVPMPVSubtitleTrack *track = &tracks[count];
+                memset(track, 0, sizeof(*track));
+                track->id = node_int64(map_value(item, "id"));
+                track->selected = node_flag(map_value(item, "selected"));
+                track->external = node_flag(map_value(item, "external"));
+                copy_text(track->title, sizeof(track->title), node_string(map_value(item, "title")));
+                copy_text(track->language, sizeof(track->language), node_string(map_value(item, "lang")));
+                copy_text(track->codec, sizeof(track->codec), node_string(map_value(item, "codec")));
+            }
+            count++;
+        }
+    }
+
+    player->free_node_contents(&track_list);
+    return count;
+}
+
+int mvp_mpv_copy_audio_tracks(
+    MVPMPVPlayer *player,
+    MVPMPVAudioTrack *tracks,
+    int capacity
+) {
+    if (player == NULL || player->handle == NULL) {
+        return -1;
+    }
+
+    mpv_node track_list = {0};
+    int status = player->get_property(
+        player->handle,
+        "track-list",
+        MPV_FORMAT_NODE,
+        &track_list
+    );
+    if (status < 0) {
+        return status;
+    }
+
+    int count = 0;
+    if (track_list.format == MPV_FORMAT_NODE_ARRAY && track_list.value.list != NULL) {
+        mpv_node_list *items = track_list.value.list;
+        for (int index = 0; index < items->num; index++) {
+            mpv_node *item = &items->values[index];
+            if (!node_string_equals(map_value(item, "type"), "audio")) {
+                continue;
+            }
+            if (tracks != NULL && count < capacity) {
+                MVPMPVAudioTrack *track = &tracks[count];
                 memset(track, 0, sizeof(*track));
                 track->id = node_int64(map_value(item, "id"));
                 track->selected = node_flag(map_value(item, "selected"));

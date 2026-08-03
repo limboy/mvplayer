@@ -58,7 +58,13 @@ final class MVVideoView: NSOpenGLView {
     override func prepareOpenGL() {
         super.prepareOpenGL()
         guard !rendererInitialized else { return }
-        openGLContext?.makeCurrentContext()
+        guard let openGLContext else { return }
+        openGLContext.makeCurrentContext()
+
+        // Avoid making the user-interactive AppKit thread wait for a lower
+        // QoS display-sync thread inside flushBuffer().
+        var swapInterval: GLint = 0
+        openGLContext.setValues(&swapInterval, for: .swapInterval)
 
         var error = [CChar](repeating: 0, count: 1_024)
         let result = error.withUnsafeMutableBufferPointer { buffer in
