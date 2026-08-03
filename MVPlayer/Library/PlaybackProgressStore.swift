@@ -19,6 +19,11 @@ struct PlaybackProgress: Codable, Equatable, Identifiable, Sendable {
 final class PlaybackProgressStore: ObservableObject {
     @Published private(set) var entries: [PlaybackProgress] = []
 
+    /// The same entries keyed for lookup. The browser asks for progress once
+    /// per visible row every time the list redraws, and scanning the array
+    /// meant normalizing every stored URL on each of those calls.
+    private var entriesByURL: [URL: PlaybackProgress] = [:]
+
     private let storageURL: URL
 
     init(storageURL: URL? = nil) {
@@ -37,7 +42,7 @@ final class PlaybackProgressStore: ObservableObject {
     }
 
     func progress(for url: URL) -> PlaybackProgress? {
-        entries.first { $0.url.standardizedFileURL == url.standardizedFileURL }
+        entriesByURL[url.standardizedFileURL]
     }
 
     func record(url: URL, position: Double, duration: Double) {
@@ -60,6 +65,7 @@ final class PlaybackProgressStore: ObservableObject {
             entries.append(value)
         }
         entries.sort { $0.lastPlayed > $1.lastPlayed }
+        entriesByURL[normalizedURL] = value
         persist()
     }
 
@@ -69,6 +75,7 @@ final class PlaybackProgressStore: ObservableObject {
 
     func remove(url: URL) {
         entries.removeAll { $0.url.standardizedFileURL == url.standardizedFileURL }
+        entriesByURL[url.standardizedFileURL] = nil
         persist()
     }
 
@@ -79,6 +86,12 @@ final class PlaybackProgressStore: ObservableObject {
             return
         }
         entries = values.sorted { $0.lastPlayed > $1.lastPlayed }
+        entriesByURL = Dictionary(
+            entries.map { ($0.url.standardizedFileURL, $0) },
+            // A file recorded twice under different spellings of the same path
+            // keeps the more recent entry, which sorted first.
+            uniquingKeysWith: { first, _ in first }
+        )
     }
 
     private func persist() {

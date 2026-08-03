@@ -4,13 +4,18 @@ import SwiftUI
 struct FolderBrowserView: View {
     @ObservedObject var appModel: AppModel
     @ObservedObject private var library: FolderLibrary
-    @ObservedObject private var state: PlayerState
     @State private var isDropTargeted = false
+
+    /// Held, deliberately, without observing it. The only things here that move
+    /// with playback are one row's percentage and one row's highlight, and both
+    /// live in leaves of their own. Observing the player from the browser
+    /// itself would rebuild every row in the folder each time the clock ticks.
+    private let state: PlayerState
 
     init(appModel: AppModel) {
         self.appModel = appModel
         _library = ObservedObject(wrappedValue: appModel.folderLibrary)
-        _state = ObservedObject(wrappedValue: appModel.playerState)
+        state = appModel.playerState
     }
 
     var body: some View {
@@ -197,38 +202,18 @@ struct FolderBrowserView: View {
                     Image(systemName: "chevron.right")
                         .foregroundStyle(.tertiary)
                 } else {
-                    Text(progressText(for: entry.url))
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                        .frame(minWidth: 44, alignment: .trailing)
+                    PlaybackProgressLabel(
+                        state: state,
+                        url: entry.url,
+                        storedFraction: appModel.playbackProgress(for: entry.url)?.fraction ?? 0
+                    )
                 }
             }
             .contentShape(Rectangle())
             .padding(.vertical, 4)
         }
         .buttonStyle(.plain)
-        .listRowBackground(
-            state.currentURL == entry.url
-                ? Color.accentColor.opacity(0.18)
-                : Color.clear
-        )
-    }
-
-    private func progressText(for url: URL) -> String {
-        "\(Int((displayedProgress(for: url) * 100).rounded(.down)))%"
-    }
-
-    private func displayedProgress(for url: URL) -> Double {
-        if state.currentURL?.standardizedFileURL == url.standardizedFileURL,
-           state.duration.isFinite,
-           state.duration > 0
-        {
-            let fraction = min(max(state.currentTime / state.duration, 0), 1)
-            return fraction
-        }
-
-        let progress = appModel.playbackProgress(for: url)
-        return progress?.fraction ?? 0
+        .listRowBackground(NowPlayingRowBackground(state: state, url: entry.url))
     }
 
     private func chooseFolders() {
@@ -253,5 +238,44 @@ struct FolderBrowserView: View {
         if panel.runModal() == .OK, let url = panel.url {
             library.replaceRoot(id: root.id, with: url)
         }
+    }
+}
+
+/// The percentage for one row. Only the row being played moves, but every row
+/// asks the player whether it is that row, so this stays a leaf: a position
+/// update redraws a handful of small labels instead of the whole browser.
+private struct PlaybackProgressLabel: View {
+    @ObservedObject var state: PlayerState
+    let url: URL
+
+    /// What the row shows when it is not the one playing. Read from the
+    /// progress store by the browser, which redraws when the store changes.
+    let storedFraction: Double
+
+    var body: some View {
+        Text("\(Int((fraction * 100).rounded(.down)))%")
+            .font(.caption.monospacedDigit())
+            .foregroundStyle(.secondary)
+            .frame(minWidth: 44, alignment: .trailing)
+    }
+
+    private var fraction: Double {
+        guard state.currentURL?.standardizedFileURL == url.standardizedFileURL,
+              state.duration.isFinite,
+              state.duration > 0
+        else {
+            return storedFraction
+        }
+        return min(max(state.currentTime / state.duration, 0), 1)
+    }
+}
+
+/// Marks the row being played. A leaf for the same reason as the label.
+private struct NowPlayingRowBackground: View {
+    @ObservedObject var state: PlayerState
+    let url: URL
+
+    var body: some View {
+        state.currentURL == url ? Color.accentColor.opacity(0.18) : Color.clear
     }
 }

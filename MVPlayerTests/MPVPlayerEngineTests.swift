@@ -1,3 +1,4 @@
+import Combine
 import XCTest
 @testable import MVPlayer
 
@@ -64,6 +65,33 @@ final class MPVPlayerEngineTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(500))
     }
 
+    func testThePlaybackPositionIsPublishedAtAFixedRateRatherThanPerFrame() async throws {
+        let engine = try makeEngine()
+        // Audio only, because a headless test has no render context and mpv
+        // would fail a video file on VO init before ever reporting a position.
+        let sample = try makeSample(audioOnly: true)
+        defer { try? FileManager.default.removeItem(at: sample) }
+
+        var updates = 0
+        let subscription = engine.state.$currentTime.sink { _ in updates += 1 }
+        defer { subscription.cancel() }
+
+        engine.load(sample)
+        try await Task.sleep(for: .seconds(3))
+
+        // Playing at all is half the assertion: a throttle that published
+        // nothing would also satisfy the count.
+        XCTAssertGreaterThan(engine.state.currentTime, 1, "the file did not play")
+
+        // Three seconds at four a second, plus the reset and the subscription's
+        // own first value. Unthrottled this file measures around seventeen a
+        // second, and a video file reports one per decoded frame.
+        XCTAssertLessThan(updates, 20, "the position is not being rationed")
+
+        engine.shutdown()
+        try await Task.sleep(for: .milliseconds(500))
+    }
+
     private func makeEngine() throws -> MPVPlayerEngine {
         do {
             return try MPVPlayerEngine(state: PlayerState())
@@ -72,13 +100,19 @@ final class MPVPlayerEngineTests: XCTestCase {
         }
     }
 
-    private func makeSample() throws -> URL {
+    private func makeSample(audioOnly: Bool = false) throws -> URL {
         guard case .ffmpeg(let ffmpeg)? = ExternalThumbnailRenderer.locateTool() else {
             throw XCTSkip("ffmpeg is not installed in this environment.")
         }
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("MVPlayerEngineSample-\(UUID().uuidString)")
-            .appendingPathExtension("mp4")
+            .appendingPathExtension(audioOnly ? "m4a" : "mp4")
+        let source = audioOnly
+            ? ["-i", "sine=frequency=440"]
+            : ["-i", "testsrc=size=320x180:rate=10"]
+        let codec = audioOnly
+            ? ["-c:a", "aac"]
+            : ["-c:v", "libx264", "-pix_fmt", "yuv420p"]
         let process = Process()
         process.executableURL = ffmpeg
         process.arguments = [
@@ -86,10 +120,9 @@ final class MPVPlayerEngineTests: XCTestCase {
             "-hide_banner",
             "-loglevel", "error",
             "-f", "lavfi",
-            "-i", "testsrc=size=320x180:rate=10",
-            "-t", "5",
-            "-c:v", "libx264",
-            "-pix_fmt", "yuv420p",
+        ] + source + [
+            "-t", "10",
+        ] + codec + [
             url.path,
         ]
         process.standardError = FileHandle.nullDevice

@@ -126,6 +126,49 @@ final class MPVPlayerEngine: @unchecked Sendable {
         }
     }
 
+    /// How often the playback position reaches `PlayerState`.
+    ///
+    /// mpv reports `time-pos` once per decoded frame. Publishing at that rate
+    /// invalidates every SwiftUI view observing PlayerState 30-60 times a
+    /// second, including the whole folder browser, to move a seconds-resolution
+    /// label and a bar whose finest pixel is worth half a second on a short
+    /// file and twelve on a long one. Four updates a second look identical and
+    /// cost an order of magnitude less.
+    private static let timePositionInterval: TimeInterval = 0.25
+
+    /// The newest position mpv has reported since the last one published.
+    /// Event-queue state, like everything else the drain touches.
+    private var pendingTimePosition: Double?
+    private var isTimePositionPublishScheduled = false
+
+    /// Publishes on the trailing edge, so a steady stream settles into one
+    /// update per interval and the last position of a file still lands rather
+    /// than being dropped with the stream.
+    private func publishTimePosition(_ seconds: Double) {
+        pendingTimePosition = seconds
+        guard !isTimePositionPublishScheduled else { return }
+        isTimePositionPublishScheduled = true
+
+        eventQueue.asyncAfter(deadline: .now() + Self.timePositionInterval) {
+            [weak self] in
+            guard let self else { return }
+            isTimePositionPublishScheduled = false
+            guard let seconds = pendingTimePosition else { return }
+            pendingTimePosition = nil
+            Task { @MainActor [weak self] in
+                self?.state.currentTime = seconds
+            }
+        }
+    }
+
+    /// Drops a position left over from the file being replaced, so it cannot
+    /// land on top of the new file's reset clock.
+    private func discardPendingTimePosition() {
+        eventQueue.async { [weak self] in
+            self?.pendingTimePosition = nil
+        }
+    }
+
     private func drainEvents() {
         guard !lifetime.isDestroyed else { return }
         while true {
@@ -145,13 +188,21 @@ final class MPVPlayerEngine: @unchecked Sendable {
             let valueType = event.value_type
             let flag = event.flag_value != 0
             let number = event.double_value
+
+            // time-pos is the one property mpv reports per decoded frame, and
+            // it is the only one worth rationing. The rest arrive a handful of
+            // times per file and go straight through, so pausing still feels
+            // instant.
+            if name == "time-pos", valueType == MVP_MPV_VALUE_DOUBLE {
+                publishTimePosition(number.isFinite ? max(0, number) : 0)
+                return
+            }
+
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 switch name {
                 case "pause" where valueType == MVP_MPV_VALUE_FLAG:
                     state.isPaused = flag
-                case "time-pos" where valueType == MVP_MPV_VALUE_DOUBLE:
-                    state.currentTime = number.isFinite ? max(0, number) : 0
                 case "duration" where valueType == MVP_MPV_VALUE_DOUBLE:
                     state.duration = number.isFinite ? max(0, number) : 0
                 case "volume" where valueType == MVP_MPV_VALUE_DOUBLE:
@@ -283,6 +334,7 @@ final class MPVPlayerEngine: @unchecked Sendable {
     @MainActor
     func load(_ url: URL) {
         state.resetForLoad(url)
+        discardPendingTimePosition()
         command(["loadfile", url.path, "replace"])
         setPaused(false)
     }
