@@ -40,21 +40,22 @@ struct FolderBrowserView: View {
             browserHeaderContent(showsItemCount: true)
             browserHeaderContent(showsItemCount: false)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, library.isAtRootList ? 16 : 10)
         .frame(height: 42)
     }
 
     private func browserHeaderContent(showsItemCount: Bool) -> some View {
-        HStack(spacing: 10) {
-            Button {
-                library.goBack()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .frame(width: 22, height: 22)
+        HStack(spacing: 6) {
+            if !library.isAtRootList {
+                Button {
+                    library.goBack()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .frame(width: 22, height: 22)
+                }
+                .buttonStyle(.plain)
+                .help("Back")
             }
-            .buttonStyle(.plain)
-            .disabled(library.isAtRootList)
-            .help("Back")
 
             Text(library.currentTitle)
                 .font(.headline)
@@ -125,9 +126,6 @@ struct FolderBrowserView: View {
             }
         } else {
             HStack(spacing: 10) {
-                Image(systemName: "folder.badge.questionmark")
-                    .font(.title3)
-                    .foregroundStyle(Color.secondary)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(root.displayName)
                         .lineLimit(1)
@@ -135,6 +133,7 @@ struct FolderBrowserView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .truncationMode(.middle)
                 }
                 Spacer()
                 Button("Reconnect") {
@@ -156,9 +155,6 @@ struct FolderBrowserView: View {
 
     private func rootLabel(_ root: LibraryRoot) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: "folder.fill")
-                .font(.title3)
-                .foregroundStyle(Color.accentColor)
             VStack(alignment: .leading, spacing: 2) {
                 Text(root.displayName)
                     .lineLimit(1)
@@ -166,6 +162,7 @@ struct FolderBrowserView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .truncationMode(.middle)
             }
             Spacer()
             Image(systemName: "chevron.right")
