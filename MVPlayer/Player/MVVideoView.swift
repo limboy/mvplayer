@@ -20,13 +20,82 @@ private func mpvRenderUpdate(context: UnsafeMutableRawPointer?) {
     }
 }
 
+private final class MVOpenGLRenderWorker: @unchecked Sendable {
+    private let engine: MPVPlayerEngine
+    private let queue = DispatchQueue(
+        label: "com.example.MVPlayer.opengl-render",
+        qos: .default
+    )
+    private let stateLock = NSLock()
+    private var context: NSOpenGLContext?
+    private var isActive = false
+
+    init(engine: MPVPlayerEngine) {
+        self.engine = engine
+    }
+
+    func activate(context: NSOpenGLContext) {
+        stateLock.withLock {
+            self.context = context
+            isActive = true
+        }
+    }
+
+    func enqueue(width: Int, height: Int) {
+        queue.async { [weak self] in
+            self?.render(width: width, height: height)
+        }
+    }
+
+    func deactivate() {
+        stateLock.withLock {
+            isActive = false
+        }
+        queue.async { [self] in
+            guard let context = stateLock.withLock({ self.context }) else { return }
+            context.lock()
+            context.makeCurrentContext()
+            mvp_mpv_destroy_renderer(engine.rawHandle)
+            NSOpenGLContext.clearCurrentContext()
+            context.unlock()
+            stateLock.withLock {
+                self.context = nil
+            }
+        }
+    }
+
+    private func render(width: Int, height: Int) {
+        guard let context = stateLock.withLock({
+            isActive ? self.context : nil
+        }) else { return }
+
+        context.lock()
+        defer { context.unlock() }
+        context.makeCurrentContext()
+        defer { NSOpenGLContext.clearCurrentContext() }
+        var framebuffer: GLint = 0
+        glGetIntegerv(GLenum(GL_DRAW_FRAMEBUFFER_BINDING), &framebuffer)
+        _ = mvp_mpv_render(
+            engine.rawHandle,
+            framebuffer,
+            Int32(width),
+            Int32(height),
+            true
+        )
+        context.flushBuffer()
+        mvp_mpv_report_swap(engine.rawHandle)
+    }
+}
+
 final class MVVideoView: NSOpenGLView {
     let engine: MPVPlayerEngine
     fileprivate nonisolated(unsafe) let openGLLibrary: UnsafeMutableRawPointer?
+    private let renderWorker: MVOpenGLRenderWorker
     private var rendererInitialized = false
 
     init(engine: MPVPlayerEngine) {
         self.engine = engine
+        renderWorker = MVOpenGLRenderWorker(engine: engine)
         openGLLibrary = dlopen(
             "/System/Library/Frameworks/OpenGL.framework/OpenGL",
             RTLD_LAZY | RTLD_LOCAL
@@ -61,8 +130,8 @@ final class MVVideoView: NSOpenGLView {
         guard let openGLContext else { return }
         openGLContext.makeCurrentContext()
 
-        // Avoid making the user-interactive AppKit thread wait for a lower
-        // QoS display-sync thread inside flushBuffer().
+        // Do not add a vertical-refresh wait on top of libmpv's frame timing.
+        // Buffer presentation itself runs on renderWorker's default-QoS queue.
         var swapInterval: GLint = 0
         openGLContext.setValues(&swapInterval, for: .swapInterval)
 
@@ -88,6 +157,7 @@ final class MVVideoView: NSOpenGLView {
         }
 
         rendererInitialized = true
+        renderWorker.activate(context: openGLContext)
         mvp_mpv_set_render_update_callback(
             engine.rawHandle,
             mpvRenderUpdate,
@@ -96,41 +166,35 @@ final class MVVideoView: NSOpenGLView {
     }
 
     override func reshape() {
+        guard let openGLContext else {
+            super.reshape()
+            needsDisplay = true
+            return
+        }
+        openGLContext.lock()
         super.reshape()
+        openGLContext.unlock()
         needsDisplay = true
     }
 
     override func draw(_ dirtyRect: NSRect) {
-        guard rendererInitialized, let openGLContext else {
+        guard rendererInitialized, openGLContext != nil else {
             NSColor.black.setFill()
             dirtyRect.fill()
             return
         }
 
-        openGLContext.makeCurrentContext()
         let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 1
         let width = Int(bounds.width * scale)
         let height = Int(bounds.height * scale)
-        var framebuffer: GLint = 0
-        glGetIntegerv(GLenum(GL_DRAW_FRAMEBUFFER_BINDING), &framebuffer)
-        _ = mvp_mpv_render(
-            engine.rawHandle,
-            framebuffer,
-            Int32(width),
-            Int32(height),
-            true
-        )
-        openGLContext.flushBuffer()
-        mvp_mpv_report_swap(engine.rawHandle)
+        renderWorker.enqueue(width: width, height: height)
     }
 
     func detachRenderer() {
         guard rendererInitialized else { return }
-        openGLContext?.makeCurrentContext()
         mvp_mpv_set_render_update_callback(engine.rawHandle, nil, nil)
-        mvp_mpv_destroy_renderer(engine.rawHandle)
         rendererInitialized = false
-        NSOpenGLContext.clearCurrentContext()
+        renderWorker.deactivate()
     }
 
 }
