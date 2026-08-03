@@ -37,6 +37,19 @@ struct TimelinePreviewScrubber: View {
 
                 Color.clear
                     .contentShape(Rectangle())
+                    .onContinuousHover { phase in
+                        switch phase {
+                        case .active(let location):
+                            guard !isSeeking else { return }
+                            updatePreview(
+                                at: location.x,
+                                width: width,
+                                updatesSeekValue: false
+                            )
+                        case .ended:
+                            clearPreview()
+                        }
+                    }
                     .gesture(
                         DragGesture(minimumDistance: 0)
                             .onChanged { value in
@@ -57,8 +70,7 @@ struct TimelinePreviewScrubber: View {
                                 committedSeekTarget = destination
                                 onCommit(destination)
                                 scheduleSeekCompletionFallback()
-                                previewTime = nil
-                                previewImage = nil
+                                clearPreview()
                             }
                     )
 
@@ -68,6 +80,7 @@ struct TimelinePreviewScrubber: View {
                             x: min(max(width * ratio(for: previewTime), 52), width - 52),
                             y: -54
                         )
+                        .allowsHitTesting(false)
                 }
             }
         }
@@ -76,8 +89,14 @@ struct TimelinePreviewScrubber: View {
         // not grow to fill the entire player.
         .frame(minWidth: 80, minHeight: 28, maxHeight: 28)
         .onDisappear {
-            thumbnailTask?.cancel()
+            clearPreview()
             seekCompletionTask?.cancel()
+        }
+        .onChange(of: url) { _, _ in
+            clearPreview()
+        }
+        .onChange(of: duration) { _, _ in
+            clearPreview()
         }
         .onChange(of: currentTime) { _, newTime in
             guard let target = committedSeekTarget else { return }
@@ -94,10 +113,16 @@ struct TimelinePreviewScrubber: View {
     }
 
     @discardableResult
-    private func updatePreview(at x: CGFloat, width: CGFloat) -> Double? {
+    private func updatePreview(
+        at x: CGFloat,
+        width: CGFloat,
+        updatesSeekValue: Bool = true
+    ) -> Double? {
         guard duration > 0, let url else { return nil }
         let time = min(max(Double(x / width) * duration, 0), duration)
-        seekValue = time
+        if updatesSeekValue {
+            seekValue = time
+        }
         previewTime = time
         thumbnailTask?.cancel()
         thumbnailTask = Task { @MainActor in
@@ -106,6 +131,13 @@ struct TimelinePreviewScrubber: View {
             previewImage = image
         }
         return time
+    }
+
+    private func clearPreview() {
+        thumbnailTask?.cancel()
+        thumbnailTask = nil
+        previewTime = nil
+        previewImage = nil
     }
 
     private func scheduleSeekCompletionFallback() {
