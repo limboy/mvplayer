@@ -215,7 +215,7 @@ final class MPVPlayerEngine: @unchecked Sendable {
             }
 
         case MVP_MPV_EVENT_FILE_LOADED:
-            refreshTracks(selectFirstSubtitle: true)
+            refreshTracks()
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.state.isLoading = false
@@ -258,7 +258,7 @@ final class MPVPlayerEngine: @unchecked Sendable {
         }
     }
 
-    private func refreshTracks(selectFirstSubtitle: Bool = false) {
+    private func refreshTracks() {
         let count = mvp_mpv_copy_subtitle_tracks(handle, nil, 0)
         let audioCount = mvp_mpv_copy_audio_tracks(handle, nil, 0)
         guard count >= 0, audioCount >= 0 else { return }
@@ -281,7 +281,7 @@ final class MPVPlayerEngine: @unchecked Sendable {
         }
         guard copiedAudio >= 0 else { return }
 
-        var subtitles = subtitleValues.prefix(Int(copiedSubtitles)).map { value -> SubtitleTrack in
+        let subtitles = subtitleValues.prefix(Int(copiedSubtitles)).map { value -> SubtitleTrack in
             var mutableValue = value
             let title = swiftString(from: &mutableValue.title)
             let language = swiftString(from: &mutableValue.language)
@@ -294,20 +294,6 @@ final class MPVPlayerEngine: @unchecked Sendable {
                 isExternal: value.external,
                 isSelected: value.selected
             )
-        }
-
-        if selectFirstSubtitle, let firstSubtitleID = subtitles.first?.id {
-            setSubtitle(id: firstSubtitleID)
-            subtitles = subtitles.map { track in
-                SubtitleTrack(
-                    id: track.id,
-                    title: track.title,
-                    language: track.language,
-                    codec: track.codec,
-                    isExternal: track.isExternal,
-                    isSelected: track.id == firstSubtitleID
-                )
-            }
         }
 
         let audioTracks = audioValues.prefix(Int(copiedAudio)).map { value -> AudioTrack in
@@ -333,7 +319,14 @@ final class MPVPlayerEngine: @unchecked Sendable {
 
     @MainActor
     /// Opens `url`, optionally beginning at `startAt` seconds rather than at
-    /// the start.
+    /// the start, and letting mpv pick a subtitle track unless
+    /// `selectsSubtitles` says the user would rather watch without one.
+    ///
+    /// `sid` is set to `auto` or `no` rather than a specific track: mpv already
+    /// knows which subtitle to prefer from the user's `slang`, from the tracks'
+    /// own default and forced flags, and — with `sub-auto=fuzzy` — from the
+    /// sidecar files sitting next to the video. Picking a track here would
+    /// throw all of that away.
     ///
     /// The position goes through mpv's `start` option instead of a seek issued
     /// once the file is open, so the first frame drawn is already the right one
@@ -345,10 +338,11 @@ final class MPVPlayerEngine: @unchecked Sendable {
     /// argument it goes in moved when mpv 0.38 inserted an index before it, and
     /// this app loads whichever libmpv Homebrew has installed. `start` has been
     /// spelled the same way throughout.
-    func load(_ url: URL, startAt seconds: Double? = nil) {
+    func load(_ url: URL, startAt seconds: Double? = nil, selectsSubtitles: Bool = true) {
         state.resetForLoad(url)
         discardPendingTimePosition()
         command(["set", "start", seconds.map { String($0) } ?? "none"])
+        command(["set", "sid", selectsSubtitles ? "auto" : "no"])
         command(["loadfile", url.path, "replace"])
         setPaused(false)
     }

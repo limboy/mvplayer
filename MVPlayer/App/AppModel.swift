@@ -141,7 +141,11 @@ final class AppModel: ObservableObject {
 
     private func loadVideo(_ url: URL) {
         videoView?.setVideoRenderingEnabled(true)
-        engine?.load(url, startAt: resumePosition(for: url))
+        engine?.load(
+            url,
+            startAt: resumePosition(for: url),
+            selectsSubtitles: SubtitlePreference.isEnabled
+        )
         updateNowPlaying()
     }
 

@@ -25,6 +25,13 @@ struct MVPlayerApp: App {
     }
 }
 
+/// The Playback menu.
+///
+/// Only full screen carries a key equivalent, and it is the system one. The
+/// space bar, the arrows and a bare `f` all work too, but they are watched by
+/// `PlayerKeyboardMonitor` instead of being bound here: a menu equivalent is
+/// matched before the key event reaches the window, so binding an unmodified
+/// key in the menu takes it away from every view in the app for good.
 struct PlaybackCommands: Commands {
     @ObservedObject var appModel: AppModel
     @ObservedObject var windowState: WindowState
@@ -34,36 +41,26 @@ struct PlaybackCommands: Commands {
             Button("Play/Pause") {
                 appModel.togglePlayPause()
             }
-            .keyboardShortcut(.space, modifiers: [])
 
             Button("Seek Backward 5 Seconds") {
                 appModel.seek(by: -5)
             }
-            .keyboardShortcut(.leftArrow, modifiers: [])
 
             Button("Seek Forward 5 Seconds") {
                 appModel.seek(by: 5)
             }
-            .keyboardShortcut(.rightArrow, modifiers: [])
 
             Button("Volume Up") {
                 appModel.changeVolume(by: 5)
             }
-            .keyboardShortcut(.upArrow, modifiers: [])
 
             Button("Volume Down") {
                 appModel.changeVolume(by: -5)
             }
-            .keyboardShortcut(.downArrow, modifiers: [])
 
             Divider()
 
-            Button("Toggle Full Screen") {
-                windowState.toggleFullscreen()
-            }
-            .keyboardShortcut("f", modifiers: [])
-
-            Button("Toggle Full Screen (System)") {
+            Button(windowState.isFullscreen ? "Exit Full Screen" : "Enter Full Screen") {
                 windowState.toggleFullscreen()
             }
             .keyboardShortcut("f", modifiers: [.command, .control])

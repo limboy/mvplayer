@@ -306,6 +306,14 @@ MVPMPVPlayer *mvp_mpv_create(char *error_buffer, size_t error_buffer_size) {
     player->set_option_string(player->handle, "keep-open", "yes");
     player->set_option_string(player->handle, "osc", "no");
 
+    // Pick up sidecar subtitles next to the video. "fuzzy" takes Movie.en.srt
+    // and Movie.forced.srt alongside Movie.mkv, where the default "exact" only
+    // takes Movie.srt; sub-file-paths adds the subdirectory that a season of
+    // downloads usually keeps them in. Which of the found tracks is shown, if
+    // any, is left to mpv's own preference order.
+    player->set_option_string(player->handle, "sub-auto", "fuzzy");
+    player->set_option_string(player->handle, "sub-file-paths", "sub:subs:subtitles:Sub:Subs:Subtitles");
+
     // MVPlayer provides its own UI. Disable mpv's LuaJIT-backed scripts so the
     // hardened app never attempts to execute unsigned generated code.
     player->set_option_string(player->handle, "load-scripts", "no");

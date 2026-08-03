@@ -15,6 +15,7 @@ struct PlayerContainerView: View {
     @State private var isSeeking = false
     @State private var seekValue: Double = 0
     @State private var hideTask: Task<Void, Never>?
+    @State private var errorDismissTask: Task<Void, Never>?
 
     init(
         appModel: AppModel,
@@ -88,6 +89,7 @@ struct PlayerContainerView: View {
             }
             .animation(.easeOut(duration: 0.18), value: controlsVisible)
             .animation(.easeOut(duration: 0.18), value: state.hasMedia)
+            .animation(.easeOut(duration: 0.18), value: state.errorMessage)
         }
         .onContinuousHover { phase in
             switch phase {
@@ -105,14 +107,33 @@ struct PlayerContainerView: View {
                 scheduleControlsHide()
             }
         }
+        .onChange(of: state.errorMessage) { _, message in
+            scheduleErrorDismiss(for: message)
+        }
         .onDisappear {
             hideTask?.cancel()
+            errorDismissTask?.cancel()
         }
         .background {
-            PlaybackKeyboardMonitor {
-                appModel.togglePlayPause()
-            }
-            .frame(width: 0, height: 0)
+            PlayerKeyboardMonitor(handle: handle)
+                .frame(width: 0, height: 0)
+        }
+    }
+
+    private func handle(_ key: PlayerKey) {
+        switch key {
+        case .togglePlayPause:
+            appModel.togglePlayPause()
+        case .seekBackward:
+            appModel.seek(by: -5)
+        case .seekForward:
+            appModel.seek(by: 5)
+        case .volumeUp:
+            appModel.changeVolume(by: 5)
+        case .volumeDown:
+            appModel.changeVolume(by: -5)
+        case .toggleFullscreen:
+            windowState.toggleFullscreen()
         }
     }
 
@@ -139,6 +160,23 @@ struct PlayerContainerView: View {
         .padding()
     }
 
+    /// Takes the error banner away on its own after a while.
+    ///
+    /// The banner covers the top of the picture and there is nothing left to do
+    /// about most of what it reports — a file that would not open has already
+    /// been replaced by the next one by the time it is read. The close button
+    /// stays for anyone who wants it gone sooner, and the message is still
+    /// selectable until then.
+    private func scheduleErrorDismiss(for message: String?) {
+        errorDismissTask?.cancel()
+        guard message != nil else { return }
+        errorDismissTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(6))
+            guard !Task.isCancelled, state.errorMessage == message else { return }
+            state.errorMessage = nil
+        }
+    }
+
     private func revealControls() {
         controlsVisible = true
         scheduleControlsHide()
@@ -155,63 +193,6 @@ struct PlayerContainerView: View {
     }
 }
 
-private struct PlaybackKeyboardMonitor: NSViewRepresentable {
-    let togglePlayPause: @MainActor () -> Void
-
-    func makeNSView(context: Context) -> PlaybackKeyboardMonitorView {
-        let view = PlaybackKeyboardMonitorView()
-        view.togglePlayPause = togglePlayPause
-        return view
-    }
-
-    func updateNSView(_ nsView: PlaybackKeyboardMonitorView, context: Context) {
-        nsView.togglePlayPause = togglePlayPause
-    }
-
-    static func dismantleNSView(
-        _ nsView: PlaybackKeyboardMonitorView,
-        coordinator: Void
-    ) {
-        nsView.stopMonitoring()
-    }
-}
-
-@MainActor
-private final class PlaybackKeyboardMonitorView: NSView {
-    var togglePlayPause: (@MainActor () -> Void)?
-    private var eventMonitor: Any?
-
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        stopMonitoring()
-        guard window != nil else { return }
-
-        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
-            [weak self] event in
-            guard let self, event.window === window else { return event }
-            guard event.charactersIgnoringModifiers == " " else { return event }
-
-            let actionModifiers: NSEvent.ModifierFlags = [
-                .command, .control, .option, .shift
-            ]
-            guard event.modifierFlags.intersection(actionModifiers).isEmpty else {
-                return event
-            }
-
-            if !event.isARepeat {
-                togglePlayPause?()
-            }
-            return nil
-        }
-    }
-
-    func stopMonitoring() {
-        guard let eventMonitor else { return }
-        NSEvent.removeMonitor(eventMonitor)
-        self.eventMonitor = nil
-    }
-}
-
 private struct PlayerControlsView: View {
     @ObservedObject var appModel: AppModel
     let engine: MPVPlayerEngine
@@ -221,6 +202,7 @@ private struct PlayerControlsView: View {
     @Binding var isSeeking: Bool
     @Binding var seekValue: Double
     @State private var isVolumePopoverPresented = false
+    @AppStorage(SubtitlePreference.defaultsKey) private var subtitlesEnabledByDefault = true
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
@@ -450,6 +432,7 @@ private struct PlayerControlsView: View {
             Button("Load Subtitle…") {
                 chooseSubtitle()
             }
+            Toggle("Show Subtitles Automatically", isOn: $subtitlesEnabledByDefault)
         } label: {
             Image(systemName: "captions.bubble")
                 .frame(width: 22, height: 22)
@@ -499,7 +482,8 @@ private struct PlayerControlsView: View {
         panel.allowedContentTypes = ["srt", "ass", "ssa", "vtt", "sub", "idx"]
             .compactMap { UTType(filenameExtension: $0) }
 
-        if panel.runModal() == .OK, let url = panel.url {
+        panel.presentAsSheet { urls in
+            guard let url = urls.first else { return }
             engine.loadSubtitle(url)
         }
     }
