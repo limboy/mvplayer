@@ -33,6 +33,7 @@
 		6AB3DC94A3EF0B237FB8A328 /* ThumbnailFilmstrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00FBBA5C4122D948B4CEEB70 /* ThumbnailFilmstrip.swift */; };
 		707B90109BC7BEC0213F4CCB /* ExternalProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C161A7144C8A6CC47C678DA /* ExternalProcess.swift */; };
 		725103053D42399B2EAF537F /* FullscreenPlayerPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355615EF1E55E543084C35E1 /* FullscreenPlayerPresenter.swift */; };
+		73F6FE48990BD8F76D846DAE /* TimelinePreviewScrubberTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E6619985A5F3CF623EA1FE /* TimelinePreviewScrubberTests.swift */; };
 		7507A320F5672C4973B540CB /* MediaThumbnailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1517D91C6721AA144D378574 /* MediaThumbnailProvider.swift */; };
 		76AC5DB4BE9F1732F445FDC5 /* MPVPlayerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54248B372A6C3479C6F3BE4C /* MPVPlayerEngine.swift */; };
 		7EB32E0CD0E45C8F4C7D36AC /* MPVCallbackContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 376D5F7D2366B2622B284644 /* MPVCallbackContext.swift */; };
@@ -110,6 +111,7 @@
 
 /* Begin PBXFileReference section */
 		00FBBA5C4122D948B4CEEB70 /* ThumbnailFilmstrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailFilmstrip.swift; sourceTree = "<group>"; };
+		01E6619985A5F3CF623EA1FE /* TimelinePreviewScrubberTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelinePreviewScrubberTests.swift; sourceTree = "<group>"; };
 		0BAF18C6339CF6EC71F9CA44 /* SubtitlePreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitlePreference.swift; sourceTree = "<group>"; };
 		1517D91C6721AA144D378574 /* MediaThumbnailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaThumbnailProvider.swift; sourceTree = "<group>"; };
 		178121889E8D5B2D2E4E5835 /* FolderLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderLibraryTests.swift; sourceTree = "<group>"; };
@@ -312,6 +314,7 @@
 				5BE27FC6F9DA3ACF836DA362 /* PlayerKeyRoutingTests.swift */,
 				8D00763DE77CF504D588F3D4 /* PlayerStateTests.swift */,
 				8DE090111AC674B864D04483 /* ThumbnailFilmstripTests.swift */,
+				01E6619985A5F3CF623EA1FE /* TimelinePreviewScrubberTests.swift */,
 				4A0C9877A4FBADC73A1D2CDD /* WindowStateTests.swift */,
 			);
 			path = MVPlayerTests;
@@ -505,6 +508,7 @@
 				44A5F585D6EBC62A6B33849C /* PlayerKeyRoutingTests.swift in Sources */,
 				BD8A53F83ACE9FB58CB6CF4F /* PlayerStateTests.swift in Sources */,
 				5CDDC091F9951F0D8BFB1B3D /* ThumbnailFilmstripTests.swift in Sources */,
+				73F6FE48990BD8F76D846DAE /* TimelinePreviewScrubberTests.swift in Sources */,
 				D1686F68229307FB773F9FFB /* WindowStateTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

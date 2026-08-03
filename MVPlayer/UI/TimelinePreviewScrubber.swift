@@ -12,25 +12,40 @@ struct TimelinePreviewScrubber: View {
     @State private var previewTime: Double?
     @State private var previewImage: NSImage?
     @State private var previewsUnavailable = false
+    @State private var previewAspectRatio: CGFloat?
     @State private var thumbnailTask: Task<Void, Never>?
     @State private var committedSeekTarget: Double?
     @State private var seekCompletionTask: Task<Void, Never>?
 
     private let thumbnailProvider = MediaThumbnailProvider.shared
 
-    /// The preview frame, at 16:9. Big enough to read the shot at a glance
-    /// rather than having to look for it. Frames are extracted at twice this
-    /// width so the card stays sharp on a Retina display.
-    private static let previewFrameSize = CGSize(width: 240, height: 135)
+    /// The box the preview frame is fitted into. Big enough to read the shot at
+    /// a glance rather than having to look for it. Frames are extracted at
+    /// twice this width so the card stays sharp on a Retina display.
+    ///
+    /// The frame keeps the file's own shape inside the box, so the familiar
+    /// 16:9 card fills the full width while a taller file gives up width
+    /// instead of towering over the controls.
+    private static let previewFrameBounds = CGSize(width: 240, height: 180)
+
+    /// What the card is shaped like until a frame says otherwise.
+    private static let defaultAspectRatio: CGFloat = 16.0 / 9.0
 
     /// The time label, the spacing above it, and the card padding, which sit
     /// below the frame and so push the whole card further up.
     private static let previewCardChrome: CGFloat = 27
 
+    private var previewFrameSize: CGSize {
+        let ratio = previewAspectRatio ?? Self.defaultAspectRatio
+        let bounds = Self.previewFrameBounds
+        let height = min(bounds.height, bounds.width / ratio)
+        return CGSize(width: (height * ratio).rounded(), height: height.rounded())
+    }
+
     /// Where the card's centre goes, keeping a constant gap above the bar
     /// whatever size the frame is.
-    private static var previewCardCenterY: CGFloat {
-        -((previewFrameSize.height + previewCardChrome) / 2 + 9)
+    private var previewCardCenterY: CGFloat {
+        -((previewFrameSize.height + Self.previewCardChrome) / 2 + 9)
     }
 
     var body: some View {
@@ -93,14 +108,14 @@ struct TimelinePreviewScrubber: View {
                 if let previewTime {
                     // Half the card width keeps it inside the bar at either
                     // end instead of hanging off the edge of the controls.
-                    let inset = Self.previewFrameSize.width / 2 + 5
+                    let inset = previewFrameSize.width / 2 + 5
                     previewCard(time: previewTime)
                         .position(
                             x: min(
                                 max(width * ratio(for: previewTime), inset),
                                 max(width - inset, inset)
                             ),
-                            y: Self.previewCardCenterY
+                            y: previewCardCenterY
                         )
                         .allowsHitTesting(false)
                 }
@@ -118,6 +133,9 @@ struct TimelinePreviewScrubber: View {
         .onChange(of: url) { _, _ in
             clearPreview()
             previewsUnavailable = false
+            // The next file has its own shape; the card learns it from the
+            // first frame of that file rather than keeping this one's.
+            previewAspectRatio = nil
             prepareFilmstrip()
         }
         .onChange(of: duration) { _, _ in
@@ -162,6 +180,7 @@ struct TimelinePreviewScrubber: View {
             thumbnailTask = nil
             previewsUnavailable = false
             previewImage = ready
+            adoptAspectRatio(from: ready)
             return time
         }
 
@@ -174,9 +193,33 @@ struct TimelinePreviewScrubber: View {
             previewsUnavailable = image == nil
             if let image {
                 previewImage = image
+                adoptAspectRatio(from: image)
             }
         }
         return time
+    }
+
+    /// Shapes the card like the file it is previewing. The first frame decides
+    /// it and the rest of the file keeps it, so the card cannot change size
+    /// under the pointer when a frame comes back a pixel row shorter.
+    private func adoptAspectRatio(from image: NSImage) {
+        guard previewAspectRatio == nil, let ratio = Self.aspectRatio(of: image) else {
+            return
+        }
+        previewAspectRatio = ratio
+    }
+
+    static func aspectRatio(of image: NSImage) -> CGFloat? {
+        var size = image.size
+        // Pixel dimensions where the representation reports them, so a frame
+        // carrying an unusual DPI is still measured by its own shape.
+        if let rep = image.representations.first, rep.pixelsWide > 0, rep.pixelsHigh > 0 {
+            size = CGSize(width: rep.pixelsWide, height: rep.pixelsHigh)
+        }
+        guard size.width > 0, size.height > 0 else { return nil }
+        // Anything past these is a frame that arrived wrong rather than a video
+        // anyone shot, and letting it through would deform the card.
+        return min(max(size.width / size.height, 0.2), 5)
     }
 
     private func prepareFilmstrip() {
@@ -223,8 +266,8 @@ struct TimelinePreviewScrubber: View {
                     }
                 }
                 .frame(
-                    width: Self.previewFrameSize.width,
-                    height: Self.previewFrameSize.height
+                    width: previewFrameSize.width,
+                    height: previewFrameSize.height
                 )
                 .clipped()
                 .clipShape(RoundedRectangle(cornerRadius: 5))

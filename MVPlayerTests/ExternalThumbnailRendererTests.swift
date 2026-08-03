@@ -7,7 +7,7 @@ final class ExternalThumbnailRendererTests: XCTestCase {
         let arguments = ExternalThumbnailRenderer.ffmpegArguments(
             for: URL(fileURLWithPath: "/videos/clip.mkv"),
             at: 42,
-            maximumWidth: 320
+            maximumEdge: 320
         )
 
         guard
@@ -21,7 +21,69 @@ final class ExternalThumbnailRendererTests: XCTestCase {
         XCTAssertEqual(arguments[inputIndex + 1], "/videos/clip.mkv")
         XCTAssertTrue(arguments.contains("-frames:v"))
         XCTAssertEqual(arguments.last, "pipe:1")
-        XCTAssertTrue(arguments.contains("scale=w='min(iw,320)':h=-2"))
+        XCTAssertTrue(
+            arguments.contains(ExternalThumbnailRenderer.scaleFilter(maximumEdge: 320))
+        )
+    }
+
+    func testTheScaleFilterSquaresThePixelsBeforeBoundingTheFrame() throws {
+        let filter = ExternalThumbnailRenderer.scaleFilter(maximumEdge: 320)
+
+        // The sample aspect ratio has to be applied before the bound, or a
+        // frame is fitted to the box in the shape it was stored rather than
+        // the shape it plays at.
+        let stretch = try XCTUnwrap(filter.range(of: "iw*sar"))
+        let bound = try XCTUnwrap(filter.range(of: "min(iw,320)"))
+        XCTAssertLessThan(stretch.lowerBound, bound.lowerBound)
+        XCTAssertTrue(filter.contains("setsar=1"))
+        XCTAssertTrue(filter.contains("min(ih,320)"))
+        XCTAssertTrue(filter.contains("force_original_aspect_ratio=decrease"))
+    }
+
+    /// A file with non square pixels is the case the shape of a preview used
+    /// to be read from: 320x180 stored, but 1:2 pixels, so it plays as a tall
+    /// 320x360 frame.
+    func testAnamorphicFramesComeOutInTheShapeTheyPlayAt() async throws {
+        let ffmpeg = try requireFFmpeg()
+        let sample = try makeSample(using: ffmpeg, sampleAspectRatio: "1/2")
+        defer { try? FileManager.default.removeItem(at: sample) }
+
+        let renderer = ExternalThumbnailRenderer(tool: .ffmpeg(ffmpeg))
+        let rendered = await renderer.image(for: sample, at: 2, maximumEdge: 240)
+        let image = try XCTUnwrap(rendered)
+        let rep = try XCTUnwrap(image.representations.first)
+
+        XCTAssertEqual(Double(rep.pixelsWide) / Double(rep.pixelsHigh), 320.0 / 360.0, accuracy: 0.02)
+        XCTAssertLessThanOrEqual(max(rep.pixelsWide, rep.pixelsHigh), 240)
+    }
+
+    func testSquarePixelFramesKeepTheirOwnShape() async throws {
+        let ffmpeg = try requireFFmpeg()
+        let sample = try makeSample(using: ffmpeg)
+        defer { try? FileManager.default.removeItem(at: sample) }
+
+        let renderer = ExternalThumbnailRenderer(tool: .ffmpeg(ffmpeg))
+        let rendered = await renderer.image(for: sample, at: 2, maximumEdge: 240)
+        let image = try XCTUnwrap(rendered)
+        let rep = try XCTUnwrap(image.representations.first)
+
+        XCTAssertEqual(Double(rep.pixelsWide) / Double(rep.pixelsHigh), 16.0 / 9.0, accuracy: 0.02)
+    }
+
+    /// Frames smaller than the bound are left alone rather than blown up into
+    /// a soft preview.
+    func testSmallFramesAreNotUpscaled() async throws {
+        let ffmpeg = try requireFFmpeg()
+        let sample = try makeSample(using: ffmpeg)
+        defer { try? FileManager.default.removeItem(at: sample) }
+
+        let renderer = ExternalThumbnailRenderer(tool: .ffmpeg(ffmpeg))
+        let rendered = await renderer.image(for: sample, at: 2, maximumEdge: 800)
+        let image = try XCTUnwrap(rendered)
+        let rep = try XCTUnwrap(image.representations.first)
+
+        XCTAssertEqual(rep.pixelsWide, 320)
+        XCTAssertEqual(rep.pixelsHigh, 180)
     }
 
     func testMPVArgumentsWriteASingleFrameIntoTheOutputDirectory() {
@@ -78,7 +140,7 @@ final class ExternalThumbnailRendererTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: sample) }
 
         let renderer = ExternalThumbnailRenderer(tool: .ffmpeg(ffmpeg))
-        let image = await renderer.image(for: sample, at: 2, maximumWidth: 160)
+        let image = await renderer.image(for: sample, at: 2, maximumEdge: 160)
 
         let unwrapped = try XCTUnwrap(image, "ffmpeg should decode a Matroska frame.")
         XCTAssertEqual(unwrapped.size.width, 160, accuracy: 1)
@@ -119,7 +181,21 @@ final class ExternalThumbnailRendererTests: XCTestCase {
         }
     }
 
+    private func requireFFmpeg() throws -> URL {
+        guard case .ffmpeg(let ffmpeg)? = ExternalThumbnailRenderer.locateTool() else {
+            throw XCTSkip("ffmpeg is not installed in this environment.")
+        }
+        return ffmpeg
+    }
+
     private func makeSampleMatroskaFile(using ffmpeg: URL) throws -> URL {
+        try makeSample(using: ffmpeg)
+    }
+
+    private func makeSample(
+        using ffmpeg: URL,
+        sampleAspectRatio: String? = nil
+    ) throws -> URL {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("MVPlayerThumbnailSample-\(UUID().uuidString).mkv")
         let process = Process()
@@ -133,6 +209,7 @@ final class ExternalThumbnailRendererTests: XCTestCase {
             "-t", "5",
             "-c:v", "libx264",
             "-pix_fmt", "yuv420p",
+        ] + (sampleAspectRatio.map { ["-vf", "setsar=\($0)"] } ?? []) + [
             url.path,
         ]
         process.standardError = FileHandle.nullDevice

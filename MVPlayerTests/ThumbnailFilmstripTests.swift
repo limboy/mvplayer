@@ -38,7 +38,7 @@ final class ThumbnailFilmstripTests: XCTestCase {
         let arguments = ExternalThumbnailRenderer.filmstripArguments(
             for: URL(fileURLWithPath: "/videos/clip.mkv"),
             interval: 2.5,
-            maximumWidth: 192
+            maximumEdge: 192
         )
 
         guard let inputIndex = arguments.firstIndex(of: "-i") else {
@@ -51,7 +51,11 @@ final class ThumbnailFilmstripTests: XCTestCase {
         }
         XCTAssertEqual(arguments[skipIndex + 1], "nokey")
         XCTAssertLessThan(skipIndex, inputIndex)
-        XCTAssertTrue(arguments.contains("fps=1/2.5,scale=w='min(iw,192)':h=-2"))
+        XCTAssertTrue(
+            arguments.contains(
+                "fps=1/2.5," + ExternalThumbnailRenderer.scaleFilter(maximumEdge: 192)
+            )
+        )
         XCTAssertTrue(arguments.contains("mjpeg"))
         XCTAssertEqual(arguments.last, "pipe:1")
         // A single seek argument would limit the pass to one frame.

@@ -50,13 +50,13 @@ final class ExternalThumbnailRenderer: Sendable {
         return false
     }
 
-    func image(for url: URL, at seconds: Int, maximumWidth: Int = 480) async -> NSImage? {
+    func image(for url: URL, at seconds: Int, maximumEdge: Int = 480) async -> NSImage? {
         switch tool {
         case .ffmpeg(let executable):
             let arguments = Self.ffmpegArguments(
                 for: url,
                 at: seconds,
-                maximumWidth: maximumWidth
+                maximumEdge: maximumEdge
             )
             guard
                 let data = await ExternalProcess.run(
@@ -87,7 +87,7 @@ final class ExternalThumbnailRenderer: Sendable {
     func filmstripFrames(
         for url: URL,
         interval: Double,
-        maximumWidth: Int = 480
+        maximumEdge: Int = 480
     ) -> AsyncStream<FilmstripFrame> {
         guard case .ffmpeg(let executable) = tool, interval > 0, interval.isFinite else {
             return AsyncStream { $0.finish() }
@@ -95,7 +95,7 @@ final class ExternalThumbnailRenderer: Sendable {
         let arguments = Self.filmstripArguments(
             for: url,
             interval: interval,
-            maximumWidth: maximumWidth
+            maximumEdge: maximumEdge
         )
         return AsyncStream { continuation in
             let box = ProcessBox()
@@ -158,10 +158,26 @@ final class ExternalThumbnailRenderer: Sendable {
         return Data(frame)
     }
 
+    /// How preview frames are sized.
+    ///
+    /// A decoder hands back frames in storage dimensions, which for a file with
+    /// non square pixels — screen recordings and phone footage often are — is
+    /// not the shape it plays at: this project's own sample stores a portrait
+    /// video as 1304x1080, which is nearly square. The first pass stretches by
+    /// the sample aspect ratio, so the frame is shaped like the video, and the
+    /// second fits it inside a square box, the same bound AVFoundation is given
+    /// on the other extraction path. `sar` is 0 when a file does not say, which
+    /// is the pixels being square.
+    static func scaleFilter(maximumEdge: Int) -> String {
+        "scale=w='if(gt(sar,0),iw*sar,iw)':h='ih',setsar=1,"
+            + "scale=w='min(iw,\(maximumEdge))':h='min(ih,\(maximumEdge))'"
+            + ":force_original_aspect_ratio=decrease:force_divisible_by=2"
+    }
+
     static func filmstripArguments(
         for url: URL,
         interval: Double,
-        maximumWidth: Int
+        maximumEdge: Int
     ) -> [String] {
         [
             "-nostdin",
@@ -175,7 +191,7 @@ final class ExternalThumbnailRenderer: Sendable {
             "-i", url.path,
             "-an", "-sn", "-dn",
             "-vf", "fps=1/\(String(format: "%g", interval)),"
-                + "scale=w='min(iw,\(maximumWidth))':h=-2",
+                + scaleFilter(maximumEdge: maximumEdge),
             // JPEG rather than PNG: a strip is hundreds of frames, and at this
             // size the compression artefacts are invisible.
             "-q:v", "6",
@@ -213,7 +229,7 @@ final class ExternalThumbnailRenderer: Sendable {
     static func ffmpegArguments(
         for url: URL,
         at seconds: Int,
-        maximumWidth: Int
+        maximumEdge: Int
     ) -> [String] {
         [
             "-nostdin",
@@ -226,7 +242,7 @@ final class ExternalThumbnailRenderer: Sendable {
             "-i", url.path,
             "-frames:v", "1",
             "-an", "-sn", "-dn",
-            "-vf", "scale=w='min(iw,\(maximumWidth))':h=-2",
+            "-vf", scaleFilter(maximumEdge: maximumEdge),
             "-f", "image2pipe",
             "-vcodec", "png",
             "pipe:1",
