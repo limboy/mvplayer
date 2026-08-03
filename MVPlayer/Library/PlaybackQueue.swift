@@ -70,6 +70,12 @@ final class PlaybackQueue: ObservableObject {
         }
     }
 
+    func clear() {
+        videos = []
+        current = nil
+        shuffleOrder = []
+    }
+
     func next(automatic: Bool = false) -> URL? {
         guard let current else { return nil }
         if automatic, repeatMode == .one {

@@ -135,6 +135,7 @@ final class FolderLibrary: ObservableObject {
             navigationPath = []
             entries = []
             selectedVideo = nil
+            onVisibleVideosChanged?(nil, [])
         }
         persist()
         rebuildWatcher()

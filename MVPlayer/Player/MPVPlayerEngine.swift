@@ -204,12 +204,15 @@ final class MPVPlayerEngine: @unchecked Sendable {
         }
     }
 
+    @MainActor
     func load(_ url: URL) {
-        Task { @MainActor [weak self] in
-            self?.state.resetForLoad(url)
-        }
+        state.resetForLoad(url)
         command(["loadfile", url.path, "replace"])
         setPaused(false)
+    }
+
+    func stop() {
+        command(["stop"])
     }
 
     func togglePause() {

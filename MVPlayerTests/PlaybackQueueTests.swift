@@ -48,6 +48,18 @@ final class PlaybackQueueTests: XCTestCase {
         XCTAssertEqual(queue.next(), newVideo)
     }
 
+    func testClearRemovesCurrentVideoAndQueue() {
+        let queue = PlaybackQueue()
+        let videos = makeVideos(["A.mp4", "B.mkv"])
+        queue.select(videos[0], from: videos)
+
+        queue.clear()
+
+        XCTAssertTrue(queue.videos.isEmpty)
+        XCTAssertNil(queue.current)
+        XCTAssertNil(queue.next())
+    }
+
     private func makeVideos(_ names: [String]) -> [URL] {
         names.map(folder.appendingPathComponent)
     }

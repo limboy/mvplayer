@@ -30,7 +30,12 @@ final class AppModel: ObservableObject {
         self.progressStore = progressStore
 
         folderLibrary.onVisibleVideosChanged = { [weak self] directory, videos in
-            guard let self, directory == self.queueDirectory else { return }
+            guard let self else { return }
+            guard let directory else {
+                self.closeVideo()
+                return
+            }
+            guard directory == self.queueDirectory else { return }
             self.playbackQueue.updateVideos(videos)
         }
         observePlayerState()
@@ -98,6 +103,21 @@ final class AppModel: ObservableObject {
         engine?.setVolume(playerState.volume + amount)
     }
 
+    func closeVideo() {
+        if playerState.hasMedia {
+            saveCurrentProgress()
+        }
+        pendingResumeURL = nil
+        pendingResumeTime = nil
+        queueDirectory = nil
+        folderLibrary.selectedVideo = nil
+        playbackQueue.clear()
+        engine?.stop()
+        videoView?.setVideoRenderingEnabled(false)
+        playerState.reset()
+        updateNowPlaying()
+    }
+
     func playbackProgress(for url: URL) -> PlaybackProgress? {
         progressStore.progress(for: url)
     }
@@ -116,6 +136,7 @@ final class AppModel: ObservableObject {
     private func loadVideo(_ url: URL) {
         pendingResumeURL = url.standardizedFileURL
         pendingResumeTime = progressStore.progress(for: url)?.position
+        videoView?.setVideoRenderingEnabled(true)
         engine?.load(url)
         updateNowPlaying()
     }

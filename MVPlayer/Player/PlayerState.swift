@@ -74,4 +74,15 @@ final class PlayerState: ObservableObject {
         subtitles = []
         audioTracks = []
     }
+
+    func reset() {
+        isPaused = true
+        isLoading = false
+        currentTime = 0
+        duration = 0
+        currentURL = nil
+        subtitles = []
+        audioTracks = []
+        errorMessage = nil
+    }
 }

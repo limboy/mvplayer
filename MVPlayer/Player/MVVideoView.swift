@@ -29,6 +29,7 @@ private final class MVOpenGLRenderWorker: @unchecked Sendable {
     private let stateLock = NSLock()
     private var context: NSOpenGLContext?
     private var isActive = false
+    private var isVideoRenderingEnabled = false
 
     init(engine: MPVPlayerEngine) {
         self.engine = engine
@@ -44,6 +45,17 @@ private final class MVOpenGLRenderWorker: @unchecked Sendable {
     func enqueue(width: Int, height: Int) {
         queue.async { [weak self] in
             self?.render(width: width, height: height)
+        }
+    }
+
+    func setVideoRenderingEnabled(_ enabled: Bool) {
+        stateLock.withLock {
+            isVideoRenderingEnabled = enabled
+        }
+        if !enabled {
+            queue.async { [weak self] in
+                self?.clearSurface()
+            }
         }
     }
 
@@ -66,7 +78,7 @@ private final class MVOpenGLRenderWorker: @unchecked Sendable {
 
     private func render(width: Int, height: Int) {
         guard let context = stateLock.withLock({
-            isActive ? self.context : nil
+            isActive && isVideoRenderingEnabled ? self.context : nil
         }) else { return }
 
         context.lock()
@@ -84,6 +96,21 @@ private final class MVOpenGLRenderWorker: @unchecked Sendable {
         )
         context.flushBuffer()
         mvp_mpv_report_swap(engine.rawHandle)
+    }
+
+    private func clearSurface() {
+        guard let context = stateLock.withLock({
+            isActive && !isVideoRenderingEnabled ? self.context : nil
+        }) else { return }
+
+        context.lock()
+        defer { context.unlock() }
+        context.makeCurrentContext()
+        defer { NSOpenGLContext.clearCurrentContext() }
+        glDisable(GLenum(GL_SCISSOR_TEST))
+        glClearColor(0, 0, 0, 1)
+        glClear(GLbitfield(GL_COLOR_BUFFER_BIT))
+        context.flushBuffer()
     }
 }
 
@@ -188,6 +215,13 @@ final class MVVideoView: NSOpenGLView {
         let width = Int(bounds.width * scale)
         let height = Int(bounds.height * scale)
         renderWorker.enqueue(width: width, height: height)
+    }
+
+    func setVideoRenderingEnabled(_ enabled: Bool) {
+        renderWorker.setVideoRenderingEnabled(enabled)
+        if enabled {
+            needsDisplay = true
+        }
     }
 
     func detachRenderer() {

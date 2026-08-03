@@ -40,6 +40,14 @@ final class FolderLibraryTests: XCTestCase {
         XCTAssertEqual(library.navigationPath.count, 2)
         library.goBack()
         XCTAssertEqual(library.currentDirectory, root.standardizedFileURL)
+
+        var returnedToRootList = false
+        library.onVisibleVideosChanged = { directory, _ in
+            returnedToRootList = directory == nil
+        }
+        library.goBack()
+        XCTAssertTrue(library.isAtRootList)
+        XCTAssertTrue(returnedToRootList)
     }
 
     func testDuplicateRootsAreIgnoredAndPersisted() throws {
