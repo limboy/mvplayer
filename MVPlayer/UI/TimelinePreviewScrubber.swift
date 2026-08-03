@@ -12,6 +12,8 @@ struct TimelinePreviewScrubber: View {
     @State private var previewTime: Double?
     @State private var previewImage: NSImage?
     @State private var thumbnailTask: Task<Void, Never>?
+    @State private var committedSeekTarget: Double?
+    @State private var seekCompletionTask: Task<Void, Never>?
 
     private let thumbnailProvider = MediaThumbnailProvider.shared
 
@@ -38,15 +40,23 @@ struct TimelinePreviewScrubber: View {
                     .gesture(
                         DragGesture(minimumDistance: 0)
                             .onChanged { value in
+                                if committedSeekTarget != nil {
+                                    seekCompletionTask?.cancel()
+                                    committedSeekTarget = nil
+                                }
+                                updatePreview(at: value.location.x, width: width)
                                 if !isSeeking {
                                     isSeeking = true
                                 }
-                                updatePreview(at: value.location.x, width: width)
                             }
                             .onEnded { value in
-                                updatePreview(at: value.location.x, width: width)
-                                onCommit(seekValue)
-                                isSeeking = false
+                                let destination = updatePreview(
+                                    at: value.location.x,
+                                    width: width
+                                ) ?? seekValue
+                                committedSeekTarget = destination
+                                onCommit(destination)
+                                scheduleSeekCompletionFallback()
                                 previewTime = nil
                                 previewImage = nil
                             }
@@ -67,6 +77,12 @@ struct TimelinePreviewScrubber: View {
         .frame(minWidth: 80, minHeight: 28, maxHeight: 28)
         .onDisappear {
             thumbnailTask?.cancel()
+            seekCompletionTask?.cancel()
+        }
+        .onChange(of: currentTime) { _, newTime in
+            guard let target = committedSeekTarget else { return }
+            guard abs(newTime - target) <= 0.5 else { return }
+            finishCommittedSeek()
         }
         .opacity(duration > 0 ? 1 : 0.55)
         .allowsHitTesting(duration > 0)
@@ -77,8 +93,9 @@ struct TimelinePreviewScrubber: View {
         return min(max(time / duration, 0), 1)
     }
 
-    private func updatePreview(at x: CGFloat, width: CGFloat) {
-        guard duration > 0, let url else { return }
+    @discardableResult
+    private func updatePreview(at x: CGFloat, width: CGFloat) -> Double? {
+        guard duration > 0, let url else { return nil }
         let time = min(max(Double(x / width) * duration, 0), duration)
         seekValue = time
         previewTime = time
@@ -88,6 +105,23 @@ struct TimelinePreviewScrubber: View {
             guard !Task.isCancelled else { return }
             previewImage = image
         }
+        return time
+    }
+
+    private func scheduleSeekCompletionFallback() {
+        seekCompletionTask?.cancel()
+        seekCompletionTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            finishCommittedSeek()
+        }
+    }
+
+    private func finishCommittedSeek() {
+        seekCompletionTask?.cancel()
+        seekCompletionTask = nil
+        committedSeekTarget = nil
+        isSeeking = false
     }
 
     @ViewBuilder
