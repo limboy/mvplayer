@@ -24,14 +24,14 @@ final class ExternalThumbnailRenderer: Sendable {
     // One frame at a time. Scrubbing cancels and replaces requests quickly,
     // and a serial queue keeps that from turning into a burst of processes.
     private static let workQueue = DispatchQueue(
-        label: "com.example.MVPlayer.ExternalThumbnailRenderer",
+        label: "me.limboy.mvplayer.ExternalThumbnailRenderer",
         qos: .userInitiated
     )
 
     // Filmstrips run for as long as it takes to read a whole file, so they get
     // their own queue instead of blocking the single frame requests behind it.
     private static let filmstripQueue = DispatchQueue(
-        label: "com.example.MVPlayer.ExternalThumbnailRenderer.filmstrip",
+        label: "me.limboy.mvplayer.ExternalThumbnailRenderer.filmstrip",
         qos: .utility
     )
 

@@ -22,7 +22,7 @@ private func mpvRenderUpdate(context: UnsafeMutableRawPointer?) {
 private final class MVOpenGLRenderWorker: @unchecked Sendable {
     private let engine: MPVPlayerEngine
     private let queue = DispatchQueue(
-        label: "com.example.MVPlayer.opengl-render",
+        label: "me.limboy.mvplayer.opengl-render",
         qos: .default
     )
     private let stateLock = NSLock()

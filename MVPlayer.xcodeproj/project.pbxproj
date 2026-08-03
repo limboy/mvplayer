@@ -548,7 +548,7 @@
 					"$(inherited)",
 					"-ldl",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.MVPlayer;
+				PRODUCT_BUNDLE_IDENTIFIER = me.limboy.mvplayer;
 				PRODUCT_MODULE_NAME = MVPlayer;
 				PRODUCT_NAME = MVPlayer;
 				SDKROOT = macosx;
@@ -566,7 +566,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.MVPlayerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = me.limboy.mvplayer.tests;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MVPlayer.app/Contents/MacOS/MVPlayer";
 			};
@@ -654,7 +654,7 @@
 					"$(inherited)",
 					"-ldl",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.MVPlayer;
+				PRODUCT_BUNDLE_IDENTIFIER = me.limboy.mvplayer;
 				PRODUCT_MODULE_NAME = MVPlayer;
 				PRODUCT_NAME = MVPlayer;
 				SDKROOT = macosx;
@@ -743,7 +743,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.MVPlayerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = me.limboy.mvplayer.tests;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MVPlayer.app/Contents/MacOS/MVPlayer";
 			};
@@ -768,7 +768,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.CMPVShim;
+				PRODUCT_BUNDLE_IDENTIFIER = me.limboy.mvplayer.CMPVShim;
 				PRODUCT_MODULE_NAME = CMPVShim;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -795,7 +795,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.CMPVShim;
+				PRODUCT_BUNDLE_IDENTIFIER = me.limboy.mvplayer.CMPVShim;
 				PRODUCT_MODULE_NAME = CMPVShim;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;

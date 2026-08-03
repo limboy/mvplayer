@@ -30,7 +30,7 @@ final class MPVPlayerEngine: @unchecked Sendable {
     /// taken beneath mpv's; a caller holding that same lock while it waits to
     /// enter mpv closes the cycle. Ordering the work on a serial queue needs no
     /// lock on either side.
-    private let eventQueue = DispatchQueue(label: "com.example.MVPlayer.mpv-events")
+    private let eventQueue = DispatchQueue(label: "me.limboy.mvplayer.mpv-events")
 
     /// Whether the handle has been freed. Read and written on `eventQueue`
     /// only, and kept in a box because `shutdown` runs from deinit, where the

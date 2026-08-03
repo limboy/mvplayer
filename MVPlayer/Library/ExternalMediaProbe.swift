@@ -27,7 +27,7 @@ enum ExternalMediaProbe {
     /// them in a line. Utility priority because nothing is waiting on the
     /// answer: rows show what they have and fill in when it arrives.
     private static let workQueue = DispatchQueue(
-        label: "com.example.MVPlayer.ExternalMediaProbe",
+        label: "me.limboy.mvplayer.ExternalMediaProbe",
         qos: .utility
     )
 

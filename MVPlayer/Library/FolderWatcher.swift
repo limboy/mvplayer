@@ -2,7 +2,7 @@ import CoreServices
 import Foundation
 
 final class FolderWatcher: @unchecked Sendable {
-    private let queue = DispatchQueue(label: "com.example.MVPlayer.folder-events")
+    private let queue = DispatchQueue(label: "me.limboy.mvplayer.folder-events")
     private let onChange: @Sendable () -> Void
     private var stream: FSEventStreamRef?
 
