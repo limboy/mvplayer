@@ -595,8 +595,8 @@ int mvp_mpv_render(
         .internal_format = 0
     };
     int flip = flip_y ? 1 : 0;
-    // The view renders on the main thread. Do not make that thread wait for
-    // mpv's target presentation time; AppKit will schedule the next draw.
+    // The render worker should not wait for mpv's target presentation time;
+    // AppKit and the update callback schedule the next draw.
     int block_for_target_time = 0;
     mpv_render_param parameters[] = {
         { MPV_RENDER_PARAM_OPENGL_FBO, &fbo },

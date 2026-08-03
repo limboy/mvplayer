@@ -15,9 +15,7 @@ private func mpvOpenGLGetProcAddress(
 private func mpvRenderUpdate(context: UnsafeMutableRawPointer?) {
     guard let context else { return }
     let view = Unmanaged<MVVideoView>.fromOpaque(context).takeUnretainedValue()
-    DispatchQueue.main.async {
-        view.needsDisplay = true
-    }
+    view.requestDisplay()
 }
 
 private final class MVOpenGLRenderWorker: @unchecked Sendable {
@@ -30,6 +28,8 @@ private final class MVOpenGLRenderWorker: @unchecked Sendable {
     private var context: NSOpenGLContext?
     private var isActive = false
     private var isVideoRenderingEnabled = false
+    private var pendingSize: (width: Int, height: Int)?
+    private var renderScheduled = false
 
     init(engine: MPVPlayerEngine) {
         self.engine = engine
@@ -43,14 +43,30 @@ private final class MVOpenGLRenderWorker: @unchecked Sendable {
     }
 
     func enqueue(width: Int, height: Int) {
+        let shouldSchedule = stateLock.withLock {
+            guard isActive, isVideoRenderingEnabled else { return false }
+
+            // During a window animation AppKit can request draws faster than the
+            // OpenGL surface can be resized and rendered. Keep only the newest
+            // size instead of building a queue of already-obsolete frames.
+            pendingSize = (width, height)
+            guard !renderScheduled else { return false }
+            renderScheduled = true
+            return true
+        }
+        guard shouldSchedule else { return }
+
         queue.async { [weak self] in
-            self?.render(width: width, height: height)
+            self?.drainPendingRenders()
         }
     }
 
     func setVideoRenderingEnabled(_ enabled: Bool) {
         stateLock.withLock {
             isVideoRenderingEnabled = enabled
+            if !enabled {
+                pendingSize = nil
+            }
         }
         if !enabled {
             queue.async { [weak self] in
@@ -62,6 +78,7 @@ private final class MVOpenGLRenderWorker: @unchecked Sendable {
     func deactivate() {
         stateLock.withLock {
             isActive = false
+            pendingSize = nil
         }
         queue.async { [self] in
             guard let context = stateLock.withLock({ self.context }) else { return }
@@ -98,6 +115,26 @@ private final class MVOpenGLRenderWorker: @unchecked Sendable {
         mvp_mpv_report_swap(engine.rawHandle)
     }
 
+    private func drainPendingRenders() {
+        while true {
+            let size = stateLock.withLock { () -> (width: Int, height: Int)? in
+                guard isActive, isVideoRenderingEnabled else {
+                    pendingSize = nil
+                    renderScheduled = false
+                    return nil
+                }
+                guard let pendingSize else {
+                    renderScheduled = false
+                    return nil
+                }
+                self.pendingSize = nil
+                return pendingSize
+            }
+            guard let size else { return }
+            render(width: size.width, height: size.height)
+        }
+    }
+
     private func clearSurface() {
         guard let context = stateLock.withLock({
             isActive && !isVideoRenderingEnabled ? self.context : nil
@@ -119,6 +156,8 @@ final class MVVideoView: NSOpenGLView {
     fileprivate nonisolated(unsafe) let openGLLibrary: UnsafeMutableRawPointer?
     private let renderWorker: MVOpenGLRenderWorker
     private var rendererInitialized = false
+    private nonisolated let displayRequestLock = NSLock()
+    private nonisolated(unsafe) var displayRequestPending = false
 
     init(engine: MPVPlayerEngine) {
         self.engine = engine
@@ -215,6 +254,23 @@ final class MVVideoView: NSOpenGLView {
         let width = Int(bounds.width * scale)
         let height = Int(bounds.height * scale)
         renderWorker.enqueue(width: width, height: height)
+    }
+
+    fileprivate nonisolated func requestDisplay() {
+        let shouldSchedule = displayRequestLock.withLock {
+            guard !displayRequestPending else { return false }
+            displayRequestPending = true
+            return true
+        }
+        guard shouldSchedule else { return }
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.displayRequestLock.withLock {
+                self.displayRequestPending = false
+            }
+            self.needsDisplay = true
+        }
     }
 
     func setVideoRenderingEnabled(_ enabled: Bool) {
