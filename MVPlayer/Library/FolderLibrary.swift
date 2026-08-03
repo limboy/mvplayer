@@ -326,6 +326,11 @@ final class FolderLibrary: ObservableObject {
         }
 
         roots = storedRoots.map { stored in
+            // Nothing reads this back. A stale bookmark still resolves to the
+            // right place, and the persist below rewrites every bookmark from
+            // the URL it resolved to, so staleness is answered by that rather
+            // than by branching here. The parameter is not optional, hence the
+            // variable.
             var isStale = false
             let resolvedURL = stored.bookmark.flatMap {
                 try? URL(
@@ -344,9 +349,10 @@ final class FolderLibrary: ObservableObject {
         }
         sortRoots()
 
-        if storedRoots.count == roots.count {
-            persist()
-        }
+        // Writes the roots straight back, which is what refreshes bookmarks
+        // that have gone stale. The count check this used to carry could not
+        // fail, because `map` returns one root per stored root.
+        persist()
     }
 
     private func persist() {

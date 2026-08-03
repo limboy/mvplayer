@@ -24,6 +24,14 @@ final class PlaybackProgressStore: ObservableObject {
     /// meant normalizing every stored URL on each of those calls.
     private var entriesByURL: [URL: PlaybackProgress] = [:]
 
+    /// How many files to remember. Entries are only ever added, and nothing
+    /// notices when a file is deleted or a volume goes away, so without a
+    /// ceiling the store grows for as long as the app is used. Cutting the
+    /// oldest is safe: `entries` is kept sorted by `lastPlayed`, so what falls
+    /// off the end is whatever has gone longest without being watched, and
+    /// losing a resume point that old costs the viewer a seek at worst.
+    static let maximumEntryCount = 500
+
     private let storageURL: URL
 
     init(storageURL: URL? = nil) {
@@ -66,6 +74,7 @@ final class PlaybackProgressStore: ObservableObject {
         }
         entries.sort { $0.lastPlayed > $1.lastPlayed }
         entriesByURL[normalizedURL] = value
+        trimToLimit()
         persist()
     }
 
@@ -92,6 +101,26 @@ final class PlaybackProgressStore: ObservableObject {
             // keeps the more recent entry, which sorted first.
             uniquingKeysWith: { first, _ in first }
         )
+        // A file written before the limit existed, or by a newer build, can be
+        // over it. Trimming on the way in keeps the ceiling honest without
+        // waiting for the next thing to be watched.
+        trimToLimit()
+    }
+
+    /// Drops the least recently played entries once the store is over its
+    /// ceiling. Relies on `entries` already being sorted.
+    private func trimToLimit() {
+        guard entries.count > Self.maximumEntryCount else { return }
+        for dropped in entries[Self.maximumEntryCount...] {
+            let key = dropped.url.standardizedFileURL
+            // A restored file can hold the same path spelled two ways, and the
+            // lookup kept the more recent of them. Only clear the key when the
+            // entry being dropped is the one standing in it.
+            if entriesByURL[key] == dropped {
+                entriesByURL[key] = nil
+            }
+        }
+        entries.removeSubrange(Self.maximumEntryCount...)
     }
 
     private func persist() {

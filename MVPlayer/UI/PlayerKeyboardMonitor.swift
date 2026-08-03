@@ -61,6 +61,11 @@ enum PlayerKeyRouting {
     /// The responder chain is walked rather than only the first responder
     /// itself, because a list hands focus to a view inside one of its rows and
     /// the table that would move its selection sits further up.
+    ///
+    /// Main actor because walking that chain reads `nextResponder`, and the
+    /// only caller is a key event monitor, which AppKit runs on the main thread
+    /// anyway.
+    @MainActor
     static func belongsToPlayer(_ key: PlayerKey, firstResponder: NSResponder?) -> Bool {
         var responder = firstResponder
         while let current = responder {
