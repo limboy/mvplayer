@@ -29,4 +29,22 @@ final class PlayerStateTests: XCTestCase {
         XCTAssertEqual(state.duration, 0)
         XCTAssertTrue(state.isLoading)
     }
+
+    func testUnlabelledAudioTracksFallBackToTheirIdentifier() {
+        // A file can carry several audio tracks with no title, language, or
+        // codec between them. Without the identifier every entry in the menu
+        // reads the same and there is no way to tell them apart.
+        let tracks = [Int64(1), Int64(2)].map { id in
+            AudioTrack(
+                id: id,
+                title: "",
+                language: nil,
+                codec: nil,
+                isExternal: false,
+                isSelected: false
+            )
+        }
+
+        XCTAssertEqual(tracks.map(\.displayName), ["Audio 1", "Audio 2"])
+    }
 }

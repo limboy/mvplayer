@@ -40,7 +40,7 @@ struct AudioTrack: Identifiable, Equatable, Sendable {
         if let codec, !codec.isEmpty {
             return codec.uppercased()
         }
-        return "Audio (id)"
+        return "Audio \(id)"
     }
 }
 
