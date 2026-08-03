@@ -42,27 +42,47 @@ struct MediaMetadata: Equatable, Sendable {
         return String(format: "%02d:%02d", minutes, remainingSeconds)
     }
 
+    /// Reads what the file has to say about itself.
+    ///
+    /// AVFoundation answers first, and for a Matroska, AVI or WebM file it
+    /// answers nothing at all: it cannot open those containers, so there is no
+    /// duration and no video track to ask about the picture, however ordinary
+    /// the contents. The row was left showing a file size and four blanks. When
+    /// that happens the question goes to ffprobe or mpv instead, the same tools
+    /// the thumbnails already fall back to. With neither installed the row
+    /// keeps its file size, which is read from the filesystem and does not
+    /// depend on anything being able to open the file.
     static func load(for url: URL) async -> MediaMetadata? {
         let values = try? url.resourceValues(forKeys: [.fileSizeKey])
         let fileSize = Int64(values?.fileSize ?? 0)
-        let asset = AVAsset(url: url)
+        let asset = AVURLAsset(url: url)
         let duration = (try? await asset.load(.duration))?.seconds ?? .nan
         let videoTracks = (try? await asset.loadTracks(withMediaType: .video)) ?? []
         let videoTrack = videoTracks.first
         let naturalSize = try? await videoTrack?.load(.naturalSize)
-        let width = naturalSize.map { Int(abs($0.width.rounded())) }
-        let height = naturalSize.map { Int(abs($0.height.rounded())) }
-        let frameRate = try? await videoTrack?.load(.nominalFrameRate)
+        var width = naturalSize.map { Int(abs($0.width.rounded())) }
+        var height = naturalSize.map { Int(abs($0.height.rounded())) }
+        var frameRate = (try? await videoTrack?.load(.nominalFrameRate)).map(Double.init)
+        var seconds = duration.isFinite && duration > 0 ? duration : nil
 
-        if fileSize == 0, !duration.isFinite, videoTrack == nil {
+        if videoTrack == nil || seconds == nil,
+           let probed = await ExternalMediaProbe.metadata(for: url)
+        {
+            seconds = seconds ?? probed.duration.flatMap { $0.isFinite && $0 > 0 ? $0 : nil }
+            width = width ?? probed.width
+            height = height ?? probed.height
+            frameRate = frameRate ?? probed.frameRate
+        }
+
+        if fileSize == 0, seconds == nil, width == nil {
             return nil
         }
         return MediaMetadata(
             fileSize: fileSize,
-            duration: duration.isFinite && duration > 0 ? duration : nil,
+            duration: seconds,
             width: width,
             height: height,
-            frameRate: frameRate.map(Double.init)
+            frameRate: frameRate
         )
     }
 }

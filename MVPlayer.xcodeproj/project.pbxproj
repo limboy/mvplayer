@@ -13,6 +13,7 @@
 		0FE86D9328BD6B36115C4240 /* SubtitlePreference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAF18C6339CF6EC71F9CA44 /* SubtitlePreference.swift */; };
 		1764362694E6533DC3206F29 /* ExternalThumbnailRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9FE539388822415A5C9AF9 /* ExternalThumbnailRenderer.swift */; };
 		1A96B555B852C8ADED3063F9 /* MVPlayerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A734080EC5730DBF0918ED0 /* MVPlayerApp.swift */; };
+		1D89B287CEFC64B649847DAF /* ExternalMediaProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF86CEF8963F3910E1B14F28 /* ExternalMediaProbe.swift */; };
 		224693807487630483B03359 /* PlayerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB70673E49BA482CE7855569 /* PlayerState.swift */; };
 		2CD1C7D40A5B25C06B7705A6 /* LibMPVSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52736CD6487176F53273DFA7 /* LibMPVSetupView.swift */; };
 		3052004CBAC853FF3305E4D9 /* PlaybackQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F5DCDC250DD95C1ECC84E7 /* PlaybackQueueTests.swift */; };
@@ -22,6 +23,7 @@
 		44A5F585D6EBC62A6B33849C /* PlayerKeyRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE27FC6F9DA3ACF836DA362 /* PlayerKeyRoutingTests.swift */; };
 		4500916E4C767AF575F92A05 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FF109F6FEADAED14509CD98 /* ContentView.swift */; };
 		485DDAF467C1BBE3F8EA1DDE /* PlaybackProgressStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5394F98A7D523C014ADFB6F6 /* PlaybackProgressStore.swift */; };
+		4E14083D841191B11D0DB719 /* ExternalMediaProbeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B1694E77667CDB81839503 /* ExternalMediaProbeTests.swift */; };
 		500B7B34711E3ACAF19AD6AD /* FolderLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CEE9DC83112344B6879958 /* FolderLibrary.swift */; };
 		5130A4033E7F95E8BE61DB52 /* MPVCallbackContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB9DAA3E8ACE8EDAA4F4195 /* MPVCallbackContextTests.swift */; };
 		5CB72F36D777FC0007486AE3 /* PlayerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9FE8521908012F2D790BA23 /* PlayerContainerView.swift */; };
@@ -29,6 +31,7 @@
 		672A01DCBC0F2FF4B70CDD69 /* FolderLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 178121889E8D5B2D2E4E5835 /* FolderLibraryTests.swift */; };
 		68911125715ED50FB78EEC0E /* PlaybackSleepPreventionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80FBBF95FE05D8F65B8A3EC /* PlaybackSleepPreventionTests.swift */; };
 		6AB3DC94A3EF0B237FB8A328 /* ThumbnailFilmstrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00FBBA5C4122D948B4CEEB70 /* ThumbnailFilmstrip.swift */; };
+		707B90109BC7BEC0213F4CCB /* ExternalProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C161A7144C8A6CC47C678DA /* ExternalProcess.swift */; };
 		725103053D42399B2EAF537F /* FullscreenPlayerPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 355615EF1E55E543084C35E1 /* FullscreenPlayerPresenter.swift */; };
 		7507A320F5672C4973B540CB /* MediaThumbnailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1517D91C6721AA144D378574 /* MediaThumbnailProvider.swift */; };
 		76AC5DB4BE9F1732F445FDC5 /* MPVPlayerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54248B372A6C3479C6F3BE4C /* MPVPlayerEngine.swift */; };
@@ -134,6 +137,7 @@
 		8D00763DE77CF504D588F3D4 /* PlayerStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerStateTests.swift; sourceTree = "<group>"; };
 		8DE090111AC674B864D04483 /* ThumbnailFilmstripTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailFilmstripTests.swift; sourceTree = "<group>"; };
 		9B0A64AA22AE8287477B9CB1 /* LibMPVLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibMPVLoaderTests.swift; sourceTree = "<group>"; };
+		9C161A7144C8A6CC47C678DA /* ExternalProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalProcess.swift; sourceTree = "<group>"; };
 		9C5E3C24BFFBDB6A9C17B81D /* FolderBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderBrowserView.swift; sourceTree = "<group>"; };
 		A30502862EAE15F85545A309 /* ExternalThumbnailRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalThumbnailRendererTests.swift; sourceTree = "<group>"; };
 		A6B7A073254AD11C705C72BD /* CMPVShim.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CMPVShim.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -142,9 +146,11 @@
 		B0F5DCDC250DD95C1ECC84E7 /* PlaybackQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackQueueTests.swift; sourceTree = "<group>"; };
 		B53BB1FECCFDB22DC4EA4792 /* FolderWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderWatcher.swift; sourceTree = "<group>"; };
 		BAC07C51A49B82DA05357675 /* VideoSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoSurface.swift; sourceTree = "<group>"; };
+		BF86CEF8963F3910E1B14F28 /* ExternalMediaProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalMediaProbe.swift; sourceTree = "<group>"; };
 		C0C92D0B421C0D1D7FD4A4F9 /* MPVPlayerEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPVPlayerEngineTests.swift; sourceTree = "<group>"; };
 		C112FA2F6E5578B9189C594C /* MVPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MVPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5F53E3BD5B82B25608D80C2 /* WindowState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowState.swift; sourceTree = "<group>"; };
+		C7B1694E77667CDB81839503 /* ExternalMediaProbeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalMediaProbeTests.swift; sourceTree = "<group>"; };
 		D37060EDEE2386D81EF2BBE7 /* MVPlayer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MVPlayer.entitlements; sourceTree = "<group>"; };
 		D87F49829CC27CC6B077C53F /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		DB0DEA414CD839046A142BE1 /* PlaybackQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackQueue.swift; sourceTree = "<group>"; };
@@ -231,6 +237,8 @@
 		B791DDE53A55EEABC243BC44 /* Library */ = {
 			isa = PBXGroup;
 			children = (
+				BF86CEF8963F3910E1B14F28 /* ExternalMediaProbe.swift */,
+				9C161A7144C8A6CC47C678DA /* ExternalProcess.swift */,
 				8B9FE539388822415A5C9AF9 /* ExternalThumbnailRenderer.swift */,
 				E0CEE9DC83112344B6879958 /* FolderLibrary.swift */,
 				B53BB1FECCFDB22DC4EA4792 /* FolderWatcher.swift */,
@@ -291,6 +299,7 @@
 		DBBA43F6884D955F0ECD042B /* MVPlayerTests */ = {
 			isa = PBXGroup;
 			children = (
+				C7B1694E77667CDB81839503 /* ExternalMediaProbeTests.swift */,
 				A30502862EAE15F85545A309 /* ExternalThumbnailRendererTests.swift */,
 				178121889E8D5B2D2E4E5835 /* FolderLibraryTests.swift */,
 				9B0A64AA22AE8287477B9CB1 /* LibMPVLoaderTests.swift */,
@@ -449,6 +458,8 @@
 			files = (
 				B369F2B940C260E43C2DF5E6 /* AppModel.swift in Sources */,
 				4500916E4C767AF575F92A05 /* ContentView.swift in Sources */,
+				1D89B287CEFC64B649847DAF /* ExternalMediaProbe.swift in Sources */,
+				707B90109BC7BEC0213F4CCB /* ExternalProcess.swift in Sources */,
 				1764362694E6533DC3206F29 /* ExternalThumbnailRenderer.swift in Sources */,
 				901251B986400022D1C75058 /* FolderBrowserView.swift in Sources */,
 				500B7B34711E3ACAF19AD6AD /* FolderLibrary.swift in Sources */,
@@ -481,6 +492,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E14083D841191B11D0DB719 /* ExternalMediaProbeTests.swift in Sources */,
 				F25FEA260D3F99AD5ABABE5A /* ExternalThumbnailRendererTests.swift in Sources */,
 				672A01DCBC0F2FF4B70CDD69 /* FolderLibraryTests.swift in Sources */,
 				9FB2F1E46CEE3F2E2F82C65D /* LibMPVLoaderTests.swift in Sources */,
