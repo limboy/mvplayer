@@ -395,6 +395,7 @@ MVPMPVPlayer *mvp_mpv_create(char *error_buffer, size_t error_buffer_size) {
     player->observe_property(player->handle, 4, "volume", MPV_FORMAT_DOUBLE);
     player->observe_property(player->handle, 5, "mute", MPV_FORMAT_FLAG);
     player->observe_property(player->handle, 6, "track-list", MPV_FORMAT_NONE);
+    player->observe_property(player->handle, 7, "speed", MPV_FORMAT_DOUBLE);
 
     write_error(error_buffer, error_buffer_size, "");
     return player;

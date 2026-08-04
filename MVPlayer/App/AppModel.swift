@@ -147,6 +147,14 @@ final class AppModel: ObservableObject {
         engine?.setVolume(playerState.volume + amount)
     }
 
+    func setSpeed(_ speed: Double) {
+        engine?.setSpeed(speed)
+    }
+
+    func changeSpeed(by amount: Double) {
+        engine?.setSpeed(playerState.speed + amount)
+    }
+
     func closeVideo() {
         if playerState.hasMedia {
             saveCurrentProgress()

@@ -209,6 +209,8 @@ final class MPVPlayerEngine: @unchecked Sendable {
                     state.volume = min(max(number, 0), 100)
                 case "mute" where valueType == MVP_MPV_VALUE_FLAG:
                     state.isMuted = flag
+                case "speed" where valueType == MVP_MPV_VALUE_DOUBLE:
+                    state.speed = number
                 default:
                     break
                 }
@@ -369,6 +371,10 @@ final class MPVPlayerEngine: @unchecked Sendable {
 
     func setVolume(_ volume: Double) {
         setDouble(property: "volume", value: min(max(volume, 0), 100))
+    }
+
+    func setSpeed(_ speed: Double) {
+        setDouble(property: "speed", value: min(max(speed, 0.25), 4))
     }
 
     func toggleMute() {

@@ -330,6 +330,7 @@ private struct PlayerControlsView: View {
     @ViewBuilder
     private var secondaryControls: some View {
         Group {
+            speedMenu
             audioMenu
             subtitleMenu
 
@@ -419,6 +420,45 @@ private struct PlayerControlsView: View {
             .frame(width: 220)
         }
         .help("Volume")
+    }
+
+    private static let speedPresets: [Double] = [0.5, 0.75, 1, 1.25, 1.5, 2]
+
+    private var speedMenu: some View {
+        Menu {
+            ForEach(Self.speedPresets, id: \.self) { preset in
+                trackToggle(
+                    speedLabel(preset),
+                    selected: abs(state.speed - preset) < 0.001
+                ) {
+                    appModel.setSpeed(preset)
+                }
+            }
+        } label: {
+            Text(speedLabel(state.speed))
+                .font(.system(size: 12, weight: .semibold))
+                .monospacedDigit()
+                .frame(minWidth: 26, minHeight: 22)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Playback Speed")
+    }
+
+    private func speedLabel(_ speed: Double) -> String {
+        let rounded = (speed * 100).rounded() / 100
+        if rounded == rounded.rounded() {
+            return "\(Int(rounded))x"
+        }
+        var text = String(format: "%.2f", rounded)
+        while text.hasSuffix("0") {
+            text.removeLast()
+        }
+        if text.hasSuffix(".") {
+            text.removeLast()
+        }
+        return "\(text)x"
     }
 
     private var subtitleMenu: some View {

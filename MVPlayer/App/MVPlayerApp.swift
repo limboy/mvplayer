@@ -156,6 +156,20 @@ struct PlaybackCommands: Commands {
 
             Divider()
 
+            Button("Increase Speed") {
+                target?.appModel.changeSpeed(by: 0.25)
+            }
+
+            Button("Decrease Speed") {
+                target?.appModel.changeSpeed(by: -0.25)
+            }
+
+            Button("Reset Speed") {
+                target?.appModel.setSpeed(1)
+            }
+
+            Divider()
+
             Button(isFullscreen ? "Exit Full Screen" : "Enter Full Screen") {
                 target?.windowState.toggleFullscreen()
             }
