@@ -386,6 +386,7 @@
 				94D301A148C88F1FF9978637 /* Resources */,
 				85B8074C5A82BABD51B49D02 /* Frameworks */,
 				C1750436186DF525B5C7C99F /* Embed Frameworks */,
+				665ED33B35E3C92F06399B52 /* Embed mpv runtime */,
 			);
 			buildRules = (
 			);
@@ -468,6 +469,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		665ED33B35E3C92F06399B52 /* Embed mpv runtime */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed mpv runtime";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/usr/bin/env bash\n#\n# Xcode \"Embed mpv runtime\" build phase. Copies the libmpv/ffmpeg bundle\n# scripts/bundle-mpv-deps.sh vendored into deps/lib and deps/bin into the\n# built app, then code-signs each copy with the same identity as the app\n# itself so hardened runtime accepts them at dlopen/exec time.\n#\n# Runs with SRCROOT missing, so it degrades gracefully: a contributor who\n# has not run bundle-mpv-deps.sh still gets a working dev build, just one\n# that falls back to Homebrew's libmpv/ffmpeg at runtime like before.\n\nset -euo pipefail\n\ndeps_lib_dir=\"$SRCROOT/deps/lib\"\ndeps_bin_dir=\"$SRCROOT/deps/bin\"\n\nif [[ ! -d \"$deps_lib_dir\" ]] || [[ -z \"$(ls -A \"$deps_lib_dir\" 2>/dev/null)\" ]]; then\n  echo \"warning: deps/lib is empty; run scripts/bundle-mpv-deps.sh to bundle libmpv so this build doesn't need Homebrew at runtime.\" >&2\n  exit 0\nfi\n\nframeworks_dir=\"$CODESIGNING_FOLDER_PATH/Contents/Frameworks\"\nbin_dir=\"$CODESIGNING_FOLDER_PATH/Contents/Resources/bin\"\nmkdir -p \"$frameworks_dir\" \"$bin_dir\"\n\necho \"Embedding $(ls \"$deps_lib_dir\" | wc -l | tr -d ' ') dylibs into Contents/Frameworks\"\ncp -p \"$deps_lib_dir\"/*.dylib \"$frameworks_dir/\"\n\nif [[ -f \"$deps_bin_dir/ffmpeg\" && -f \"$deps_bin_dir/ffprobe\" ]]; then\n  echo \"Embedding ffmpeg and ffprobe into Contents/Resources/bin\"\n  cp -p \"$deps_bin_dir/ffmpeg\" \"$deps_bin_dir/ffprobe\" \"$bin_dir/\"\nfi\n\nif [[ \"${CODE_SIGNING_ALLOWED:-YES}\" == \"YES\" ]]; then\n  sign_identity=\"${EXPANDED_CODE_SIGN_IDENTITY:-${CODE_SIGN_IDENTITY:--}}\"\n  [[ -n \"$sign_identity\" ]] || sign_identity=\"-\"\n\n  for target in \"$frameworks_dir\"/*.dylib; do\n    [[ -f \"$target\" ]] || continue\n    codesign --force --sign \"$sign_identity\" --options runtime --timestamp=none \"$target\"\n  done\n\n  # ffmpeg/ffprobe run as their own child processes rather than being\n  # dlopen'd into MVPlayer, so it's their own signature — not MVPlayer's\n  # disable-library-validation entitlement — that governs whether hardened\n  # runtime lets them load the ad-hoc-signed sibling dylibs above. Sign them\n  # with the same entitlement MVPlayer itself carries so they can.\n  for target in \"$bin_dir/ffmpeg\" \"$bin_dir/ffprobe\"; do\n    [[ -f \"$target\" ]] || continue\n    codesign --force --sign \"$sign_identity\" --options runtime --timestamp=none \\\n      --entitlements \"$SRCROOT/MVPlayer/Support/MVPlayer.entitlements\" \"$target\"\n  done\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5927D98E64EB529533F5A292 /* Sources */ = {

@@ -14,9 +14,10 @@ struct FilmstripFrame: @unchecked Sendable {
     let image: NSImage
 }
 
-/// Extracts preview frames with the Homebrew command line tools installed
-/// alongside libmpv. AVFoundation cannot open most Matroska, AVI, or WebM
-/// files, so for those containers this is the only source of previews.
+/// Extracts preview frames with the ffmpeg command line tools bundled inside
+/// the app (or, failing that, a Homebrew install on the host). AVFoundation
+/// cannot open most Matroska, AVI, or WebM files, so for those containers
+/// this is the only source of previews.
 final class ExternalThumbnailRenderer: Sendable {
     static let ffmpegPathVariable = "MVPLAYER_FFMPEG_PATH"
     static let mpvPathVariable = "MVPLAYER_MPV_PATH"
@@ -203,13 +204,18 @@ final class ExternalThumbnailRenderer: Sendable {
 
     static func locateTool(
         environment: [String: String] = ProcessInfo.processInfo.environment,
+        bundle: Bundle = .main,
         fileManager: FileManager = .default
     ) -> ThumbnailTool? {
-        let ffmpegCandidates = [environment[ffmpegPathVariable]].compactMap { $0 } + [
-            "/opt/homebrew/bin/ffmpeg",
-            "/opt/homebrew/opt/ffmpeg/bin/ffmpeg",
-            "/usr/local/bin/ffmpeg",
-        ]
+        let bundledFFmpeg = bundle.resourceURL?
+            .appendingPathComponent("bin/ffmpeg", isDirectory: false).path
+        let ffmpegCandidates = [environment[ffmpegPathVariable]].compactMap { $0 }
+            + [bundledFFmpeg].compactMap { $0 }
+            + [
+                "/opt/homebrew/bin/ffmpeg",
+                "/opt/homebrew/opt/ffmpeg/bin/ffmpeg",
+                "/usr/local/bin/ffmpeg",
+            ]
         if let path = ffmpegCandidates.first(where: fileManager.isExecutableFile(atPath:)) {
             return .ffmpeg(URL(fileURLWithPath: path))
         }

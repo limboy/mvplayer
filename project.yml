@@ -109,6 +109,10 @@ targets:
         OTHER_LDFLAGS:
           - "$(inherited)"
           - "-ldl"
+    postbuildScripts:
+      - name: Embed mpv runtime
+        path: scripts/embed-mpv-runtime.sh
+        basedOnDependencyAnalysis: false
     scheme:
       testTargets:
         - MVPlayerTests

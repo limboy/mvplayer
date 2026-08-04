@@ -1,6 +1,8 @@
 #include "CMPVShim.h"
 
 #include <dlfcn.h>
+#include <limits.h>
+#include <mach-o/dyld.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -187,6 +189,41 @@ static void *load_symbol(void *library, const char *name, char *error, size_t er
         memcpy(&(player)->field, &resolved, sizeof(resolved)); \
     } while (0)
 
+// Derives Contents/Frameworks/libmpv.2.dylib from the running executable's
+// own path (Contents/MacOS/MVPlayer), so a release build finds the copy
+// scripts/bundle-mpv-deps.sh and the "Embed mpv runtime" build phase placed
+// alongside it before ever looking at the Homebrew fallback paths.
+static bool bundled_library_path(char *out, size_t out_size) {
+    uint32_t size = 0;
+    _NSGetExecutablePath(NULL, &size);
+    if (size == 0 || size > PATH_MAX) {
+        return false;
+    }
+    char raw[PATH_MAX];
+    if (_NSGetExecutablePath(raw, &size) != 0) {
+        return false;
+    }
+    char resolved[PATH_MAX];
+    if (realpath(raw, resolved) == NULL) {
+        return false;
+    }
+
+    char *macos_slash = strrchr(resolved, '/');
+    if (macos_slash == NULL) {
+        return false;
+    }
+    *macos_slash = '\0'; // ".../MVPlayer.app/Contents/MacOS"
+
+    char *contents_slash = strrchr(resolved, '/');
+    if (contents_slash == NULL) {
+        return false;
+    }
+    *contents_slash = '\0'; // ".../MVPlayer.app/Contents"
+
+    int written = snprintf(out, out_size, "%s/Frameworks/libmpv.2.dylib", resolved);
+    return written > 0 && (size_t)written < out_size;
+}
+
 static void *open_libmpv(char *path, size_t path_size, char *error, size_t error_size) {
     const char *override_path = getenv("MVPLAYER_LIBMPV_PATH");
     if (override_path != NULL && override_path[0] != '\0') {
@@ -208,6 +245,16 @@ static void *open_libmpv(char *path, size_t path_size, char *error, size_t error
         );
         write_error(error, error_size, message);
         return NULL;
+    }
+
+    char bundled[PATH_MAX];
+    if (bundled_library_path(bundled, sizeof(bundled))) {
+        dlerror();
+        void *library = dlopen(bundled, RTLD_NOW | RTLD_LOCAL);
+        if (library != NULL) {
+            snprintf(path, path_size, "%s", bundled);
+            return library;
+        }
     }
 
     const char *candidates[] = {

@@ -14,6 +14,8 @@ Options:
   --install-dir DIR       Application destination (default: /Applications)
   --no-install            Build and package without copying the app to disk
   --no-generate           Use the existing Xcode project without running XcodeGen
+  --no-vendor             Skip vendoring libmpv/ffmpeg; the built app falls back
+                          to Homebrew mpv/ffmpeg on this Mac at runtime
   --trash-duplicates      Move same-bundle-id copies in other Applications
                           folders to the Trash instead of only warning
   --launch                Open the installed app after copying it
@@ -66,6 +68,7 @@ derived_data_arg=""
 install_dir_arg=""
 should_install=true
 should_generate=true
+should_vendor_deps=true
 should_launch=false
 should_trash_duplicates=false
 
@@ -92,6 +95,10 @@ while (($# > 0)); do
       ;;
     --no-generate)
       should_generate=false
+      shift
+      ;;
+    --no-vendor)
+      should_vendor_deps=false
       shift
       ;;
     --trash-duplicates)
@@ -144,14 +151,20 @@ if [[ "$should_generate" == true ]]; then
   (cd "$project_dir" && xcodegen generate)
 fi
 
-if command -v brew >/dev/null 2>&1; then
-  if brew --prefix mpv >/dev/null 2>&1; then
-    info "Found Homebrew mpv"
-  else
-    printf 'warning: Homebrew mpv is not installed; MVPlayer playback will not work until it is.\n' >&2
-  fi
+if [[ "$should_vendor_deps" == true ]]; then
+  info "Vendoring libmpv and ffmpeg so the installed app is self-contained"
+  "$project_dir/scripts/bundle-mpv-deps.sh"
 else
-  printf 'warning: Homebrew is not installed; MVPlayer playback requires a libmpv installation.\n' >&2
+  printf 'warning: Skipping dependency vendoring (--no-vendor); the installed app will require Homebrew mpv/ffmpeg on this Mac at runtime.\n' >&2
+  if command -v brew >/dev/null 2>&1; then
+    if brew --prefix mpv >/dev/null 2>&1; then
+      info "Found Homebrew mpv"
+    else
+      printf 'warning: Homebrew mpv is not installed; MVPlayer playback will not work until it is.\n' >&2
+    fi
+  else
+    printf 'warning: Homebrew is not installed; MVPlayer playback requires a libmpv installation.\n' >&2
+  fi
 fi
 
 xcode_version_line="$(xcodebuild -version 2>/dev/null | sed -n '1p')"

@@ -14,10 +14,12 @@ creates `build/Release/MVPlayer.zip`, and copies the app into `/Applications`.
 
 1. Confirm that the host is macOS and that `xcodebuild`, `xcodegen`, and
    `ditto` are available. Do not install missing tools automatically.
-2. Confirm that Homebrew `mpv` is installed before installing the app. MVPlayer
-   loads `libmpv` at runtime; a successful build does not guarantee playback
-   works without it. If it is missing, stop and tell the user to run
-   `brew install mpv`.
+2. Confirm that Homebrew `mpv` and `ffmpeg` are installed on the build machine.
+   The script vendors `libmpv` and `ffmpeg`/`ffprobe` from these into the app
+   bundle (`scripts/bundle-mpv-deps.sh`), so the installed app plays back
+   without Homebrew on the machine it runs on — but the build machine still
+   needs both installed to produce that bundle. If either is missing, stop and
+   tell the user to run `brew install mpv ffmpeg`.
 3. Run the bundled script from the repository root:
 
    ```sh
@@ -33,16 +35,19 @@ creates `build/Release/MVPlayer.zip`, and copies the app into `/Applications`.
 5. Use `--launch` only when the user asks to open the app after installation.
    Use `--no-install` when packaging or validating a build without changing an
    installed copy. Use `--no-generate` only when the checked-in Xcode project
-   should be used as-is.
+   should be used as-is. Use `--no-vendor` only when the user explicitly wants
+   a build that still relies on Homebrew mpv/ffmpeg at runtime instead of a
+   self-contained one.
 6. Keep one installed copy. The script warns when another `MVPlayer.app` with
    the same bundle identifier sits in the other Applications folder, because
    LaunchServices may open that stale copy instead of the new build. Pass
    `--trash-duplicates` to move those copies to the Trash, but only after the
    user agrees to discard them.
 7. Report the package path, built app path, install path, and any prerequisite
-   or signing limitation. Do not describe the app as App Store-ready: this
-   project intentionally loads Homebrew libraries outside the bundle and
-   disables library validation for local use.
+   or signing limitation. Do not describe the app as App Store-ready: it ships
+   GPL-licensed libmpv/ffmpeg (see the repository's License section) and
+   disables library validation to allow the `--no-vendor` Homebrew fallback,
+   neither of which fit Mac App Store distribution.
 
 ## Failure handling
 

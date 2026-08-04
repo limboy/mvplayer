@@ -32,21 +32,48 @@ overlays and online-video hooks. It is designed for local video playback.
 
 - Xcode 26 or newer
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen)
-- Homebrew mpv:
+- Homebrew mpv and ffmpeg, needed on the *build* machine only:
 
   ```sh
-  brew install mpv
+  brew install mpv ffmpeg
   ```
 
-The app loads libmpv at runtime from `/opt/homebrew`. If it is unavailable,
-MVPlayer opens a setup screen instead of failing at launch.
+A Release build vendors `libmpv` and the `ffmpeg`/`ffprobe` binaries (plus
+every Homebrew dylib either depends on) into the app bundle — see
+[Bundled runtime](#bundled-runtime) — so the built app plays back without
+Homebrew on the machine that runs it. A plain debug build skipped past that
+step still loads libmpv from `/opt/homebrew` at runtime, falling back to a
+setup screen instead of failing at launch if it is unavailable, and scrubber
+previews fall back the same way to a Homebrew `ffmpeg`, then a Homebrew `mpv`
+binary. Set `MVPLAYER_LIBMPV_PATH`, `MVPLAYER_FFMPEG_PATH`, or
+`MVPLAYER_MPV_PATH` to point any of these at an installation elsewhere.
+Without any of them, playback is unavailable and previews and metadata are
+limited to files AVFoundation can decode.
 
-Scrubber previews use the `ffmpeg` command line tool that Homebrew installs
-with mpv, falling back to the `mpv` binary; metadata for containers
-AVFoundation will not open uses the `ffprobe` beside that `ffmpeg`, falling
-back to `mpv`. Set `MVPLAYER_FFMPEG_PATH` or `MVPLAYER_MPV_PATH` to point at an
-installation elsewhere. Without either tool, previews and metadata are limited
-to files AVFoundation can decode.
+## Bundled runtime
+
+MVPlayer links against `libmpv` and shells out to `ffmpeg`/`ffprobe` for
+containers AVFoundation cannot read. Rather than requiring end users to
+install Homebrew mpv/ffmpeg themselves, a Release build embeds them the way
+[IINA](https://github.com/iina/iina) does:
+
+```sh
+scripts/bundle-mpv-deps.sh
+```
+
+This copies `libmpv.dylib`, `ffmpeg`, `ffprobe`, and every Homebrew dylib any
+of them depend on into `deps/lib` and `deps/bin`, rewriting their install
+names to `@rpath` so they no longer reference `/opt/homebrew`. `deps/` is
+gitignored — regenerate it locally whenever the Homebrew mpv or ffmpeg
+version changes, and before packaging a release. The `MVPlayer` target's
+"Embed mpv runtime" build phase then copies `deps/lib` into
+`Contents/Frameworks` and `deps/bin` into `Contents/Resources/bin`, and
+code-signs each copy; `CMPVShim` and `ExternalThumbnailRenderer` look there
+before ever trying a Homebrew path. If `deps/` is empty the build still
+succeeds, it just falls back to Homebrew at runtime as before.
+
+This is also why MVPlayer is GPLv3-licensed rather than MIT — see
+[License](#license).
 
 Opening a file starts one background pass that extracts a strip of preview
 frames covering the whole timeline, so hovering reads from memory and keeps up
@@ -69,11 +96,14 @@ You can also open `MVPlayer.xcodeproj` and run the `MVPlayer` scheme.
 
 ## Local optimized Release build
 
-This creates an optimized Apple silicon build for local use. Homebrew `mpv`
-must be installed on the Mac running the app.
+This creates an optimized Apple silicon build for local use. Run
+[`scripts/bundle-mpv-deps.sh`](scripts/bundle-mpv-deps.sh) first (see
+[Bundled runtime](#bundled-runtime)) so the build embeds `libmpv`/`ffmpeg` and
+the built app does not need Homebrew mpv on the Mac that runs it.
 
 ```sh
 xcodegen generate
+./scripts/bundle-mpv-deps.sh
 xcodebuild \
   -project MVPlayer.xcodeproj \
   -scheme MVPlayer \
@@ -130,10 +160,18 @@ made from the immediate video files in the folder where playback was started.
 
 ## Distribution note
 
-This development build intentionally loads Homebrew libraries outside the app
-bundle and disables library validation. It is not configured for Mac App Store
-distribution.
+A Release build embeds and code-signs its own copies of `libmpv`/`ffmpeg`
+(see [Bundled runtime](#bundled-runtime)), so it runs without Homebrew. The
+app still disables library validation so the `MVPLAYER_*_PATH` overrides and
+the Homebrew fallback path keep working for development, and it is not
+configured for Mac App Store distribution — GPLv3 and the App Store's terms
+don't mix, and the app isn't notarized.
 
 ## License
 
-MVPlayer is available under the [MIT License](LICENSE).
+MVPlayer is available under the [GNU General Public License v3.0](LICENSE).
+It bundles `libmpv`, `ffmpeg`, and their dependencies, several of which are
+GPL-licensed themselves (ffmpeg is built with `--enable-gpl` for `libx264`
+and `libx265`); distributing those binaries requires the whole app to be
+GPL-licensed too, the same reasoning [IINA](https://github.com/iina/iina)
+uses for its own GPLv3 license.
