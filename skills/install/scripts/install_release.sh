@@ -11,9 +11,11 @@ Build and package MVPlayer for Apple-silicon macOS, then install the app locally
 Options:
   --project-dir DIR       MVPlayer repository root (default: current directory)
   --derived-data-dir DIR  Xcode derived data directory (default: project/build)
-  --install-dir DIR       Application destination (default: ~/Applications)
+  --install-dir DIR       Application destination (default: /Applications)
   --no-install            Build and package without copying the app to disk
   --no-generate           Use the existing Xcode project without running XcodeGen
+  --trash-duplicates      Move same-bundle-id copies in other Applications
+                          folders to the Trash instead of only warning
   --launch                Open the installed app after copying it
   -h, --help              Show this help
 USAGE
@@ -39,12 +41,33 @@ resolve_path() {
   esac
 }
 
+real_path() {
+  (cd "$1" >/dev/null 2>&1 && pwd -P)
+}
+
+bundle_identifier_of() {
+  /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$1/Contents/Info.plist" 2>/dev/null || true
+}
+
+# Move an app bundle to the Trash without clobbering an existing entry, then
+# print the destination.
+trash_app() {
+  local app="$1" destination
+  destination="$HOME/.Trash/$(basename "$app")"
+  if [[ -e "$destination" ]]; then
+    destination="$destination.$(date +%Y%m%d-%H%M%S)"
+  fi
+  mv "$app" "$destination" || return 1
+  printf '%s\n' "$destination"
+}
+
 project_dir="$(pwd -P)"
 derived_data_arg=""
 install_dir_arg=""
 should_install=true
 should_generate=true
 should_launch=false
+should_trash_duplicates=false
 
 while (($# > 0)); do
   case "$1" in
@@ -69,6 +92,10 @@ while (($# > 0)); do
       ;;
     --no-generate)
       should_generate=false
+      shift
+      ;;
+    --trash-duplicates)
+      should_trash_duplicates=true
       shift
       ;;
     --launch)
@@ -101,11 +128,12 @@ fi
 if [[ -n "$install_dir_arg" ]]; then
   install_dir="$(resolve_path "$install_dir_arg")"
 else
-  [[ -n "${HOME:-}" ]] || fail "HOME is not set; pass --install-dir explicitly."
-  install_dir="$HOME/Applications"
+  install_dir="/Applications"
 fi
 
 [[ "$should_launch" == false || "$should_install" == true ]] || fail "--launch requires installation; remove --no-install."
+[[ "$should_trash_duplicates" == false || "$should_install" == true ]] || fail "--trash-duplicates requires installation; remove --no-install."
+[[ "$should_trash_duplicates" == false || -n "${HOME:-}" ]] || fail "--trash-duplicates requires HOME to be set."
 
 require_command xcodebuild
 require_command ditto
@@ -207,8 +235,61 @@ if [[ "$should_install" == true ]]; then
   installed_app="$install_dir/MVPlayer.app"
   info "Installing MVPlayer to $installed_app"
   ditto --rsrc --extattr --acl "$built_app" "$installed_app" || \
-    fail "Cannot install to $installed_app. Try --install-dir \"$HOME/Applications\"."
+    fail "Cannot install to $installed_app. Try --install-dir ~/Applications."
   [[ -x "$installed_app/Contents/MacOS/MVPlayer" ]] || fail "Installed app is incomplete: $installed_app"
+
+  # A copy of MVPlayer left in another Applications folder keeps the same bundle
+  # identifier, and LaunchServices may resolve that stale copy instead of the one
+  # just installed. Opening MVPlayer then silently runs the old build.
+  installed_real="$(real_path "$installed_app")"
+  installed_identifier="$(bundle_identifier_of "$installed_app")"
+  applications_dirs=(/Applications)
+  if [[ -n "${HOME:-}" ]]; then
+    applications_dirs+=("$HOME/Applications")
+  fi
+  duplicate_apps=()
+  for applications_dir in "${applications_dirs[@]}"; do
+    duplicate_app="$applications_dir/MVPlayer.app"
+    [[ -d "$duplicate_app" ]] || continue
+    duplicate_real="$(real_path "$duplicate_app")"
+    [[ -n "$duplicate_real" && "$duplicate_real" != "$installed_real" ]] || continue
+    [[ -z "$installed_identifier" || "$(bundle_identifier_of "$duplicate_app")" == "$installed_identifier" ]] || continue
+    duplicate_apps+=("$duplicate_real")
+  done
+
+  for duplicate_app in "${duplicate_apps[@]+"${duplicate_apps[@]}"}"; do
+    if [[ "$should_trash_duplicates" == true ]]; then
+      info "Trashing an older MVPlayer copy at $duplicate_app"
+      if trashed_app="$(trash_app "$duplicate_app")"; then
+        printf 'Moved to %s\n' "$trashed_app"
+      else
+        printf 'warning: Could not move %s to the Trash; remove it manually or MVPlayer may open that older copy.\n' \
+          "$duplicate_app" >&2
+      fi
+    else
+      printf 'warning: Another MVPlayer.app with the same bundle identifier is installed at %s.\n' "$duplicate_app" >&2
+      printf 'warning: Opening MVPlayer may launch that copy instead of the build just installed.\n' >&2
+      printf 'warning: Re-run with --trash-duplicates, or remove that copy by hand.\n' >&2
+    fi
+  done
+
+  # Teach LaunchServices about the freshly installed copy. The bundle identifier
+  # may stay bound to a previous location until the app is opened once.
+  lsregister_tool="/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister"
+  if [[ -x "$lsregister_tool" ]]; then
+    info "Registering the installed app with LaunchServices"
+    "$lsregister_tool" -f -R -trusted "$installed_app" >/dev/null 2>&1 || \
+      printf 'warning: Could not register %s with LaunchServices.\n' "$installed_app" >&2
+  fi
+
+  if command -v osascript >/dev/null 2>&1 && [[ -n "$installed_identifier" ]]; then
+    resolved_app="$(osascript -e "POSIX path of (path to application id \"$installed_identifier\")" 2>/dev/null || true)"
+    resolved_app="${resolved_app%/}"
+    if [[ -n "$resolved_app" && "$(real_path "$resolved_app")" != "$installed_real" ]]; then
+      printf 'warning: LaunchServices still opens %s for %s.\n' "$resolved_app" "$installed_identifier" >&2
+      printf 'warning: Remove that copy, then open %s once to rebind it.\n' "$installed_app" >&2
+    fi
+  fi
 
   if [[ "$should_launch" == true ]]; then
     require_command open
