@@ -229,6 +229,20 @@ final class MPVPlayerEngine: @unchecked Sendable {
                 return
             }
 
+            // With `keep-open` holding mpv at the last frame instead of
+            // unloading the file, `end-file` is not a dependable signal of
+            // reaching natural end-of-playback — `eof-reached` flipping is.
+            // Reported the same way `end-file` normally would be, generation
+            // and all, so a stale flip after a manual Previous/Next is
+            // dropped the same way a stale end-of-file report is.
+            if name == "eof-reached", valueType == MVP_MPV_VALUE_FLAG, flag {
+                let endedGeneration = loadGeneration
+                Task { @MainActor [weak self] in
+                    self?.onPlaybackEnded?(endedGeneration)
+                }
+                return
+            }
+
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 switch name {
