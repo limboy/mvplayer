@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-04
+- Add support for playing audio files
+- Automatically advance to the next file when playback ends naturally
+- Restart the current video from the beginning instead of only skipping back within the first 3 seconds played
+- Fix losing the highlighted selection when navigating back, and simplify the empty-state placeholder text
+
 ## [0.1.2] - 2026-08-04
 - Fix Previous/Next sometimes not responding and losing the highlighted selection
 
