@@ -13,6 +13,13 @@ struct FolderBrowserView: View {
     @State private var selection: URL?
     @FocusState private var isListFocused: Bool
 
+    /// Mirrors `selection` only when something other than the user moved it —
+    /// `normalizeSelection`, `goBack`, and playback tracking. The list scrolls
+    /// to keep this row centered; a click or an arrow key leaves it alone, so
+    /// the view doesn't jump out from under someone who is already looking at
+    /// the row they just picked.
+    @State private var autoScrollTarget: URL?
+
     /// Held, deliberately, without observing it. The only things here that move
     /// with playback are one row's percentage and one row's highlight, and both
     /// live in leaves of their own. Observing the player from the browser
@@ -52,8 +59,10 @@ struct FolderBrowserView: View {
         // Keeps the row the keyboard sits on in step with whatever the
         // transport controls just moved playback to — Previous/Next and
         // auto-advance change this without going through `selectFromClick`.
+        // Skipped when it already matches `selection`: that means a click
+        // just put it there, and the row is already where the user put it.
         .onChange(of: library.selectedVideo) { _, newValue in
-            if let newValue { selection = newValue }
+            if let newValue, newValue != selection { moveSelection(to: newValue) }
         }
         .onAppear(perform: normalizeSelection)
     }
@@ -79,7 +88,7 @@ struct FolderBrowserView: View {
             ? library.roots.map(\.url)
             : library.entries.map(\.url)
         if selection == nil || !available.contains(selection!) {
-            selection = available.first
+            moveSelection(to: available.first)
         }
     }
 
@@ -90,8 +99,16 @@ struct FolderBrowserView: View {
         let leftDirectory = library.currentDirectory
         library.goBack()
         if let leftDirectory {
-            selection = leftDirectory
+            moveSelection(to: leftDirectory)
         }
+    }
+
+    /// Moves the selection on the app's own initiative — as opposed to
+    /// `selectFromClick` or the list's own arrow-key handling, which are the
+    /// user doing it — and asks the list to scroll the row into view.
+    private func moveSelection(to url: URL?) {
+        selection = url
+        autoScrollTarget = url
     }
 
     private func openSelection() {
@@ -264,14 +281,17 @@ struct FolderBrowserView: View {
                     Label("Drag a folder here", systemImage: "folder")
                 }
             } else {
-                List(selection: $selection) {
-                    ForEach(library.roots) { root in
-                        rootRow(root)
-                            .tag(root.url)
+                ScrollViewReader { proxy in
+                    List(selection: $selection) {
+                        ForEach(library.roots) { root in
+                            rootRow(root)
+                                .tag(root.url)
+                        }
                     }
+                    .listStyle(.inset)
+                    .modifier(KeyboardNavigation(isFocused: $isListFocused, open: openSelection))
+                    .modifier(ScrollToSelection(target: autoScrollTarget, proxy: proxy))
                 }
-                .listStyle(.inset)
-                .modifier(KeyboardNavigation(isFocused: $isListFocused, open: openSelection))
             }
         } else if library.entries.isEmpty {
             ContentUnavailableView(
@@ -280,14 +300,17 @@ struct FolderBrowserView: View {
                 description: Text("This folder has no supported video or audio files or subfolders.")
             )
         } else {
-            List(selection: $selection) {
-                ForEach(library.entries) { entry in
-                    entryRow(entry)
-                        .tag(entry.url)
+            ScrollViewReader { proxy in
+                List(selection: $selection) {
+                    ForEach(library.entries) { entry in
+                        entryRow(entry)
+                            .tag(entry.url)
+                    }
                 }
+                .listStyle(.inset)
+                .modifier(KeyboardNavigation(isFocused: $isListFocused, open: openSelection))
+                .modifier(ScrollToSelection(target: autoScrollTarget, proxy: proxy))
             }
-            .listStyle(.inset)
-            .modifier(KeyboardNavigation(isFocused: $isListFocused, open: openSelection))
         }
     }
 
@@ -490,6 +513,29 @@ private struct KeyboardNavigation: ViewModifier {
             .onKeyPress(.return) {
                 open()
                 return .handled
+            }
+    }
+}
+
+/// Keeps whichever row `target` names centered on screen. Only fed by
+/// `moveSelection(to:)` — the app moving the selection on its own, via
+/// `normalizeSelection`, `goBack`, or playback tracking — never by a click or
+/// an arrow key, so the list doesn't jump on the user while they're the one
+/// driving it. No animation, since an animated scroll on every auto-advance
+/// would fight the pace videos finish at.
+private struct ScrollToSelection: ViewModifier {
+    let target: URL?
+    let proxy: ScrollViewProxy
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: target) { _, newValue in
+                guard let newValue else { return }
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    proxy.scrollTo(newValue, anchor: .center)
+                }
             }
     }
 }
