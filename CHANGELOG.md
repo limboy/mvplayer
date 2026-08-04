@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-04
+- Add playback speed control, with presets from 0.5x to 2x
+- Repeat button in a single-video window now toggles repeat on/off directly,
+  instead of cycling through an all/one distinction that didn't apply
+
 ## [0.1.0] - 2026-08-04
 - First tagged release, distributed as a signed and notarized DMG on GitHub
   Releases with Sparkle auto-update
