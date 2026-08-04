@@ -1,7 +1,17 @@
 # MVPlayer
 
-MVPlayer is a native SwiftUI macOS video player backed by Homebrew's
-`libmpv`. It targets macOS 14 or newer on Apple silicon.
+MVPlayer is a native SwiftUI macOS video player built on `libmpv`. It targets
+macOS 14 or newer on Apple silicon. Releases bundle their own copies of
+`libmpv` and `ffmpeg`, so the downloaded app needs no Homebrew install to run.
+
+![MVPlayer playing an episode with a hover frame preview and subtitles, next to a folder queue](Assets/screenshots/mvplayer.png)
+
+## Download
+
+Grab the signed, notarized DMG from [GitHub
+Releases](https://github.com/limboy/mvplayer/releases/latest) — no Homebrew
+or other setup needed. The app checks for updates on its own via Sparkle; see
+[Distribution note](#distribution-note).
 
 ## Features
 
@@ -13,7 +23,7 @@ MVPlayer is a native SwiftUI macOS video player backed by Homebrew's
   video resumes on the frame it left off at.
 - Timeline scrubbing with hover frame previews for every playable format,
   shaped like the video they preview — AVFoundation where it can read the file,
-  Homebrew `ffmpeg` or `mpv` for the containers it cannot, such as MKV, AVI,
+  bundled `ffmpeg` or `mpv` for the containers it cannot, such as MKV, AVI,
   and WebM.
 - A status bar under the list describing the selection: running time,
   dimensions, frame rate, and file size for a video, the location for a folder.
