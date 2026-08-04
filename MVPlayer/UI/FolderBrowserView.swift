@@ -142,14 +142,16 @@ struct FolderBrowserView: View {
 
             Spacer()
 
-            Button {
-                chooseFolders()
-            } label: {
-                Image(systemName: "plus")
-                    .frame(width: 22, height: 22)
+            if library.isAtRootList {
+                Button {
+                    chooseFolders()
+                } label: {
+                    Image(systemName: "plus")
+                        .frame(width: 22, height: 22)
+                }
+                .buttonStyle(.plain)
+                .help("Add Folder")
             }
-            .buttonStyle(.plain)
-            .help("Add Folder")
 
             if showsItemCount, !library.isAtRootList {
                 Text("\(library.entries.count) items")
