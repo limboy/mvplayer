@@ -39,7 +39,7 @@ struct MVPlayerApp: App {
     var body: some Scene {
         WindowGroup("MVPlayer") {
             ContentView(appModel: appModel, windowState: windowState, library: library)
-                .frame(minWidth: 560, minHeight: 560)
+                .frame(minWidth: 480, minHeight: 560)
                 .background {
                     WindowFrameAutosave(key: "MainWindowFrame")
                         .frame(width: 0, height: 0)
