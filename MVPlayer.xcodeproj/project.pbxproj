@@ -27,6 +27,7 @@
 		4E14083D841191B11D0DB719 /* ExternalMediaProbeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B1694E77667CDB81839503 /* ExternalMediaProbeTests.swift */; };
 		500B7B34711E3ACAF19AD6AD /* FolderLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CEE9DC83112344B6879958 /* FolderLibrary.swift */; };
 		5130A4033E7F95E8BE61DB52 /* MPVCallbackContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB9DAA3E8ACE8EDAA4F4195 /* MPVCallbackContextTests.swift */; };
+		58FDCE6C8E074D9CD084DE91 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 0BD606D03BD959423FE2B692 /* Sparkle */; };
 		5CB72F36D777FC0007486AE3 /* PlayerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9FE8521908012F2D790BA23 /* PlayerContainerView.swift */; };
 		5CDDC091F9951F0D8BFB1B3D /* ThumbnailFilmstripTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DE090111AC674B864D04483 /* ThumbnailFilmstripTests.swift */; };
 		672A01DCBC0F2FF4B70CDD69 /* FolderLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 178121889E8D5B2D2E4E5835 /* FolderLibraryTests.swift */; };
@@ -192,6 +193,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AF6DFC6430EE7FAB997F4859 /* CMPVShim.framework in Frameworks */,
+				58FDCE6C8E074D9CD084DE91 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -395,6 +397,7 @@
 			);
 			name = MVPlayer;
 			packageProductDependencies = (
+				0BD606D03BD959423FE2B692 /* Sparkle */,
 			);
 			productName = MVPlayer;
 			productReference = C112FA2F6E5578B9189C594C /* MVPlayer.app */;
@@ -430,9 +433,6 @@
 					2F79174ADF74EBCEDAD8309B = {
 						ProvisioningStyle = Automatic;
 					};
-					4FFF34665CD533F56F402514 = {
-						ProvisioningStyle = Automatic;
-					};
 					DD12C06412DDDA56CCB823DC = {
 						ProvisioningStyle = Automatic;
 					};
@@ -447,6 +447,9 @@
 			);
 			mainGroup = D96E386BF06B4B3A6DAABF05;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				FCBEEB2BF566F9194CE2A5DD /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 18050FBA2EF8A0573E275CE3 /* Products */;
 			projectDirPath = "";
@@ -488,7 +491,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#!/usr/bin/env bash\n#\n# Xcode \"Embed mpv runtime\" build phase. Copies the libmpv/ffmpeg bundle\n# scripts/bundle-mpv-deps.sh vendored into deps/lib and deps/bin into the\n# built app, then code-signs each copy with the same identity as the app\n# itself so hardened runtime accepts them at dlopen/exec time.\n#\n# Runs with SRCROOT missing, so it degrades gracefully: a contributor who\n# has not run bundle-mpv-deps.sh still gets a working dev build, just one\n# that falls back to Homebrew's libmpv/ffmpeg at runtime like before.\n\nset -euo pipefail\n\ndeps_lib_dir=\"$SRCROOT/deps/lib\"\ndeps_bin_dir=\"$SRCROOT/deps/bin\"\n\nif [[ ! -d \"$deps_lib_dir\" ]] || [[ -z \"$(ls -A \"$deps_lib_dir\" 2>/dev/null)\" ]]; then\n  echo \"warning: deps/lib is empty; run scripts/bundle-mpv-deps.sh to bundle libmpv so this build doesn't need Homebrew at runtime.\" >&2\n  exit 0\nfi\n\nframeworks_dir=\"$CODESIGNING_FOLDER_PATH/Contents/Frameworks\"\nbin_dir=\"$CODESIGNING_FOLDER_PATH/Contents/Resources/bin\"\nmkdir -p \"$frameworks_dir\" \"$bin_dir\"\n\necho \"Embedding $(ls \"$deps_lib_dir\" | wc -l | tr -d ' ') dylibs into Contents/Frameworks\"\ncp -p \"$deps_lib_dir\"/*.dylib \"$frameworks_dir/\"\n\nif [[ -f \"$deps_bin_dir/ffmpeg\" && -f \"$deps_bin_dir/ffprobe\" ]]; then\n  echo \"Embedding ffmpeg and ffprobe into Contents/Resources/bin\"\n  cp -p \"$deps_bin_dir/ffmpeg\" \"$deps_bin_dir/ffprobe\" \"$bin_dir/\"\nfi\n\nif [[ \"${CODE_SIGNING_ALLOWED:-YES}\" == \"YES\" ]]; then\n  sign_identity=\"${EXPANDED_CODE_SIGN_IDENTITY:-${CODE_SIGN_IDENTITY:--}}\"\n  [[ -n \"$sign_identity\" ]] || sign_identity=\"-\"\n\n  for target in \"$frameworks_dir\"/*.dylib; do\n    [[ -f \"$target\" ]] || continue\n    codesign --force --sign \"$sign_identity\" --options runtime --timestamp=none \"$target\"\n  done\n\n  # ffmpeg/ffprobe run as their own child processes rather than being\n  # dlopen'd into MVPlayer, so it's their own signature — not MVPlayer's\n  # disable-library-validation entitlement — that governs whether hardened\n  # runtime lets them load the ad-hoc-signed sibling dylibs above. Sign them\n  # with the same entitlement MVPlayer itself carries so they can.\n  for target in \"$bin_dir/ffmpeg\" \"$bin_dir/ffprobe\"; do\n    [[ -f \"$target\" ]] || continue\n    codesign --force --sign \"$sign_identity\" --options runtime --timestamp=none \\\n      --entitlements \"$SRCROOT/MVPlayer/Support/MVPlayer.entitlements\" \"$target\"\n  done\nfi\n";
+			shellScript = "#!/usr/bin/env bash\n#\n# Xcode \"Embed mpv runtime\" build phase. Copies the libmpv/ffmpeg bundle\n# scripts/bundle-mpv-deps.sh vendored into deps/lib and deps/bin into the\n# built app, then code-signs each copy with the same identity as the app\n# itself so hardened runtime accepts them at dlopen/exec time.\n#\n# Runs with SRCROOT missing, so it degrades gracefully: a contributor who\n# has not run bundle-mpv-deps.sh still gets a working dev build, just one\n# that falls back to Homebrew's libmpv/ffmpeg at runtime like before.\n\nset -euo pipefail\n\ndeps_lib_dir=\"$SRCROOT/deps/lib\"\ndeps_bin_dir=\"$SRCROOT/deps/bin\"\n\nif [[ ! -d \"$deps_lib_dir\" ]] || [[ -z \"$(ls -A \"$deps_lib_dir\" 2>/dev/null)\" ]]; then\n  echo \"warning: deps/lib is empty; run scripts/bundle-mpv-deps.sh to bundle libmpv so this build doesn't need Homebrew at runtime.\" >&2\n  exit 0\nfi\n\nframeworks_dir=\"$CODESIGNING_FOLDER_PATH/Contents/Frameworks\"\nbin_dir=\"$CODESIGNING_FOLDER_PATH/Contents/Resources/bin\"\nmkdir -p \"$frameworks_dir\" \"$bin_dir\"\n\necho \"Embedding $(ls \"$deps_lib_dir\" | wc -l | tr -d ' ') dylibs into Contents/Frameworks\"\ncp -p \"$deps_lib_dir\"/*.dylib \"$frameworks_dir/\"\n\nif [[ -f \"$deps_bin_dir/ffmpeg\" && -f \"$deps_bin_dir/ffprobe\" ]]; then\n  echo \"Embedding ffmpeg and ffprobe into Contents/Resources/bin\"\n  cp -p \"$deps_bin_dir/ffmpeg\" \"$deps_bin_dir/ffprobe\" \"$bin_dir/\"\nfi\n\nif [[ \"${CODE_SIGNING_ALLOWED:-YES}\" == \"YES\" ]]; then\n  sign_identity=\"${EXPANDED_CODE_SIGN_IDENTITY:-${CODE_SIGN_IDENTITY:--}}\"\n  [[ -n \"$sign_identity\" ]] || sign_identity=\"-\"\n\n  # Ad-hoc signing (dev builds with no cert) can't carry a secure timestamp.\n  # Notarization requires one on every signature made with a real identity,\n  # so Release archives need --timestamp, not --timestamp=none.\n  timestamp_flag=\"--timestamp=none\"\n  if [[ \"$sign_identity\" != \"-\" ]]; then\n    timestamp_flag=\"--timestamp\"\n  fi\n\n  for target in \"$frameworks_dir\"/*.dylib; do\n    [[ -f \"$target\" ]] || continue\n    codesign --force --sign \"$sign_identity\" --options runtime \"$timestamp_flag\" \"$target\"\n  done\n\n  # ffmpeg/ffprobe run as their own child processes rather than being\n  # dlopen'd into MVPlayer, so it's their own signature — not MVPlayer's\n  # disable-library-validation entitlement — that governs whether hardened\n  # runtime lets them load the ad-hoc-signed sibling dylibs above. Sign them\n  # with the same entitlement MVPlayer itself carries so they can.\n  for target in \"$bin_dir/ffmpeg\" \"$bin_dir/ffprobe\"; do\n    [[ -f \"$target\" ]] || continue\n    codesign --force --sign \"$sign_identity\" --options runtime \"$timestamp_flag\" \\\n      --entitlements \"$SRCROOT/MVPlayer/Support/MVPlayer.entitlements\" \"$target\"\n  done\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -592,7 +595,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = mvplayer;
 				CODE_SIGN_ENTITLEMENTS = MVPlayer/Support/MVPlayer.entitlements;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MVPlayer/Support/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = MVPlayer;
@@ -602,6 +608,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = 0.1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ldl",
@@ -700,6 +707,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = mvplayer;
 				CODE_SIGN_ENTITLEMENTS = MVPlayer/Support/MVPlayer.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MVPlayer/Support/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = MVPlayer;
@@ -709,6 +717,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MARKETING_VERSION = 0.1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ldl",
@@ -902,6 +911,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FCBEEB2BF566F9194CE2A5DD /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0BD606D03BD959423FE2B692 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FCBEEB2BF566F9194CE2A5DD /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 51722A73EC56917110A96947 /* Project object */;
 }

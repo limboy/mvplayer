@@ -163,9 +163,26 @@ made from the immediate video files in the folder where playback was started.
 A Release build embeds and code-signs its own copies of `libmpv`/`ffmpeg`
 (see [Bundled runtime](#bundled-runtime)), so it runs without Homebrew. The
 app still disables library validation so the `MVPLAYER_*_PATH` overrides and
-the Homebrew fallback path keep working for development, and it is not
-configured for Mac App Store distribution — GPLv3 and the App Store's terms
-don't mix, and the app isn't notarized.
+the Homebrew fallback path keep working for development.
+
+Tagged releases are signed with a Developer ID certificate and notarized by
+Apple, then published as a DMG on [GitHub
+Releases](https://github.com/limboy/mvplayer/releases) — GPLv3 and Developer
+ID notarization are compatible even though Mac App Store distribution isn't
+attempted, the same approach [IINA](https://github.com/iina/iina) uses. The
+app checks that feed for updates automatically (or on demand from the
+MVPlayer menu's "Check for Updates…" item) using
+[Sparkle](https://sparkle-project.org).
+
+## Releasing
+
+`scripts/release.sh` builds, vendors `libmpv`/`ffmpeg`, signs, notarizes,
+tags, and publishes a GitHub Release from your own Mac; see
+[`.env.example`](.env.example) for the required Apple credentials. Pushing a
+`vX.Y.Z` tag also runs [`.github/workflows/release.yml`](.github/workflows/release.yml),
+which does the same thing in CI from repository secrets. Both scripts pull
+release notes from [`CHANGELOG.md`](CHANGELOG.md), so add an entry there
+before releasing.
 
 ## License
 

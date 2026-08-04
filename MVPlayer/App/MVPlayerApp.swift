@@ -1,5 +1,8 @@
 import AppKit
 import SwiftUI
+#if canImport(Sparkle)
+import Sparkle
+#endif
 
 @main
 struct MVPlayerApp: App {
@@ -10,6 +13,22 @@ struct MVPlayerApp: App {
     /// Held here rather than inside the model, because the browser is the
     /// window's and a window opened on one file has neither.
     private let library: FolderLibrary
+
+    #if canImport(Sparkle)
+    #if DEBUG
+    private let updaterController = SPUStandardUpdaterController(
+        startingUpdater: false,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
+    #else
+    private let updaterController = SPUStandardUpdaterController(
+        startingUpdater: true,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
+    #endif
+    #endif
 
     init() {
         let library = FolderLibrary()
@@ -35,6 +54,11 @@ struct MVPlayerApp: App {
         .commands {
             FileCommands()
             PlaybackCommands()
+            #if canImport(Sparkle)
+            CommandGroup(after: .appInfo) {
+                CheckForUpdatesView(updater: updaterController.updater)
+            }
+            #endif
         }
     }
 }
@@ -49,6 +73,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 }
+
+/// The "Check for Updates…" menu item.
+///
+/// Never disabled: a `disabled` in the main menu holds the value it was
+/// first built with (see `PlaybackCommands`), and `canCheckForUpdates` starts
+/// out false before Sparkle finishes its startup check, which would grey the
+/// item out for the rest of the run. `checkForUpdates()` is safe to call
+/// while a check isn't possible yet — it just does nothing.
+#if canImport(Sparkle)
+struct CheckForUpdatesView: View {
+    let updater: SPUUpdater
+
+    var body: some View {
+        Button("Check for Updates…") {
+            updater.checkForUpdates()
+        }
+    }
+}
+#endif
 
 /// The File menu.
 ///

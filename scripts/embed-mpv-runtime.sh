@@ -35,9 +35,17 @@ if [[ "${CODE_SIGNING_ALLOWED:-YES}" == "YES" ]]; then
   sign_identity="${EXPANDED_CODE_SIGN_IDENTITY:-${CODE_SIGN_IDENTITY:--}}"
   [[ -n "$sign_identity" ]] || sign_identity="-"
 
+  # Ad-hoc signing (dev builds with no cert) can't carry a secure timestamp.
+  # Notarization requires one on every signature made with a real identity,
+  # so Release archives need --timestamp, not --timestamp=none.
+  timestamp_flag="--timestamp=none"
+  if [[ "$sign_identity" != "-" ]]; then
+    timestamp_flag="--timestamp"
+  fi
+
   for target in "$frameworks_dir"/*.dylib; do
     [[ -f "$target" ]] || continue
-    codesign --force --sign "$sign_identity" --options runtime --timestamp=none "$target"
+    codesign --force --sign "$sign_identity" --options runtime "$timestamp_flag" "$target"
   done
 
   # ffmpeg/ffprobe run as their own child processes rather than being
@@ -47,7 +55,7 @@ if [[ "${CODE_SIGNING_ALLOWED:-YES}" == "YES" ]]; then
   # with the same entitlement MVPlayer itself carries so they can.
   for target in "$bin_dir/ffmpeg" "$bin_dir/ffprobe"; do
     [[ -f "$target" ]] || continue
-    codesign --force --sign "$sign_identity" --options runtime --timestamp=none \
+    codesign --force --sign "$sign_identity" --options runtime "$timestamp_flag" \
       --entitlements "$SRCROOT/MVPlayer/Support/MVPlayer.entitlements" "$target"
   done
 fi

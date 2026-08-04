@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release MVPlayer"
+  short_description: "Cut and publish a signed, notarized MVPlayer release"
+  default_prompt: "Use $release to cut and publish the next MVPlayer release."

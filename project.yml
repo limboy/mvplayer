@@ -16,6 +16,12 @@ settings:
     CLANG_ENABLE_MODULES: YES
     CODE_SIGN_STYLE: Automatic
     ENABLE_HARDENED_RUNTIME: YES
+
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.6.0"
+
 targets:
   CMPVShim:
     type: framework
@@ -45,9 +51,16 @@ targets:
         buildPhase: resources
     dependencies:
       - target: CMPVShim
+      - package: Sparkle
     info:
       path: MVPlayer/Support/Info.plist
       properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        SUEnableAutomaticChecks: true
+        SUScheduledCheckInterval: 86400
+        SUFeedURL: https://github.com/limboy/mvplayer/releases/latest/download/appcast.xml
+        SUPublicEDKey: B6+JHJ8tGYlOk0bFN5Ldnn+U40ebdkWsqWYg9nZMh0A=
         # Lets the Finder hand video files to MVPlayer, through Open With or by
         # dropping them on the icon. The rank is Alternate deliberately: the app
         # offers to open these, it does not claim them from whatever the Mac
@@ -98,6 +111,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: me.limboy.mvplayer
         PRODUCT_NAME: MVPlayer
         PRODUCT_MODULE_NAME: MVPlayer
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: MVPlayer
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.video
@@ -109,6 +124,10 @@ targets:
         OTHER_LDFLAGS:
           - "$(inherited)"
           - "-ldl"
+      configs:
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: "Developer ID Application"
     postbuildScripts:
       - name: Embed mpv runtime
         path: scripts/embed-mpv-runtime.sh

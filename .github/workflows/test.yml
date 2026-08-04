@@ -1,0 +1,68 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-app-macos:
+    name: Build MVPlayer (Debug)
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          # Pinned: Xcode 26.3 + macos-15 runner crashes ibtoold during
+          # mvplayer.icon (Icon Composer) compile with dyld AVFCore symbol
+          # mismatches. 26.2 builds the .icon asset cleanly.
+          xcode-version: "26.2"
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Cache DerivedData and SPM
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-app-macos-${{ hashFiles('project.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-app-macos-
+
+      - name: Build and test MVPlayer (Debug)
+        # Skip the mvplayer.icon (Icon Composer) asset compile in CI: ibtoold
+        # crashes on the macos-15 runner image due to dyld AVFCore symbol
+        # mismatches. The Swift code still compiles and tests still run —
+        # only the icon is skipped, which we don't ship from CI anyway.
+        # libmpv/ffmpeg are dlopen'd at runtime rather than linked, so no
+        # Homebrew mpv/ffmpeg is needed to build or test.
+        #
+        # Signing is left at its default (Automatic, no team on this
+        # runner), which falls back to ad-hoc — needed because the test
+        # action actually launches MVPlayer.app as the XCTest host.
+        # CODE_SIGNING_ALLOWED=NO leaves the outer app fully unsigned while
+        # the vendored Sparkle.framework keeps its own real signature, and
+        # that mismatch gets the process SIGKILLed with "Code Signature
+        # Invalid" on launch instead of just failing to sign.
+        run: |
+          xcodebuild \
+            -project MVPlayer.xcodeproj \
+            -scheme MVPlayer \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            ASSETCATALOG_COMPILER_APPICON_NAME="" \
+            EXCLUDED_SOURCE_FILE_NAMES="mvplayer.icon" \
+            test -quiet
