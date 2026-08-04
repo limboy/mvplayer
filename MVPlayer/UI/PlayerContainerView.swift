@@ -54,7 +54,7 @@ struct PlayerContainerView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "play.rectangle")
                         .font(.system(size: 46, weight: .light))
-                    Text("Choose a video below")
+                    Text("Select an item below")
                         .font(.headline)
                 }
                 .foregroundStyle(.secondary)

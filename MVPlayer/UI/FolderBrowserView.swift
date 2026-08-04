@@ -85,6 +85,17 @@ struct FolderBrowserView: View {
         }
     }
 
+    /// Leaves the current folder for the list above it, and keeps the keyboard
+    /// on the row that was just backed out of rather than letting
+    /// `normalizeSelection` snap it back to the top of that list.
+    private func goBack() {
+        let leftDirectory = library.currentDirectory
+        library.goBack()
+        if let leftDirectory {
+            selection = leftDirectory
+        }
+    }
+
     private func openSelection() {
         guard let selection else { return }
         if library.isAtRootList {
@@ -135,7 +146,7 @@ struct FolderBrowserView: View {
         HStack(spacing: 6) {
             if !library.isAtRootList {
                 Button {
-                    library.goBack()
+                    goBack()
                 } label: {
                     Image(systemName: "chevron.left")
                         .frame(width: 22, height: 22)
