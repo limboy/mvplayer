@@ -28,8 +28,10 @@ struct FolderBrowserView: View {
             browserHeader
             Divider()
             browserContent
-            Divider()
-            statusBar
+            if !library.isAtRootList {
+                Divider()
+                statusBar
+            }
         }
         .background(Color(nsColor: .controlBackgroundColor))
         .overlay {
@@ -140,6 +142,15 @@ struct FolderBrowserView: View {
 
             Spacer()
 
+            Button {
+                chooseFolders()
+            } label: {
+                Image(systemName: "plus")
+                    .frame(width: 22, height: 22)
+            }
+            .buttonStyle(.plain)
+            .help("Add Folder")
+
             if showsItemCount, !library.isAtRootList {
                 Text("\(library.entries.count) items")
                     .font(.caption)
@@ -231,13 +242,7 @@ struct FolderBrowserView: View {
         if library.isAtRootList {
             if library.roots.isEmpty {
                 ContentUnavailableView {
-                    Label("Add a Video Folder", systemImage: "folder.badge.plus")
-                } description: {
-                    Text("Drag a folder here, or use Choose Folder.")
-                } actions: {
-                    Button("Choose Folder…") {
-                        chooseFolders()
-                    }
+                    Label("Drag a folder here", systemImage: "folder")
                 }
             } else {
                 List(selection: $selection) {
