@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-04
+- Fix Previous/Next sometimes not responding and losing the highlighted selection
+
 ## [0.1.1] - 2026-08-04
 - Add playback speed control, with presets from 0.5x to 2x
 - Repeat button in a single-video window now toggles repeat on/off directly,
