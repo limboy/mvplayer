@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-05
+- Lower the minimum window width so the player can be resized narrower (480pt instead of 560pt)
+
 ## [0.2.1] - 2026-08-04
 - The video list now automatically scrolls to keep the currently playing file in view
 - Folders in the library root now show a folder icon
