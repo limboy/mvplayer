@@ -126,7 +126,16 @@ final class AppModel: ObservableObject {
         loadVideo(next)
     }
 
+    /// Restarts the current file instead of moving back once there's enough
+    /// played that "previous" more likely means "again" than "the last one" —
+    /// the same threshold most players use before Previous stops chaining.
+    private static let previousRestartThreshold: Double = 3
+
     func playPrevious() {
+        if playerState.hasMedia, playerState.currentTime > Self.previousRestartThreshold {
+            engine?.seek(to: 0)
+            return
+        }
         guard let previous = playbackQueue.previous() else { return }
         saveCurrentProgress()
         folderLibrary?.selectVideo(previous)
