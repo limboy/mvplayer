@@ -1,5 +1,5 @@
 ---
-name: install
+name: install-to-local
 description: Build MVPlayer as an optimized Apple-silicon macOS Release app, package the resulting .app as a zip, and install it locally. Use when the user asks to build, package, install, or locally deploy MVPlayer from this repository.
 ---
 
@@ -21,7 +21,7 @@ creates `build/Release/MVPlayer.zip`, and copies the app into `/Applications`.
 3. Run the bundled script from the repository root:
 
    ```sh
-   bash skills/install/scripts/install_release.sh
+   bash skills/install-to-local/scripts/install_release.sh
    ```
 
    By default it installs to `/Applications/MVPlayer.app`. It always writes
