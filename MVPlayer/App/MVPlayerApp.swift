@@ -68,7 +68,7 @@ struct MVPlayerApp: App {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func application(_ application: NSApplication, open urls: [URL]) {
-        for url in urls where FolderLibrary.isVideo(url) {
+        for url in urls where FolderLibrary.isVideo(url) || FolderLibrary.isAudio(url) {
             FilePlayerWindows.shared.open(url)
         }
     }

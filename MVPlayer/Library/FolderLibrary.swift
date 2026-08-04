@@ -12,6 +12,7 @@ struct BrowserEntry: Identifiable, Hashable, Sendable {
     enum Kind: Hashable, Sendable {
         case folder
         case video
+        case audio
     }
 
     let url: URL
@@ -52,6 +53,13 @@ final class FolderLibrary: ObservableObject {
         "3g2", "3gp", "asf", "avi", "divx", "dv", "f4v", "flv", "m2t", "m2ts",
         "m4v", "mkv", "mov", "mp4", "mpeg", "mpg", "mts", "ogm", "ogv", "rm",
         "rmvb", "ts", "vob", "webm", "wmv"
+    ]
+
+    /// The audio counterpart to `videoExtensions`, same purpose: what counts as
+    /// playable when the system has no content type for it.
+    nonisolated static let audioExtensions: Set<String> = [
+        "aac", "aif", "aiff", "alac", "ape", "flac", "m4a", "mka", "mp3",
+        "oga", "ogg", "opus", "wav", "wma"
     ]
 
     init(
@@ -95,7 +103,7 @@ final class FolderLibrary: ObservableObject {
     }
 
     var visibleVideos: [URL] {
-        entries.compactMap { $0.kind == .video ? $0.url : nil }
+        entries.compactMap { $0.kind != .folder ? $0.url : nil }
     }
 
     @discardableResult
@@ -234,7 +242,7 @@ final class FolderLibrary: ObservableObject {
                 .sorted(by: Self.entrySort)
 
             loadMetadata(for: entries.compactMap { entry in
-                entry.kind == .video ? entry.url : nil
+                entry.kind != .folder ? entry.url : nil
             })
 
             if let selectedVideo, !entries.contains(where: { $0.url == selectedVideo }) {
@@ -279,6 +287,17 @@ final class FolderLibrary: ObservableObject {
         return videoExtensions.contains(url.pathExtension.lowercased())
     }
 
+    nonisolated static func isAudio(_ url: URL) -> Bool {
+        let resourceValues = try? url.resourceValues(forKeys: [.contentTypeKey, .isRegularFileKey])
+        guard resourceValues?.isRegularFile != false else { return false }
+        if let contentType = resourceValues?.contentType,
+           contentType.conforms(to: .audio)
+        {
+            return true
+        }
+        return audioExtensions.contains(url.pathExtension.lowercased())
+    }
+
     private static func makeEntry(_ url: URL) -> BrowserEntry? {
         let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .isHiddenKey])
         if values?.isHidden == true {
@@ -290,11 +309,14 @@ final class FolderLibrary: ObservableObject {
         if isVideo(url) {
             return BrowserEntry(url: url.standardizedFileURL, kind: .video)
         }
+        if isAudio(url) {
+            return BrowserEntry(url: url.standardizedFileURL, kind: .audio)
+        }
         return nil
     }
 
     private static func entrySort(_ lhs: BrowserEntry, _ rhs: BrowserEntry) -> Bool {
-        if lhs.kind != rhs.kind {
+        if (lhs.kind == .folder) != (rhs.kind == .folder) {
             return lhs.kind == .folder
         }
         return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending

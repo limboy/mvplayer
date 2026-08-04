@@ -5,6 +5,10 @@ struct TimelinePreviewScrubber: View {
     let currentTime: Double
     let duration: Double
     let url: URL?
+    /// Whether hovering or dragging shows the frame preview card. Off for
+    /// audio, which has no frames to show — extracting one would only ever
+    /// fail, after a visible flash of the empty placeholder card.
+    var showsPreview: Bool = true
     @Binding var isSeeking: Bool
     @Binding var seekValue: Double
     let onCommit: (Double) -> Void
@@ -47,6 +51,15 @@ struct TimelinePreviewScrubber: View {
     private var previewCardCenterY: CGFloat {
         -((previewFrameSize.height + Self.previewCardChrome) / 2 + 9)
     }
+
+    /// A rough upper bound on how wide the time-only badge gets, wide enough
+    /// for an "h:mm:ss" reading. Used only to keep the badge inside the bar
+    /// at either end — SwiftUI still sizes the badge itself to its text.
+    private static let timeBadgeWidth: CGFloat = 56
+
+    /// Where the badge sits above the bar. Fixed, unlike the full preview
+    /// card: there is no frame underneath it to make room for.
+    private static let timeBadgeCenterY: CGFloat = -20
 
     var body: some View {
         GeometryReader { proxy in
@@ -106,18 +119,32 @@ struct TimelinePreviewScrubber: View {
                     )
 
                 if let previewTime {
-                    // Half the card width keeps it inside the bar at either
-                    // end instead of hanging off the edge of the controls.
-                    let inset = previewFrameSize.width / 2 + 5
-                    previewCard(time: previewTime)
-                        .position(
-                            x: min(
-                                max(width * ratio(for: previewTime), inset),
-                                max(width - inset, inset)
-                            ),
-                            y: previewCardCenterY
-                        )
-                        .allowsHitTesting(false)
+                    if showsPreview {
+                        // Half the card width keeps it inside the bar at
+                        // either end instead of hanging off the edge of the
+                        // controls.
+                        let inset = previewFrameSize.width / 2 + 5
+                        previewCard(time: previewTime)
+                            .position(
+                                x: min(
+                                    max(width * ratio(for: previewTime), inset),
+                                    max(width - inset, inset)
+                                ),
+                                y: previewCardCenterY
+                            )
+                            .allowsHitTesting(false)
+                    } else {
+                        let inset = Self.timeBadgeWidth / 2 + 5
+                        timeBadge(time: previewTime)
+                            .position(
+                                x: min(
+                                    max(width * ratio(for: previewTime), inset),
+                                    max(width - inset, inset)
+                                ),
+                                y: Self.timeBadgeCenterY
+                            )
+                            .allowsHitTesting(false)
+                    }
                 }
             }
         }
@@ -170,6 +197,7 @@ struct TimelinePreviewScrubber: View {
             seekValue = time
         }
         previewTime = time
+        guard showsPreview else { return time }
 
         // The filmstrip covers the whole file, so this normally hits and the
         // preview tracks the pointer with no delay at all. Extracting a frame
@@ -223,7 +251,7 @@ struct TimelinePreviewScrubber: View {
     }
 
     private func prepareFilmstrip() {
-        guard let url, duration > 0 else { return }
+        guard showsPreview, let url, duration > 0 else { return }
         thumbnailProvider.prepare(for: url, duration: duration)
     }
 
@@ -279,6 +307,19 @@ struct TimelinePreviewScrubber: View {
         .padding(5)
         .background(.black.opacity(0.88), in: RoundedRectangle(cornerRadius: 7))
         .shadow(color: .black.opacity(0.35), radius: 6, y: 2)
+    }
+
+    /// The hover position for a file with no frames to preview — audio.
+    /// Just the time, in a small pill, rather than the full card with its
+    /// placeholder frame.
+    private func timeBadge(time: Double) -> some View {
+        Text(timeString(time))
+            .font(.caption2.monospacedDigit())
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(.black.opacity(0.88), in: Capsule())
+            .shadow(color: .black.opacity(0.35), radius: 4, y: 1)
     }
 
     private func timeString(_ seconds: Double) -> String {

@@ -83,6 +83,37 @@ final class FolderLibraryTests: XCTestCase {
         XCTAssertEqual(library.visibleVideos, [second.standardizedFileURL])
     }
 
+    func testAudioFilesJoinVideoInTheBrowserAndPlaybackQueue() throws {
+        let root = temporaryDirectory.appendingPathComponent("Music", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try Data().write(to: root.appendingPathComponent("song.mp3"))
+        try Data().write(to: root.appendingPathComponent("clip.mp4"))
+        try Data().write(to: root.appendingPathComponent("notes.txt"))
+
+        let library = FolderLibrary(storageURL: storageURL, startWatching: false)
+        XCTAssertTrue(library.addFolders([root]))
+        library.openRoot(library.roots[0])
+
+        XCTAssertEqual(library.entries.map(\.name), ["clip.mp4", "song.mp3"])
+        XCTAssertEqual(
+            library.entries.first { $0.name == "song.mp3" }?.kind,
+            .audio
+        )
+        // Both play through the same queue as video, in name order alongside it.
+        XCTAssertEqual(
+            library.visibleVideos.map(\.lastPathComponent),
+            ["clip.mp4", "song.mp3"]
+        )
+    }
+
+    func testIsAudioRecognizesKnownExtensionsRegardlessOfCase() {
+        XCTAssertTrue(FolderLibrary.isAudio(URL(fileURLWithPath: "/a/song.mp3")))
+        XCTAssertTrue(FolderLibrary.isAudio(URL(fileURLWithPath: "/a/song.FLAC")))
+        XCTAssertTrue(FolderLibrary.isAudio(URL(fileURLWithPath: "/a/song.m4a")))
+        XCTAssertFalse(FolderLibrary.isAudio(URL(fileURLWithPath: "/a/clip.mp4")))
+        XCTAssertFalse(FolderLibrary.isAudio(URL(fileURLWithPath: "/a/notes.txt")))
+    }
+
     func testUnavailableRootCanBeRemoved() throws {
         let root = temporaryDirectory.appendingPathComponent("Videos", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

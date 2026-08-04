@@ -58,6 +58,16 @@ final class PlayerState: ObservableObject {
     @Published var audioTracks: [AudioTrack] = []
     @Published var errorMessage: String?
 
+    /// Whether the file has no picture of its own — no video track, or only
+    /// one carrying embedded cover art. Drives the static music icon shown in
+    /// place of a picture, and hides the timeline's frame-preview hover.
+    @Published var isAudioOnly = false
+
+    /// Whether the video track `isAudioOnly` is talking about is embedded
+    /// cover art rather than nothing at all. mpv displays that art on its
+    /// own; the static music icon is only for a file with neither.
+    @Published var audioHasCoverArt = false
+
     var hasMedia: Bool {
         currentURL != nil
     }
@@ -82,6 +92,8 @@ final class PlayerState: ObservableObject {
         errorMessage = nil
         subtitles = []
         audioTracks = []
+        isAudioOnly = false
+        audioHasCoverArt = false
     }
 
     func reset() {
@@ -92,6 +104,8 @@ final class PlayerState: ObservableObject {
         currentURL = nil
         subtitles = []
         audioTracks = []
+        isAudioOnly = false
+        audioHasCoverArt = false
         errorMessage = nil
     }
 }

@@ -127,6 +127,15 @@ int mvp_mpv_copy_audio_tracks(
     int capacity
 );
 
+/// Whether the current file has a video track worth displaying, i.e. one that
+/// is not an embedded cover art image. Returns 1 (yes), 0 (no — audio only),
+/// or -1 on error.
+int mvp_mpv_has_visual_video_track(MVPMPVPlayer *player);
+
+/// Whether the current file has a video track that is embedded cover art.
+/// Returns 1 (yes), 0 (no), or -1 on error.
+int mvp_mpv_has_album_art_track(MVPMPVPlayer *player);
+
 #ifdef __cplusplus
 }
 #endif

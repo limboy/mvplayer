@@ -249,6 +249,7 @@ final class MPVPlayerEngine: @unchecked Sendable {
 
         case MVP_MPV_EVENT_FILE_LOADED:
             refreshTracks()
+            configureVisualization()
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.state.isLoading = false
@@ -348,6 +349,22 @@ final class MPVPlayerEngine: @unchecked Sendable {
         Task { @MainActor [weak self] in
             self?.state.subtitles = subtitles
             self?.state.audioTracks = audioTracks
+        }
+    }
+
+    /// Decides once per file whether it has a picture of its own to show.
+    /// mpv already displays embedded cover art on its own with no help from
+    /// here; a file with neither gets a static icon, drawn by
+    /// `PlayerContainerView` rather than mpv, once `state.isAudioOnly` is set
+    /// and `state.audioHasCoverArt` is not.
+    private func configureVisualization() {
+        let hasVisualVideo = mvp_mpv_has_visual_video_track(handle)
+        guard hasVisualVideo >= 0 else { return }
+        let isAudioOnly = hasVisualVideo == 0
+        let hasCoverArt = isAudioOnly && mvp_mpv_has_album_art_track(handle) == 1
+        Task { @MainActor [weak self] in
+            self?.state.isAudioOnly = isAudioOnly
+            self?.state.audioHasCoverArt = hasCoverArt
         }
     }
 

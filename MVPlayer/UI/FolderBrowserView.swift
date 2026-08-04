@@ -61,17 +61,17 @@ struct FolderBrowserView: View {
     }
 
     /// Takes what was dropped on the browser: folders join the library, and a
-    /// video file opens in a window of its own rather than pushing aside what is
-    /// playing here.
+    /// video or audio file opens in a window of its own rather than pushing
+    /// aside what is playing here.
     private func accept(_ urls: [URL]) -> Bool {
-        let videos = urls.filter(FolderLibrary.isVideo)
-        let folders = urls.filter { !videos.contains($0) }
+        let media = urls.filter { FolderLibrary.isVideo($0) || FolderLibrary.isAudio($0) }
+        let folders = urls.filter { !media.contains($0) }
 
         let added = library.addFolders(folders)
-        for video in videos {
-            FilePlayerWindows.shared.open(video)
+        for file in media {
+            FilePlayerWindows.shared.open(file)
         }
-        return added || !videos.isEmpty
+        return added || !media.isEmpty
     }
 
     /// Keeps the arrow keys pointed at a row that is still there, and gives
@@ -105,7 +105,7 @@ struct FolderBrowserView: View {
         switch entry.kind {
         case .folder:
             library.openFolder(entry.url)
-        case .video:
+        case .video, .audio:
             appModel.play(
                 entry.url,
                 from: library.visibleVideos,
@@ -230,7 +230,7 @@ struct FolderBrowserView: View {
         switch selectedEntry.kind {
         case .folder:
             return ["Folder"]
-        case .video:
+        case .video, .audio:
             // Empty until the read of the file comes back, rather than a row of
             // placeholders that would only be replaced a moment later.
             return library.metadata(for: selectedEntry.url)?.summaryParts ?? []
@@ -266,9 +266,9 @@ struct FolderBrowserView: View {
             }
         } else if library.entries.isEmpty {
             ContentUnavailableView(
-                "No Videos Here",
+                "No Media Here",
                 systemImage: "film",
-                description: Text("This folder has no supported video files or subfolders.")
+                description: Text("This folder has no supported video or audio files or subfolders.")
             )
         } else {
             List(selection: $selection) {
@@ -353,6 +353,14 @@ struct FolderBrowserView: View {
                 if entry.kind == .folder {
                     Image(systemName: "folder.fill")
                         .foregroundStyle(Color.accentColor)
+                        .frame(width: 22, height: 22)
+                } else if entry.kind == .audio {
+                    Image(systemName: "music.note")
+                        .foregroundStyle(.secondary)
+                        .frame(width: 22, height: 22)
+                } else if entry.kind == .video {
+                    Image(systemName: "film")
+                        .foregroundStyle(.secondary)
                         .frame(width: 22, height: 22)
                 }
                 Text(entry.name)
