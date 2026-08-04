@@ -308,6 +308,9 @@ struct FolderBrowserView: View {
             }
         } else {
             HStack(spacing: 10) {
+                Image(systemName: "folder.fill")
+                    .foregroundStyle(.secondary)
+                    .frame(width: 22, height: 22)
                 Text(root.displayName)
                     .lineLimit(1)
                 Spacer()
@@ -331,6 +334,9 @@ struct FolderBrowserView: View {
 
     private func rootLabel(_ root: LibraryRoot) -> some View {
         HStack(spacing: 10) {
+            Image(systemName: "folder.fill")
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 22, height: 22)
             Text(root.displayName)
                 .lineLimit(1)
             Spacer()
