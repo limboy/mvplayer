@@ -314,6 +314,15 @@ MVPMPVPlayer *mvp_mpv_create(char *error_buffer, size_t error_buffer_size) {
     player->set_option_string(player->handle, "sub-auto", "fuzzy");
     player->set_option_string(player->handle, "sub-file-paths", "sub:subs:subtitles:Sub:Subs:Subtitles");
 
+    // Show an embedded subtitle even when nothing marked it. mpv's own default
+    // only falls back to tracks flagged "default", and MVPlayer never sets
+    // slang for a track to match by language instead, so a file whose one
+    // English track carries no flag would open with no subtitle at all — not
+    // what somebody who left "Show Subtitles Automatically" on is asking for.
+    // Turning the preference off still sets sid to no, which this never
+    // overrides.
+    player->set_option_string(player->handle, "subs-fallback", "yes");
+
     // MVPlayer provides its own UI. Disable mpv's LuaJIT-backed scripts so the
     // hardened app never attempts to execute unsigned generated code.
     player->set_option_string(player->handle, "load-scripts", "no");

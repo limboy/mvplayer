@@ -323,10 +323,10 @@ final class MPVPlayerEngine: @unchecked Sendable {
     /// `selectsSubtitles` says the user would rather watch without one.
     ///
     /// `sid` is set to `auto` or `no` rather than a specific track: mpv already
-    /// knows which subtitle to prefer from the user's `slang`, from the tracks'
-    /// own default and forced flags, and — with `sub-auto=fuzzy` — from the
-    /// sidecar files sitting next to the video. Picking a track here would
-    /// throw all of that away.
+    /// knows which subtitle to prefer from the tracks' own default and forced
+    /// flags, from `subs-fallback=yes` when no flag settles it, and — with
+    /// `sub-auto=fuzzy` — from the sidecar files sitting next to the video.
+    /// Picking a track here would throw all of that away.
     ///
     /// The position goes through mpv's `start` option instead of a seek issued
     /// once the file is open, so the first frame drawn is already the right one
