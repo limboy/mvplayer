@@ -63,8 +63,8 @@ final class AppModel: ObservableObject {
         startupError = nil
         do {
             let engine = try MPVPlayerEngine(state: playerState)
-            engine.onPlaybackEnded = { [weak self] in
-                self?.advanceAfterEnd()
+            engine.onPlaybackEnded = { [weak self] generation in
+                self?.advanceAfterEnd(generation: generation)
             }
             self.engine = engine
             let videoView = MVVideoView(engine: engine)
@@ -179,7 +179,15 @@ final class AppModel: ObservableObject {
         pendingLoad != nil
     }
 
-    private func advanceAfterEnd() {
+    /// Reacts to mpv reporting a file's natural end. `generation` is the one
+    /// `load()` gave that file: if a manual Previous/Next has already loaded
+    /// something else by the time this runs — end-of-file is detected on
+    /// mpv's own queue and hops to the main actor to get here, and a click can
+    /// land in that gap — advancing from `current` now would advance from the
+    /// wrong file and undo what the user just chose. Stale end-of-file events
+    /// are dropped instead.
+    private func advanceAfterEnd(generation: Int) {
+        guard engine?.isMostRecentLoad(generation) == true else { return }
         if let currentURL = playerState.currentURL {
             progressStore.markFinished(url: currentURL, duration: playerState.duration)
         }
@@ -201,7 +209,7 @@ final class AppModel: ObservableObject {
             // The file is what the window is showing from this moment, even
             // though mpv has not been given it yet: the title, the row's
             // highlight and the spinner all read this.
-            playerState.resetForLoad(url)
+            playerState.resetForLoad(url, startAt: startAt)
             updateNowPlaying()
             return
         }

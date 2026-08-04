@@ -17,7 +17,9 @@ final class MPVPlayerEngine: @unchecked Sendable {
     let info: LibMPVInfo
     let state: PlayerState
 
-    var onPlaybackEnded: (@MainActor () -> Void)?
+    /// Carries the generation `load()` gave the file that just ended, so a
+    /// listener can tell a real end from a stale one — see `loadGeneration`.
+    var onPlaybackEnded: (@MainActor (Int) -> Void)?
     var onFileLoaded: (@MainActor () -> Void)?
 
     private let handle: OpaquePointer
@@ -44,6 +46,35 @@ final class MPVPlayerEngine: @unchecked Sendable {
     /// calling mpv, and never taken from an mpv callback.
     private let shutdownLock = NSLock()
     private var isShuttingDown = false
+
+    /// Bumped by every `load()`, so the end-of-file mpv reports for one file
+    /// can be told apart from a load a manual Previous/Next has since
+    /// replaced it with. `load()` runs on the main actor; end-of-file is
+    /// detected on `eventQueue`; a lock is simplest for a plain counter two
+    /// threads only ever read or increment, never anything that touches mpv.
+    private let generationLock = NSLock()
+    private var _loadGeneration = 0
+
+    private var loadGeneration: Int {
+        generationLock.lock()
+        defer { generationLock.unlock() }
+        return _loadGeneration
+    }
+
+    @discardableResult
+    private func bumpLoadGeneration() -> Int {
+        generationLock.lock()
+        defer { generationLock.unlock() }
+        _loadGeneration += 1
+        return _loadGeneration
+    }
+
+    /// Whether `generation` is still the most recent file asked of mpv, i.e.
+    /// nothing has loaded since. Lets a caller reacting to a delayed
+    /// end-of-file check whether it is still about the file it thinks it is.
+    func isMostRecentLoad(_ generation: Int) -> Bool {
+        loadGeneration == generation
+    }
 
     /// Owned by libmpv until the player is destroyed. Touched only by `init`
     /// and `shutdown`, which runs at most once.
@@ -231,8 +262,9 @@ final class MPVPlayerEngine: @unchecked Sendable {
             let reason = event.end_reason
             let errorCode = event.error
             if reason == 0 {
+                let endedGeneration = loadGeneration
                 Task { @MainActor [weak self] in
-                    self?.onPlaybackEnded?()
+                    self?.onPlaybackEnded?(endedGeneration)
                 }
             } else if reason == 4 {
                 let message = "Playback failed (mpv error \(errorCode))."
@@ -340,13 +372,19 @@ final class MPVPlayerEngine: @unchecked Sendable {
     /// argument it goes in moved when mpv 0.38 inserted an index before it, and
     /// this app loads whichever libmpv Homebrew has installed. `start` has been
     /// spelled the same way throughout.
-    func load(_ url: URL, startAt seconds: Double? = nil, selectsSubtitles: Bool = true) {
-        state.resetForLoad(url)
+    /// Returns the generation this load was given, for a caller that wants to
+    /// match it against a later `isMostRecentLoad(_:)` check itself rather
+    /// than waiting on `onPlaybackEnded`.
+    @discardableResult
+    func load(_ url: URL, startAt seconds: Double? = nil, selectsSubtitles: Bool = true) -> Int {
+        let generation = bumpLoadGeneration()
+        state.resetForLoad(url, startAt: seconds)
         discardPendingTimePosition()
         command(["set", "start", seconds.map { String($0) } ?? "none"])
         command(["set", "sid", selectsSubtitles ? "auto" : "no"])
         command(["loadfile", url.path, "replace"])
         setPaused(false)
+        return generation
     }
 
     func stop() {

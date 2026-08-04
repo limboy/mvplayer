@@ -6,8 +6,10 @@ struct FolderBrowserView: View {
     @ObservedObject private var library: FolderLibrary
     @State private var isDropTargeted = false
 
-    /// The row the arrow keys are moving over, which is not the row being
-    /// played: browsing ahead of what is on screen is the point of it.
+    /// The row the arrow keys are moving over. Free to diverge from what is
+    /// playing — browsing ahead of what is on screen is the point of it —
+    /// but follows along whenever the app itself is the one moving playback,
+    /// via `library.selectedVideo` below.
     @State private var selection: URL?
     @FocusState private var isListFocused: Bool
 
@@ -49,6 +51,12 @@ struct FolderBrowserView: View {
         }
         .onChange(of: library.entries) { _, _ in normalizeSelection() }
         .onChange(of: library.roots) { _, _ in normalizeSelection() }
+        // Keeps the row the keyboard sits on in step with whatever the
+        // transport controls just moved playback to — Previous/Next and
+        // auto-advance change this without going through `selectFromClick`.
+        .onChange(of: library.selectedVideo) { _, newValue in
+            if let newValue { selection = newValue }
+        }
         .onAppear(perform: normalizeSelection)
     }
 

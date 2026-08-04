@@ -129,6 +129,44 @@ final class MPVPlayerEngineTests: XCTestCase {
         XCTAssertLessThan(engine.state.currentTime, 3, "the offset leaked into the next file")
     }
 
+    /// Guards against the race behind Previous/Next intermittently doing
+    /// nothing: mpv reports a file's natural end on its own thread, and the
+    /// report reaches `onPlaybackEnded` only after a hop to the main actor. A
+    /// manual Previous/Next can land in that gap and load a different file
+    /// before the stale end-of-file report is handled. This checks the
+    /// mechanism `AppModel.advanceAfterEnd` leans on to drop such a report
+    /// instead of acting on it and undoing the user's navigation — without
+    /// depending on an actual end-of-file event, which needs real playback to
+    /// run to completion and is unreliable under a headless test's audio
+    /// output.
+    func testALoadsGenerationStopsBeingMostRecentOnceAnotherLoadRuns() throws {
+        let engine = try makeEngine()
+        let first = try makeSample(audioOnly: true)
+        let second = try makeSample(audioOnly: true)
+        defer {
+            try? FileManager.default.removeItem(at: first)
+            try? FileManager.default.removeItem(at: second)
+        }
+
+        let firstGeneration = engine.load(first)
+        XCTAssertTrue(
+            engine.isMostRecentLoad(firstGeneration),
+            "nothing else has loaded yet, so this load is still the most recent"
+        )
+
+        // Stands in for a manual Previous/Next racing a stale end-of-file
+        // report for `first`.
+        let secondGeneration = engine.load(second)
+
+        XCTAssertFalse(
+            engine.isMostRecentLoad(firstGeneration),
+            "a load that happened after should invalidate the first load's generation"
+        )
+        XCTAssertTrue(engine.isMostRecentLoad(secondGeneration))
+
+        engine.shutdown()
+    }
+
     /// Polls rather than sleeping a fixed span: opening a file and getting the
     /// first position back takes a second or so, and the position itself only
     /// lands four times a second.

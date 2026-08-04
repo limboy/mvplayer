@@ -66,9 +66,12 @@ final class PlayerState: ObservableObject {
         subtitles.first(where: \.isSelected)?.id
     }
 
-    func resetForLoad(_ url: URL) {
+    /// `startAt` is where the file is about to resume, if anywhere, so the
+    /// clock reads that immediately rather than at 0 for the moment before
+    /// mpv reports the real position it opened at.
+    func resetForLoad(_ url: URL, startAt seconds: Double? = nil) {
         currentURL = url
-        currentTime = 0
+        currentTime = seconds ?? 0
         duration = 0
         // Loading a file always asks mpv for `pause=no`, but mpv only reports
         // `pause` when the value actually flips, so an already-unpaused player
