@@ -4,11 +4,7 @@ MVPlayer is a native SwiftUI macOS video player built on `libmpv`. It targets
 macOS 14 or newer on Apple silicon. Releases bundle their own copies of
 `libmpv` and `ffmpeg`, so the downloaded app needs no Homebrew install to run.
 
-<p align="center">
-  <img src="Assets/screenshots/screenshot-1.webp" width="38%" />
-  <img src="Assets/screenshots/screenshot-2.webp" width="45%" />
-</p>
-
+![](Assets/screenshots/screenshot.webp) 
 
 ## Download
 
