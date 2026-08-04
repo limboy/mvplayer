@@ -30,10 +30,8 @@ struct FolderBrowserView: View {
             browserHeader
             Divider()
             browserContent
-            if !library.isAtRootList {
-                Divider()
-                statusBar
-            }
+            Divider()
+            statusBar
         }
         .background(Color(nsColor: .controlBackgroundColor))
         .overlay {
@@ -225,7 +223,7 @@ struct FolderBrowserView: View {
 
     private var statusTitle: String {
         if let selectedRoot {
-            return selectedRoot.displayName
+            return selectedRoot.url.path
         }
         if let selectedEntry {
             return selectedEntry.name
@@ -235,7 +233,7 @@ struct FolderBrowserView: View {
 
     private var statusDetails: [String] {
         if let selectedRoot {
-            return selectedRoot.isAvailable ? [selectedRoot.url.path] : ["Unavailable"]
+            return selectedRoot.isAvailable ? [] : ["Unavailable"]
         }
         guard let selectedEntry else { return [] }
         switch selectedEntry.kind {
@@ -310,15 +308,8 @@ struct FolderBrowserView: View {
             }
         } else {
             HStack(spacing: 10) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(root.displayName)
-                        .lineLimit(1)
-                    Text(root.url.path)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                }
+                Text(root.displayName)
+                    .lineLimit(1)
                 Spacer()
                 Button("Reconnect") {
                     reconnect(root)
@@ -326,6 +317,7 @@ struct FolderBrowserView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.small)
             }
+            .padding(.vertical, 8)
             .contextMenu {
                 Button("Reconnect…") {
                     reconnect(root)
@@ -339,19 +331,13 @@ struct FolderBrowserView: View {
 
     private func rootLabel(_ root: LibraryRoot) -> some View {
         HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(root.displayName)
-                    .lineLimit(1)
-                Text(root.url.path)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
+            Text(root.displayName)
+                .lineLimit(1)
             Spacer()
             Image(systemName: "chevron.right")
                 .foregroundStyle(.tertiary)
         }
+        .padding(.vertical, 8)
         .contentShape(Rectangle())
     }
 
