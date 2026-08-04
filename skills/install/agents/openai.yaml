@@ -1,0 +1,4 @@
+interface:
+  display_name: "Install MVPlayer"
+  short_description: "Build and install an optimized MVPlayer release"
+  default_prompt: "Use $install to build MVPlayer and install the local Release app."
