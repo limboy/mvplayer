@@ -122,6 +122,13 @@ final class PlaybackQueue: ObservableObject {
         repeatMode = repeatMode.next
     }
 
+    /// Flips between not repeating and repeating the current video. For a
+    /// window with no queue to cycle through, "Repeat All" means nothing, so
+    /// this is the only toggle such a window offers.
+    func toggleRepeatOne() {
+        repeatMode = repeatMode == .off ? .one : .off
+    }
+
     private var activeOrder: [URL] {
         isShuffled ? shuffleOrder : videos
     }

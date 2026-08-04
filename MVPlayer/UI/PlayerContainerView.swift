@@ -344,14 +344,26 @@ private struct PlayerControlsView: View {
                 }
             }
 
-            controlButton(
-                queue.repeatMode.symbolName,
-                foregroundStyle: queue.repeatMode == .off
-                    ? AnyShapeStyle(Color.primary)
-                    : AnyShapeStyle(Color.accentColor),
-                help: queue.repeatMode.label
-            ) {
-                queue.cycleRepeatMode()
+            if showsQueueControls {
+                controlButton(
+                    queue.repeatMode.symbolName,
+                    foregroundStyle: queue.repeatMode == .off
+                        ? AnyShapeStyle(Color.primary)
+                        : AnyShapeStyle(Color.accentColor),
+                    help: queue.repeatMode.label
+                ) {
+                    queue.cycleRepeatMode()
+                }
+            } else {
+                controlButton(
+                    "repeat",
+                    foregroundStyle: queue.repeatMode == .off
+                        ? AnyShapeStyle(Color.primary)
+                        : AnyShapeStyle(Color.accentColor),
+                    help: queue.repeatMode == .off ? "Repeat Off" : "Repeat On"
+                ) {
+                    queue.toggleRepeatOne()
+                }
             }
 
             controlButton(
