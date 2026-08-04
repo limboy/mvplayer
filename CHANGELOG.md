@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-04
+- The video list now automatically scrolls to keep the currently playing file in view
+- Folders in the library root now show a folder icon
+- The current folder's path moved from the sidebar into the status bar
+
 ## [0.2.0] - 2026-08-04
 - Add support for playing audio files
 - Automatically advance to the next file when playback ends naturally

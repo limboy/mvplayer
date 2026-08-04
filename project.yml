@@ -111,7 +111,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: me.limboy.mvplayer
         PRODUCT_NAME: MVPlayer
         PRODUCT_MODULE_NAME: MVPlayer
-        MARKETING_VERSION: "0.2.0"
+        MARKETING_VERSION: "0.2.1"
         CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: MVPlayer
