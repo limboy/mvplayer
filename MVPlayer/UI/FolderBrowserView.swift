@@ -164,7 +164,8 @@ struct FolderBrowserView: View {
                     goBack()
                 } label: {
                     Image(systemName: "chevron.left")
-                        .frame(width: 22, height: 22)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("Back")
