@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-08-05
+- The mouse cursor now hides automatically after a moment of inactivity in full screen, matching the playback controls
+
 ## [0.2.3] - 2026-08-05
 - When leaving full screen, a click-to-return prompt now appears immediately instead of waiting for the screen transition to finish
 
