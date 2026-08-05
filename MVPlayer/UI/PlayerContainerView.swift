@@ -50,6 +50,26 @@ struct PlayerContainerView: View {
                     windowState.toggleFullscreen()
                 }
 
+            if state.hasMedia,
+               !isVideoSurfaceActive,
+               windowState.isFullscreenContentPresented {
+                Button {
+                    windowState.returnVideoFromFullscreen()
+                } label: {
+                    VStack(spacing: 14) {
+                        Image(systemName: "arrow.down.right.and.arrow.up.left")
+                            .font(.system(size: 34, weight: .semibold))
+                        Text("Click to Exit Full Screen")
+                            .font(.title3.weight(.semibold))
+                    }
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Returns the video to this window")
+            }
+
             if !state.hasMedia {
                 VStack(spacing: 12) {
                     Image(systemName: "play.rectangle")
@@ -81,7 +101,7 @@ struct PlayerContainerView: View {
 
                 Spacer()
 
-                if state.hasMedia {
+                if state.hasMedia, isVideoSurfaceActive {
                     PlayerControlsView(
                         appModel: appModel,
                         engine: engine,

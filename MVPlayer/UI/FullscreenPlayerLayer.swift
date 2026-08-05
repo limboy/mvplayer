@@ -17,6 +17,7 @@ struct FullscreenPlayerLayer: View {
         FullscreenPlayerPresenter(
             isPresented: windowState.isFullscreen,
             exitRequest: windowState.fullscreenExitRequest,
+            returnRequest: windowState.fullscreenReturnRequest,
             sourceFrame: windowState.fullscreenSourceFrame
         ) {
             PlayerContainerView(
@@ -29,6 +30,10 @@ struct FullscreenPlayerLayer: View {
             )
             .ignoresSafeArea()
             .preferredColorScheme(.dark)
+        } onPresent: {
+            windowState.fullscreenDidEnter()
+        } onWillDismiss: {
+            windowState.fullscreenWillExit()
         } onDismiss: {
             windowState.fullscreenDidExit()
         }

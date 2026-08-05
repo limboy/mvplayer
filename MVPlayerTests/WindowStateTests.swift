@@ -9,10 +9,15 @@ final class WindowStateTests: XCTestCase {
 
         state.toggleFullscreen()
         XCTAssertTrue(state.isFullscreen)
+        XCTAssertFalse(state.isFullscreenContentPresented)
         XCTAssertEqual(state.fullscreenExitRequest, 0)
+
+        state.fullscreenDidEnter()
+        XCTAssertTrue(state.isFullscreenContentPresented)
 
         state.toggleFullscreen()
         XCTAssertTrue(state.isFullscreen)
+        XCTAssertFalse(state.isFullscreenContentPresented)
         XCTAssertEqual(state.fullscreenExitRequest, 1)
 
         state.toggleFullscreen()
@@ -20,6 +25,31 @@ final class WindowStateTests: XCTestCase {
 
         state.fullscreenDidExit()
         XCTAssertFalse(state.isFullscreen)
+        XCTAssertFalse(state.isFullscreenContentPresented)
+    }
+
+    func testAnExitRequestedDuringEntryNeverShowsTheReturnPrompt() {
+        let state = WindowState()
+
+        state.toggleFullscreen()
+        state.toggleFullscreen()
+        state.fullscreenDidEnter()
+
+        XCTAssertTrue(state.isFullscreen)
+        XCTAssertFalse(state.isFullscreenContentPresented)
+    }
+
+    func testReturningFromTheNormalWindowUsesTheDirectDismissalRequest() {
+        let state = WindowState()
+
+        state.toggleFullscreen()
+        state.fullscreenDidEnter()
+        state.returnVideoFromFullscreen()
+
+        XCTAssertTrue(state.isFullscreen)
+        XCTAssertFalse(state.isFullscreenContentPresented)
+        XCTAssertEqual(state.fullscreenReturnRequest, 1)
+        XCTAssertEqual(state.fullscreenExitRequest, 0)
     }
 
     func testFullscreenCapturesVideoSurfaceFrameInScreenCoordinates() {

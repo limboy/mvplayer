@@ -4,26 +4,39 @@ import SwiftUI
 struct FullscreenPlayerPresenter<Content: View>: NSViewRepresentable {
     let isPresented: Bool
     let exitRequest: UInt
+    let returnRequest: UInt
     let sourceFrame: NSRect?
     let content: Content
+    let onPresent: @MainActor () -> Void
+    let onWillDismiss: @MainActor () -> Void
     let onDismiss: @MainActor () -> Void
 
     init(
         isPresented: Bool,
         exitRequest: UInt,
+        returnRequest: UInt,
         sourceFrame: NSRect?,
         @ViewBuilder content: () -> Content,
+        onPresent: @escaping @MainActor () -> Void,
+        onWillDismiss: @escaping @MainActor () -> Void,
         onDismiss: @escaping @MainActor () -> Void
     ) {
         self.isPresented = isPresented
         self.exitRequest = exitRequest
+        self.returnRequest = returnRequest
         self.sourceFrame = sourceFrame
         self.content = content()
+        self.onPresent = onPresent
+        self.onWillDismiss = onWillDismiss
         self.onDismiss = onDismiss
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onDismiss: onDismiss)
+        Coordinator(
+            onPresent: onPresent,
+            onWillDismiss: onWillDismiss,
+            onDismiss: onDismiss
+        )
     }
 
     func makeNSView(context: Context) -> NSView {
@@ -35,28 +48,38 @@ struct FullscreenPlayerPresenter<Content: View>: NSViewRepresentable {
             anchorView: nsView,
             isPresented: isPresented,
             exitRequest: exitRequest,
+            returnRequest: returnRequest,
             sourceFrame: sourceFrame,
             content: content
         )
     }
 
     static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
-        coordinator.closeImmediately()
+        coordinator.closeImmediately(notify: false)
     }
 
     @MainActor
     final class Coordinator: NSObject, NSWindowDelegate {
+        private let onPresent: @MainActor () -> Void
+        private let onWillDismiss: @MainActor () -> Void
         private let onDismiss: @MainActor () -> Void
         private var fullscreenWindow: NSWindow?
         private var hostingController: NSHostingController<Content>?
         private var lastExitRequest: UInt = 0
+        private var lastReturnRequest: UInt = 0
         private var presentationScheduled = false
         private var hasEnteredFullscreen = false
         private var exitWhenEntered = false
         private var isClosing = false
         private var windowedFrame: NSRect?
 
-        init(onDismiss: @escaping @MainActor () -> Void) {
+        init(
+            onPresent: @escaping @MainActor () -> Void,
+            onWillDismiss: @escaping @MainActor () -> Void,
+            onDismiss: @escaping @MainActor () -> Void
+        ) {
+            self.onPresent = onPresent
+            self.onWillDismiss = onWillDismiss
             self.onDismiss = onDismiss
         }
 
@@ -64,6 +87,7 @@ struct FullscreenPlayerPresenter<Content: View>: NSViewRepresentable {
             anchorView: NSView,
             isPresented: Bool,
             exitRequest: UInt,
+            returnRequest: UInt,
             sourceFrame: NSRect?,
             content: Content
         ) {
@@ -76,6 +100,7 @@ struct FullscreenPlayerPresenter<Content: View>: NSViewRepresentable {
 
             if isPresented, fullscreenWindow == nil, !presentationScheduled {
                 lastExitRequest = exitRequest
+                lastReturnRequest = returnRequest
                 presentationScheduled = true
                 let sourceWindow = anchorView.window
 
@@ -95,6 +120,12 @@ struct FullscreenPlayerPresenter<Content: View>: NSViewRepresentable {
                 if fullscreenWindow != nil {
                     requestExit()
                 }
+                return
+            }
+
+            if returnRequest != lastReturnRequest {
+                lastReturnRequest = returnRequest
+                closeImmediately(notify: true)
                 return
             }
 
@@ -217,7 +248,14 @@ struct FullscreenPlayerPresenter<Content: View>: NSViewRepresentable {
             if exitWhenEntered {
                 exitWhenEntered = false
                 requestExit()
+            } else {
+                onPresent()
             }
+        }
+
+        func windowWillExitFullScreen(_ notification: Notification) {
+            guard notification.object as? NSWindow === fullscreenWindow else { return }
+            onWillDismiss()
         }
 
         func windowDidExitFullScreen(_ notification: Notification) {
@@ -236,22 +274,31 @@ struct FullscreenPlayerPresenter<Content: View>: NSViewRepresentable {
             return false
         }
 
-        func closeImmediately() {
-            finishClosing(notify: false)
+        func closeImmediately(notify: Bool) {
+            guard fullscreenWindow != nil || presentationScheduled else { return }
+            isClosing = true
+            hasEnteredFullscreen = false
+            exitWhenEntered = false
+            presentationScheduled = false
+
+            // The return button lives in the normal desktop Space. Toggling a
+            // background full-screen window would make macOS visit that Space,
+            // animate out of it, restore this temporary window, and only then
+            // return the video. Closing it directly keeps the user on the normal
+            // Space and lets the already-laid-out normal host take over at once.
+            finalizeClose()
+            if notify {
+                onDismiss()
+            }
         }
 
         private func finishClosing(notify: Bool) {
             guard !isClosing else { return }
             isClosing = true
-
             hasEnteredFullscreen = false
             exitWhenEntered = false
 
             if notify {
-                // The normal and fullscreen players keep separate, stable host
-                // views. Publishing the dismissal moves the shared video view
-                // directly back to the already-laid-out normal host. The next
-                // representable update closes this window in the same render pass.
                 onDismiss()
             } else {
                 finalizeClose()
