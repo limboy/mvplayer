@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-08-05
+- When leaving full screen, a click-to-return prompt now appears immediately instead of waiting for the screen transition to finish
+
 ## [0.2.2] - 2026-08-05
 - Lower the minimum window width so the player can be resized narrower (480pt instead of 560pt)
 
