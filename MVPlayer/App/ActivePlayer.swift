@@ -29,11 +29,19 @@ final class ActivePlayer: ObservableObject {
 
     func claim(_ target: PlayerTarget) {
         guard self.target?.appModel !== target.appModel else { return }
-        self.target = target
-        windowStateObserver = target.windowState.objectWillChange
-            .sink { [weak self] _ in
-                self?.objectWillChange.send()
-            }
+        // `claim` can be reached synchronously from an NSViewRepresentable's
+        // `updateNSView`, i.e. from within a SwiftUI view update. Publishing
+        // `target` right there trips "Publishing changes from within view
+        // updates is not allowed", so the actual mutation is pushed to the
+        // next run loop turn instead.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.target?.appModel !== target.appModel else { return }
+            self.target = target
+            self.windowStateObserver = target.windowState.objectWillChange
+                .sink { [weak self] _ in
+                    self?.objectWillChange.send()
+                }
+        }
     }
 
     /// Releases the menu if `appModel` holds it. A window closing while another
