@@ -21,6 +21,7 @@ struct PlayerContainerView: View {
     @State private var seekValue: Double = 0
     @State private var hideTask: Task<Void, Never>?
     @State private var errorDismissTask: Task<Void, Never>?
+    @State private var isCursorHidden = false
 
     init(
         appModel: AppModel,
@@ -143,9 +144,16 @@ struct PlayerContainerView: View {
         .onChange(of: state.errorMessage) { _, message in
             scheduleErrorDismiss(for: message)
         }
+        .onChange(of: controlsVisible) { _, visible in
+            updateCursorVisibility(controlsVisible: visible)
+        }
+        .onChange(of: windowState.isFullscreen) { _, isFullscreen in
+            updateCursorVisibility(controlsVisible: controlsVisible)
+        }
         .onDisappear {
             hideTask?.cancel()
             errorDismissTask?.cancel()
+            showCursorIfHidden()
         }
         .background {
             PlayerKeyboardMonitor(handle: handle)
@@ -223,6 +231,30 @@ struct PlayerContainerView: View {
             guard !Task.isCancelled, !state.isPaused, !isSeeking else { return }
             controlsVisible = false
         }
+    }
+
+    /// Keeps the pointer out of the way on the same schedule as the
+    /// controller: it disappears with it and comes back the moment the
+    /// controller does. Windowed playback never hides it — there is a title
+    /// bar and surrounding chrome to reach there.
+    ///
+    /// `setHiddenUntilMouseMoves` rather than `hide()`/`unhide()`: the latter
+    /// is a manually balanced counter that only ever un-hides through our own
+    /// `onChange`, and our hover callback firing is not reliable enough for
+    /// that to hold in a real (Spaces-backed) full screen window. The former
+    /// is handled natively by AppKit, so a stray mouse move always brings the
+    /// pointer back even if our own state falls out of sync.
+    private func updateCursorVisibility(controlsVisible: Bool) {
+        let shouldHide = windowState.isFullscreen && !controlsVisible
+        guard shouldHide != isCursorHidden else { return }
+        isCursorHidden = shouldHide
+        NSCursor.setHiddenUntilMouseMoves(shouldHide)
+    }
+
+    private func showCursorIfHidden() {
+        guard isCursorHidden else { return }
+        isCursorHidden = false
+        NSCursor.setHiddenUntilMouseMoves(false)
     }
 }
 
