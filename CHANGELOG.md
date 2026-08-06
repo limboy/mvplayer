@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-08-06
+- Enlarge the clickable area of the back button in the folder browser, making it easier to tap
+
 ## [0.2.4] - 2026-08-05
 - The mouse cursor now hides automatically after a moment of inactivity in full screen, matching the playback controls
 
