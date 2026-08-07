@@ -8,6 +8,12 @@ struct MediaMetadata: Equatable, Sendable {
     let height: Int?
     let frameRate: Double?
 
+    /// ID3 tags, read for mp3 files only. Both are required for the status
+    /// bar's "artist - album" line — a file tagged with just one of them
+    /// falls back to showing its name, the same as a file with neither.
+    let artist: String?
+    let album: String?
+
     /// What is worth saying about the file, in reading order, leaving out
     /// anything it did not answer for.
     ///
@@ -74,6 +80,14 @@ struct MediaMetadata: Equatable, Sendable {
             frameRate = frameRate ?? probed.frameRate
         }
 
+        var artist: String?
+        var album: String?
+        if url.pathExtension.lowercased() == "mp3" {
+            let tags = await id3Tags(from: asset)
+            artist = tags.artist
+            album = tags.album
+        }
+
         if fileSize == 0, seconds == nil, width == nil {
             return nil
         }
@@ -82,7 +96,29 @@ struct MediaMetadata: Equatable, Sendable {
             duration: seconds,
             width: width,
             height: height,
-            frameRate: frameRate
+            frameRate: frameRate,
+            artist: artist,
+            album: album
         )
+    }
+
+    /// Pulls artist and album out of an mp3's ID3 tags. Either can be absent —
+    /// untagged files and files tagged by something idiosyncratic both come
+    /// back with a blank in one or both spots, which the caller treats as
+    /// "not parseable" and falls back to the filename for.
+    private static func id3Tags(from asset: AVURLAsset) async -> (artist: String?, album: String?) {
+        guard let items = try? await asset.load(.commonMetadata) else { return (nil, nil) }
+        func value(for key: AVMetadataKey) async -> String? {
+            for item in items where item.commonKey == key {
+                if let string = try? await item.load(.stringValue) {
+                    let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !trimmed.isEmpty { return trimmed }
+                }
+            }
+            return nil
+        }
+        let artist = await value(for: .commonKeyArtist)
+        let album = await value(for: .commonKeyAlbumName)
+        return (artist, album)
     }
 }

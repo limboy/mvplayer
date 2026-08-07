@@ -244,6 +244,16 @@ struct FolderBrowserView: View {
             return selectedRoot.url.path
         }
         if let selectedEntry {
+            // An mp3 with both ID3 tags read introduces itself that way instead
+            // of by filename; anything untagged, unparseable, or not an mp3
+            // falls back to the name like every other row always has.
+            if selectedEntry.url.pathExtension.lowercased() == "mp3",
+               let metadata = library.metadata(for: selectedEntry.url),
+               let artist = metadata.artist,
+               let album = metadata.album
+            {
+                return "\(artist) - \(album)"
+            }
             return selectedEntry.name
         }
         return ""
