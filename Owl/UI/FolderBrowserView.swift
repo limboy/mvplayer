@@ -352,7 +352,7 @@ struct FolderBrowserView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.small)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, 4)
             .contextMenu {
                 Button("Reconnect…") {
                     reconnect(root)
@@ -375,7 +375,7 @@ struct FolderBrowserView: View {
             Image(systemName: "chevron.right")
                 .foregroundStyle(.tertiary)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 4)
         .contentShape(Rectangle())
     }
 
@@ -388,6 +388,10 @@ struct FolderBrowserView: View {
                 if entry.kind == .folder {
                     Image(systemName: "folder.fill")
                         .foregroundStyle(Color.accentColor)
+                        .frame(width: 22, height: 22)
+                } else {
+                    Image(systemName: "play.rectangle.fill")
+                        .foregroundStyle(.secondary)
                         .frame(width: 22, height: 22)
                 }
                 Text(entry.name)
