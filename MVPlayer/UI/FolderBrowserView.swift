@@ -381,10 +381,6 @@ struct FolderBrowserView: View {
                     Image(systemName: "folder.fill")
                         .foregroundStyle(Color.accentColor)
                         .frame(width: 22, height: 22)
-                } else if entry.kind == .video {
-                    Image(systemName: "film")
-                        .foregroundStyle(.secondary)
-                        .frame(width: 22, height: 22)
                 }
                 Text(entry.name)
                     .lineLimit(1)
