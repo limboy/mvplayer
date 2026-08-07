@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-# Build, sign, notarize, and Sparkle-sign an MVPlayer DMG on GitHub Actions.
-# The tag-triggered workflow publishes build/MVPlayer.dmg and build/appcast.xml.
+# Build, sign, notarize, and Sparkle-sign an Owl DMG on GitHub Actions.
+# The tag-triggered workflow publishes build/Owl.dmg and build/appcast.xml.
 
 VERSION="${1:?Usage: bash scripts/release-ci.sh <version>}"
 if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -43,7 +43,7 @@ fi
 
 CERTIFICATE_PATH="$RUNNER_TEMP/Certificates.p12"
 ASC_KEY_PATH="$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8"
-KEYCHAIN_PATH="$RUNNER_TEMP/mvplayer-release.keychain-db"
+KEYCHAIN_PATH="$RUNNER_TEMP/owl-release.keychain-db"
 KEYCHAIN_PASSWORD="$(uuidgen)"
 SIGNING_IDENTITY="Developer ID Application: $SIGNING_IDENTITY_NAME ($APPLE_TEAM_ID)"
 
@@ -81,7 +81,7 @@ if ! security find-identity -v -p codesigning "$KEYCHAIN_PATH" |
   exit 1
 fi
 
-echo "🔨 Building MVPlayer v$VERSION..."
+echo "🔨 Building Owl v$VERSION..."
 xcodegen generate
 
 echo "📦 Vendoring libmpv/ffmpeg..."
@@ -98,10 +98,10 @@ authentication_args=(
 )
 
 xcodebuild \
-  -project MVPlayer.xcodeproj \
-  -scheme MVPlayer \
+  -project Owl.xcodeproj \
+  -scheme Owl \
   -configuration Release \
-  -archivePath build/MVPlayer.xcarchive \
+  -archivePath build/Owl.xcarchive \
   archive \
   CODE_SIGN_STYLE=Manual \
   CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
@@ -113,13 +113,13 @@ sed "s/\${APPLE_TEAM_ID}/$APPLE_TEAM_ID/g" \
   ExportOptions.plist > build/ExportOptions.plist
 xcodebuild \
   -exportArchive \
-  -archivePath build/MVPlayer.xcarchive \
+  -archivePath build/Owl.xcarchive \
   -exportOptionsPlist build/ExportOptions.plist \
   -exportPath build/export
 
 echo "🔍 Verifying code signature..."
-scripts/verify-entitlements.sh build/export/MVPlayer.app
-codesign --verify --deep --strict --verbose=2 build/export/MVPlayer.app
+scripts/verify-entitlements.sh build/export/Owl.app
+codesign --verify --deep --strict --verbose=2 build/export/Owl.app
 
 notary_args=(
   --key "$ASC_KEY_PATH"
@@ -129,41 +129,41 @@ notary_args=(
   --output-format json
 )
 
-echo "🔏 Notarizing and stapling MVPlayer.app..."
+echo "🔏 Notarizing and stapling Owl.app..."
 ditto \
   -c \
   -k \
   --keepParent \
-  build/export/MVPlayer.app \
-  build/MVPlayer-notarization.zip
+  build/export/Owl.app \
+  build/Owl-notarization.zip
 xcrun notarytool submit \
-  build/MVPlayer-notarization.zip \
+  build/Owl-notarization.zip \
   "${notary_args[@]}" |
   tee build/notarization-app.json
 if [[ "$(plutil -extract status raw build/notarization-app.json)" != "Accepted" ]]; then
   echo "❌ App notarization was not accepted"
   exit 1
 fi
-xcrun stapler staple build/export/MVPlayer.app
-xcrun stapler validate build/export/MVPlayer.app
+xcrun stapler staple build/export/Owl.app
+xcrun stapler validate build/export/Owl.app
 
-create_mvplayer_dmg() {
+create_owl_dmg() {
   local output_path="$1"
   rm -f "$output_path"
 
   create-dmg \
-    --volname "MVPlayer" \
+    --volname "Owl" \
     --window-pos 200 120 \
     --window-size 660 400 \
     --icon-size 160 \
     --text-size 14 \
-    --icon "MVPlayer.app" 170 180 \
-    --hide-extension "MVPlayer.app" \
+    --icon "Owl.app" 170 180 \
+    --hide-extension "Owl.app" \
     --app-drop-link 490 180 \
     --no-internet-enable \
     --format UDZO \
     "$output_path" \
-    build/export/MVPlayer.app || true
+    build/export/Owl.app || true
 
   if [[ ! -f "$output_path" ]]; then
     echo "❌ DMG creation failed"
@@ -171,21 +171,21 @@ create_mvplayer_dmg() {
   fi
 }
 
-echo "📦 Creating, notarizing, and stapling MVPlayer.dmg..."
-create_mvplayer_dmg build/MVPlayer.dmg
+echo "📦 Creating, notarizing, and stapling Owl.dmg..."
+create_owl_dmg build/Owl.dmg
 xcrun notarytool submit \
-  build/MVPlayer.dmg \
+  build/Owl.dmg \
   "${notary_args[@]}" |
   tee build/notarization-dmg.json
 if [[ "$(plutil -extract status raw build/notarization-dmg.json)" != "Accepted" ]]; then
   echo "❌ DMG notarization was not accepted"
   exit 1
 fi
-xcrun stapler staple build/MVPlayer.dmg
-xcrun stapler validate build/MVPlayer.dmg
+xcrun stapler staple build/Owl.dmg
+xcrun stapler validate build/Owl.dmg
 
-spctl --assess --type execute --verbose build/export/MVPlayer.app
-hdiutil verify build/MVPlayer.dmg
+spctl --assess --type execute --verbose build/export/Owl.app
+hdiutil verify build/Owl.dmg
 
 SPARKLE_BIN="$(find "$HOME/Library/Developer/Xcode/DerivedData" \
   -path '*/SourcePackages/artifacts/sparkle/Sparkle/bin/sign_update' \
@@ -200,7 +200,7 @@ fi
 echo "✍️ Signing the DMG for Sparkle..."
 signature_output="$(
   printf '%s' "$SPARKLE_ED_PRIVATE_KEY" |
-    "$SPARKLE_BIN" --ed-key-file - build/MVPlayer.dmg
+    "$SPARKLE_BIN" --ed-key-file - build/Owl.dmg
 )"
 ed_signature="$(
   printf '%s' "$signature_output" |
@@ -210,7 +210,7 @@ signed_length="$(
   printf '%s' "$signature_output" |
     sed -n 's/.*length="\([^"]*\)".*/\1/p'
 )"
-actual_length="$(stat -f '%z' build/MVPlayer.dmg)"
+actual_length="$(stat -f '%z' build/Owl.dmg)"
 if [[ -z "$ed_signature" || "$signed_length" != "$actual_length" ]]; then
   echo "❌ Sparkle signature metadata is invalid"
   exit 1
@@ -242,13 +242,13 @@ done <<< "$release_notes"
 html_notes+="</ul>"
 
 pub_date="$(date -u '+%a, %d %b %Y %H:%M:%S +0000')"
-repository="${GITHUB_REPOSITORY:-limboy/mvplayer}"
+repository="${GITHUB_REPOSITORY:-limboy/owl}"
 
 cat > build/appcast.xml <<APPCAST
 <?xml version="1.0" standalone="yes"?>
 <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
   <channel>
-    <title>MVPlayer</title>
+    <title>Owl</title>
     <item>
       <title>Version $VERSION</title>
       <sparkle:version>$VERSION</sparkle:version>
@@ -257,7 +257,7 @@ cat > build/appcast.xml <<APPCAST
       <pubDate>$pub_date</pubDate>
       <description><![CDATA[$html_notes]]></description>
       <enclosure
-        url="https://github.com/$repository/releases/download/v$VERSION/MVPlayer.dmg"
+        url="https://github.com/$repository/releases/download/v$VERSION/Owl.dmg"
         sparkle:edSignature="$ed_signature"
         length="$actual_length"
         type="application/octet-stream"
@@ -267,5 +267,5 @@ cat > build/appcast.xml <<APPCAST
 </rss>
 APPCAST
 
-plutil -lint build/export/MVPlayer.app/Contents/Info.plist
-echo "✅ MVPlayer v$VERSION is ready at build/MVPlayer.dmg"
+plutil -lint build/export/Owl.app/Contents/Info.plist
+echo "✅ Owl v$VERSION is ready at build/Owl.dmg"

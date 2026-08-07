@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Vendors libmpv and the Homebrew ffmpeg command line tools MVPlayer shells
+# Vendors libmpv and the Homebrew ffmpeg command line tools Owl shells
 # out to for thumbnails, together with every Homebrew dylib either one
 # depends on, into deps/lib and deps/bin. install_name_tool rewrites every
 # Homebrew-prefixed load command to @rpath, the same approach IINA's
@@ -123,7 +123,7 @@ process "$ffmpeg_src" "$bin_out"
 process "$ffprobe_src" "$bin_out"
 
 # ffmpeg and ffprobe run as their own processes rather than being dlopen'd
-# into MVPlayer, so unlike libmpv's dependents they need their own rpath to
+# into Owl, so unlike libmpv's dependents they need their own rpath to
 # resolve @rpath/libavcodec.dylib and friends: Contents/Resources/bin/ffmpeg
 # looks two directories up for Contents/Frameworks.
 for exe in "$bin_out/ffmpeg" "$bin_out/ffprobe"; do

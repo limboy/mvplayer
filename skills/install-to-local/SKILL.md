@@ -1,14 +1,14 @@
 ---
 name: install-to-local
-description: Build MVPlayer as an optimized Apple-silicon macOS Release app, package the resulting .app as a zip, and install it locally. Use when the user asks to build, package, install, or locally deploy MVPlayer from this repository.
+description: Build Owl as an optimized Apple-silicon macOS Release app, package the resulting .app as a zip, and install it locally. Use when the user asks to build, package, install, or locally deploy Owl from this repository.
 ---
 
-# Install MVPlayer
+# Install Owl
 
-Use this skill from the MVPlayer repository root to produce and install a local
+Use this skill from the Owl repository root to produce and install a local
 Release build. The workflow regenerates the Xcode project from `project.yml`,
-builds the shared `MVPlayer` scheme for `macOS arm64`, validates the app bundle,
-creates `build/Release/MVPlayer.zip`, and copies the app into `/Applications`.
+builds the shared `Owl` scheme for `macOS arm64`, validates the app bundle,
+creates `build/Release/Owl.zip`, and copies the app into `/Applications`.
 
 ## Workflow
 
@@ -26,9 +26,9 @@ creates `build/Release/MVPlayer.zip`, and copies the app into `/Applications`.
    bash skills/install-to-local/scripts/install_release.sh
    ```
 
-   By default it installs to `/Applications/MVPlayer.app`. It always writes
-   the Release package to `build/Release/MVPlayer.zip` and reports the original
-   built app at `build/Build/Products/Release/MVPlayer.app`.
+   By default it installs to `/Applications/Owl.app`. It always writes
+   the Release package to `build/Release/Owl.zip` and reports the original
+   built app at `build/Build/Products/Release/Owl.app`.
 4. If the user asks for a per-user install, pass `--install-dir ~/Applications`.
    For a different local destination, pass an absolute or project-relative path
    with `--install-dir`.
@@ -38,7 +38,7 @@ creates `build/Release/MVPlayer.zip`, and copies the app into `/Applications`.
    should be used as-is. Use `--no-vendor` only when the user explicitly wants
    a build that still relies on Homebrew mpv/ffmpeg at runtime instead of a
    self-contained one.
-6. Keep one installed copy. The script warns when another `MVPlayer.app` with
+6. Keep one installed copy. The script warns when another `Owl.app` with
    the same bundle identifier sits in the other Applications folder, because
    LaunchServices may open that stale copy instead of the new build. Pass
    `--trash-duplicates` to move those copies to the Trash, but only after the
@@ -58,7 +58,7 @@ creates `build/Release/MVPlayer.zip`, and copies the app into `/Applications`.
   `--install-dir ~/Applications` does not require administrator access.
 - If the installed app still behaves like an older build, suspect a second copy
   rather than a bad build. Compare
-  `osascript -e 'POSIX path of (path to application id "me.limboy.mvplayer")'`
+  `osascript -e 'POSIX path of (path to application id "me.limboy.owl")'`
   with the install path, and check whether an old instance is still running.
   A newly installed copy may stay unbound until it is opened once by full path.
 - Do not delete or reset source files. The script only replaces the generated

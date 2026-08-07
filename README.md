@@ -1,6 +1,6 @@
-# MVPlayer
+# Owl
 
-MVPlayer is a native SwiftUI macOS video player built on `libmpv`. It targets
+Owl is a native SwiftUI macOS video player built on `libmpv`. It targets
 macOS 14 or newer on Apple silicon. Releases bundle their own copies of
 `libmpv` and `ffmpeg`, so the downloaded app needs no Homebrew install to run.
 
@@ -9,7 +9,7 @@ macOS 14 or newer on Apple silicon. Releases bundle their own copies of
 ## Download
 
 Grab the signed, notarized DMG from [GitHub
-Releases](https://github.com/limboy/mvplayer/releases/latest) — no Homebrew
+Releases](https://github.com/limboy/owl/releases/latest) — no Homebrew
 or other setup needed. The app checks for updates on its own via Sparkle; see
 [Distribution note](#distribution-note).
 
@@ -35,7 +35,7 @@ or other setup needed. The app checks for updates on its own via Sparkle; see
   supported: MP4, MKV, MOV, AVI, WebM, MPEG, M2TS, FLV, WMV, and the rest of
   what mpv handles.
 
-MVPlayer provides its own playback interface and disables mpv's built-in Lua
+Owl provides its own playback interface and disables mpv's built-in Lua
 overlays and online-video hooks. It is designed for local video playback.
 
 ## Requirements
@@ -55,14 +55,14 @@ Homebrew on the machine that runs it. A plain debug build skipped past that
 step still loads libmpv from `/opt/homebrew` at runtime, falling back to a
 setup screen instead of failing at launch if it is unavailable, and scrubber
 previews fall back the same way to a Homebrew `ffmpeg`, then a Homebrew `mpv`
-binary. Set `MVPLAYER_LIBMPV_PATH`, `MVPLAYER_FFMPEG_PATH`, or
-`MVPLAYER_MPV_PATH` to point any of these at an installation elsewhere.
+binary. Set `OWL_LIBMPV_PATH`, `OWL_FFMPEG_PATH`, or
+`OWL_MPV_PATH` to point any of these at an installation elsewhere.
 Without any of them, playback is unavailable and previews and metadata are
 limited to files AVFoundation can decode.
 
 ## Bundled runtime
 
-MVPlayer links against `libmpv` and shells out to `ffmpeg`/`ffprobe` for
+Owl links against `libmpv` and shells out to `ffmpeg`/`ffprobe` for
 containers AVFoundation cannot read. Rather than requiring end users to
 install Homebrew mpv/ffmpeg themselves, a Release build embeds them the way
 [IINA](https://github.com/iina/iina) does:
@@ -75,14 +75,14 @@ This copies `libmpv.dylib`, `ffmpeg`, `ffprobe`, and every Homebrew dylib any
 of them depend on into `deps/lib` and `deps/bin`, rewriting their install
 names to `@rpath` so they no longer reference `/opt/homebrew`. `deps/` is
 gitignored — regenerate it locally whenever the Homebrew mpv or ffmpeg
-version changes, and before packaging a release. The `MVPlayer` target's
+version changes, and before packaging a release. The `Owl` target's
 "Embed mpv runtime" build phase then copies `deps/lib` into
 `Contents/Frameworks` and `deps/bin` into `Contents/Resources/bin`, and
 code-signs each copy; `CMPVShim` and `ExternalThumbnailRenderer` look there
 before ever trying a Homebrew path. If `deps/` is empty the build still
 succeeds, it just falls back to Homebrew at runtime as before.
 
-This is also why MVPlayer is GPLv3-licensed rather than MIT — see
+This is also why Owl is GPLv3-licensed rather than MIT — see
 [License](#license).
 
 Opening a file starts one background pass that extracts a strip of preview
@@ -96,13 +96,13 @@ back to extracting a single frame on demand.
 ```sh
 xcodegen generate
 xcodebuild \
-  -project MVPlayer.xcodeproj \
-  -scheme MVPlayer \
+  -project Owl.xcodeproj \
+  -scheme Owl \
   -destination 'platform=macOS,arch=arm64' \
   build
 ```
 
-You can also open `MVPlayer.xcodeproj` and run the `MVPlayer` scheme.
+You can also open `Owl.xcodeproj` and run the `Owl` scheme.
 
 ## Local optimized Release build
 
@@ -115,8 +115,8 @@ the built app does not need Homebrew mpv on the Mac that runs it.
 xcodegen generate
 ./scripts/bundle-mpv-deps.sh
 xcodebuild \
-  -project MVPlayer.xcodeproj \
-  -scheme MVPlayer \
+  -project Owl.xcodeproj \
+  -scheme Owl \
   -configuration Release \
   -destination 'platform=macOS,arch=arm64' \
   -derivedDataPath "$PWD/build" \
@@ -126,13 +126,13 @@ xcodebuild \
 The built app is located at:
 
 ```text
-build/Build/Products/Release/MVPlayer.app
+build/Build/Products/Release/Owl.app
 ```
 
 Launch it from the command line with:
 
 ```sh
-open "build/Build/Products/Release/MVPlayer.app"
+open "build/Build/Products/Release/Owl.app"
 ```
 
 ## Usage
@@ -172,16 +172,16 @@ made from the immediate video files in the folder where playback was started.
 
 A Release build embeds and code-signs its own copies of `libmpv`/`ffmpeg`
 (see [Bundled runtime](#bundled-runtime)), so it runs without Homebrew. The
-app still disables library validation so the `MVPLAYER_*_PATH` overrides and
+app still disables library validation so the `OWL_*_PATH` overrides and
 the Homebrew fallback path keep working for development.
 
 Tagged releases are signed with a Developer ID certificate and notarized by
 Apple, then published as a DMG on [GitHub
-Releases](https://github.com/limboy/mvplayer/releases) — GPLv3 and Developer
+Releases](https://github.com/limboy/owl/releases) — GPLv3 and Developer
 ID notarization are compatible even though Mac App Store distribution isn't
 attempted, the same approach [IINA](https://github.com/iina/iina) uses. The
 app checks that feed for updates automatically (or on demand from the
-MVPlayer menu's "Check for Updates…" item) using
+Owl menu's "Check for Updates…" item) using
 [Sparkle](https://sparkle-project.org).
 
 ## Releasing
@@ -196,7 +196,7 @@ before releasing.
 
 ## License
 
-MVPlayer is available under the [GNU General Public License v3.0](LICENSE).
+Owl is available under the [GNU General Public License v3.0](LICENSE).
 It bundles `libmpv`, `ffmpeg`, and their dependencies, several of which are
 GPL-licensed themselves (ffmpeg is built with `--enable-gpl` for `libx264`
 and `libx265`); distributing those binaries requires the whole app to be

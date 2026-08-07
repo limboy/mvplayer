@@ -1,0 +1,935 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0003AF8949ED1256C3A43291 /* ExternalThumbnailRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED791579A595AB920BF3B4C3 /* ExternalThumbnailRendererTests.swift */; };
+		0282E16B4B8649D6470D201F /* NowPlayingRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1125A8BA6898A644DB4E704 /* NowPlayingRoutingTests.swift */; };
+		0B4249BE7FF887DA892E6660 /* DeferredVideoLoadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4A9FDB62392BD0AD14F244 /* DeferredVideoLoadTests.swift */; };
+		0B55DEFEE779D30558AB43A4 /* OpenPanelPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD049F9D499797C934F77DAF /* OpenPanelPresentation.swift */; };
+		0F0CEB4FB74A2EAE50E89AE0 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = C86CBBC09AD4A7409E406990 /* Sparkle */; };
+		0F1FE9B21281C99684FE0C7E /* PlaybackQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C76B9868D82BEC6FE6B098 /* PlaybackQueue.swift */; };
+		154F47E287B4363ECFC3499F /* PlayerKeyRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B4FFFA39F2DDEE28712765 /* PlayerKeyRoutingTests.swift */; };
+		18187DD54A9546D0B257F2BA /* CMPVShim.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 456156D2104CCC71E44ED064 /* CMPVShim.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		19F93DAA44C3F00C9A4D04F7 /* LibMPVLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F95DCB088AE9C1F23648D9 /* LibMPVLoaderTests.swift */; };
+		1B75F9576440638DA950DEDE /* ExternalProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A45CF271BF51DEF146E472C /* ExternalProcess.swift */; };
+		1BC84FB4122C2EB235185A58 /* CMPVShim.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 456156D2104CCC71E44ED064 /* CMPVShim.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		23EC0CFB57205F3A55D96D2E /* WindowStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74D95441DA3E2BF2742CF836 /* WindowStateTests.swift */; };
+		29BEBB83BD55FEBCEA6343DB /* WindowFrameAutosave.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40494D790102331CDA1DFA0A /* WindowFrameAutosave.swift */; };
+		3087D0228911A1CA336730B4 /* MPVPlayerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69E2716A6927AAE5AB0FC30 /* MPVPlayerEngine.swift */; };
+		3794109AEE0FD8A669674436 /* PlaybackSleepPreventionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 093418A852F12FF5F2C2A376 /* PlaybackSleepPreventionTests.swift */; };
+		3813DF4D2DC9B9A0E243BB1B /* VideoSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC6D17A8C1723ECB080630E1 /* VideoSurface.swift */; };
+		3ED38378253222CF3BE41148 /* FolderLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03546ED494F7981257B22719 /* FolderLibrary.swift */; };
+		4258ABB81C9695D807D8C38F /* PlayerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27578999F49A171B6A85C2FF /* PlayerState.swift */; };
+		4659BF974AADCCE330D40EC6 /* FilePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDD55B69E99761BC490581E9 /* FilePlayerView.swift */; };
+		4F84531FC86B81E85DF399CF /* MPVPlayerEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCC8E952A90128DD529F1639 /* MPVPlayerEngineTests.swift */; };
+		531A435A1C413F8BA257E874 /* CMPVShim.c in Sources */ = {isa = PBXBuildFile; fileRef = C98F2734DF3D47DAA96A618C /* CMPVShim.c */; };
+		56706FE9718A5A319CF6C302 /* MPVCallbackContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C9A0A5A5D5250649E7A1DA9 /* MPVCallbackContextTests.swift */; };
+		572323978357DDD81F2942EB /* CMPVShim.h in Headers */ = {isa = PBXBuildFile; fileRef = 433CCA26271A4B82EEA1EE86 /* CMPVShim.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		5BEE184EE142C2D70AD946E6 /* MediaThumbnailProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C1E88E7092374764AEB3C8 /* MediaThumbnailProviderTests.swift */; };
+		5F127852051AE9C61C927630 /* FullscreenPlayerLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA9F32EE0856EF796AC2CFB /* FullscreenPlayerLayer.swift */; };
+		6D22011982BAAB39AD915448 /* FullscreenPlayerPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28ED5B96888E54F7E4C99E90 /* FullscreenPlayerPresenter.swift */; };
+		72B87347DFD4E9188C248106 /* CMPVShim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 456156D2104CCC71E44ED064 /* CMPVShim.framework */; };
+		7B4D8B780F0E31AAE65F195B /* PlayerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81840AEB2C8BA1EEE343254F /* PlayerContainerView.swift */; };
+		7F9EBB84C420590F4F757AE2 /* FolderWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AF92AB949157F871F84B6FB /* FolderWatcher.swift */; };
+		7FB9F834AEE4B64540CD3752 /* SubtitlePreference.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0D9DCB9D710E27DC8929AB /* SubtitlePreference.swift */; };
+		813E6B59B6395BBE815BF623 /* PlaybackProgressStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD9C30DD296E1E842395C5D /* PlaybackProgressStoreTests.swift */; };
+		87585A2B720D8EFFB0CC3D37 /* ExternalMediaProbeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80EB50BD7D043D1A725AC90 /* ExternalMediaProbeTests.swift */; };
+		8FAC2C7638AD8EBCA9D148CB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD5BE4F204397A6E90FE180A /* ContentView.swift */; };
+		94676EEEA065C0808A3B70B3 /* MediaMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4621E1B4E6785A0FE5112F63 /* MediaMetadata.swift */; };
+		98E8F19BAC5C9AF9CA6DC9E3 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F2B59B9C0F68193F93C159 /* AppModel.swift */; };
+		9CE0B44EC6F32866FEF5F45C /* CMPVShim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 456156D2104CCC71E44ED064 /* CMPVShim.framework */; };
+		9DA29AFE3B39E8806977475B /* OwlVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D366A3377DC4542E4AD790B9 /* OwlVideoView.swift */; };
+		A2BB7DDC0B32DE13076BD9ED /* MPVCallbackContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB3CED93F74A3379251EE497 /* MPVCallbackContext.swift */; };
+		A5E72DC6FE56818127A1499A /* FolderLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5432C3419818B5FEE77FC848 /* FolderLibraryTests.swift */; };
+		AFCEF0E501D3843D9A76BA10 /* FilePlayerWindows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85C54626E6A0F02EAB11B481 /* FilePlayerWindows.swift */; };
+		BA33FD9D3E71A5B4BCB0EC6B /* PlaybackQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4E79E721FB5FC7B15A2708 /* PlaybackQueueTests.swift */; };
+		C02A6D3379C8FBFA5A52D7B6 /* MediaThumbnailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE47C887D3498C5E61DFE7DC /* MediaThumbnailProvider.swift */; };
+		C0AA28E4D823547433204413 /* LibMPVSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934ADE9C5CEA91221C7B1377 /* LibMPVSetupView.swift */; };
+		CFF9DEBF454481CC1533A1DB /* OwlApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95B350A1FE624197E2AA32B0 /* OwlApp.swift */; };
+		D0FB6ED6FC3CD7335EF99E97 /* TimelinePreviewScrubber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53C32D670BE52750EF7D188B /* TimelinePreviewScrubber.swift */; };
+		D37A917110D804F2977D2DE5 /* PlayerStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40633D16992B312A728DCD19 /* PlayerStateTests.swift */; };
+		D48B82811FA247B68FFBE208 /* ThumbnailFilmstripTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1967C4A2291A70E00B0BCEF5 /* ThumbnailFilmstripTests.swift */; };
+		D60DA7EC36E99FD3D4A9C2D3 /* NowPlayingCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2172AA878A892270B4DAD4DE /* NowPlayingCenter.swift */; };
+		D74494569D6D047D8CDADA1E /* LibMPVLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656B2E6C7CDC5DD236F04AE3 /* LibMPVLoader.swift */; };
+		DD132B8BFC685969A7107A12 /* TimelinePreviewScrubberTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FC415F37CDA276B30430A57 /* TimelinePreviewScrubberTests.swift */; };
+		DFB04491A01F4C654B281290 /* PlaybackProgressStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 048D3CA5A823BBC54F30C707 /* PlaybackProgressStore.swift */; };
+		E2A6AEC7192FB0432DCFE6DC /* WindowState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F9A530CB7E7B750B311889 /* WindowState.swift */; };
+		E32C7A723EF2638139F375B5 /* ThumbnailFilmstrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F9CC47229CAEE965A61E2A /* ThumbnailFilmstrip.swift */; };
+		E4C14895F053EA94428F8350 /* FolderBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 521442101CFC2609B330FADD /* FolderBrowserView.swift */; };
+		E770198A243E7BFC0E08E2BD /* ExternalMediaProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = C30A33BD5231EF485304BABC /* ExternalMediaProbe.swift */; };
+		EDF65A905CBFC05FC7953460 /* owl.icon in Resources */ = {isa = PBXBuildFile; fileRef = 350EF09239D82DE2A970AE95 /* owl.icon */; };
+		EF9A1A3765574525227002CB /* ActivePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42493D4355E2786D1631F7E6 /* ActivePlayer.swift */; };
+		F41673A067E6E9693504559E /* PlayerKeyboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9A82848C0D9F83D3630766 /* PlayerKeyboardMonitor.swift */; };
+		FCA100535EB69CB1750595DA /* ExternalThumbnailRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4970997FBFC0773D78E00155 /* ExternalThumbnailRenderer.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		101CD0A045CF529BEB86407A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 13758DC77E5A96D6AFF092CC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3233D70453F9176386ABD04F;
+			remoteInfo = Owl;
+		};
+		28FEA1BA5BFD73768F6A85D5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 13758DC77E5A96D6AFF092CC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 59039AB03F90822B42A8CF0F;
+			remoteInfo = CMPVShim;
+		};
+		DF2BE124F3B381735B18E04B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 13758DC77E5A96D6AFF092CC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 59039AB03F90822B42A8CF0F;
+			remoteInfo = CMPVShim;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		28D49BE3D59B633991086730 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1BC84FB4122C2EB235185A58 /* CMPVShim.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C30531D3E9D93882EBC0A146 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				18187DD54A9546D0B257F2BA /* CMPVShim.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		03546ED494F7981257B22719 /* FolderLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderLibrary.swift; sourceTree = "<group>"; };
+		046A4BD934B655C47F79E02C /* Owl.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Owl.entitlements; sourceTree = "<group>"; };
+		048D3CA5A823BBC54F30C707 /* PlaybackProgressStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackProgressStore.swift; sourceTree = "<group>"; };
+		093418A852F12FF5F2C2A376 /* PlaybackSleepPreventionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackSleepPreventionTests.swift; sourceTree = "<group>"; };
+		0FC415F37CDA276B30430A57 /* TimelinePreviewScrubberTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelinePreviewScrubberTests.swift; sourceTree = "<group>"; };
+		1967C4A2291A70E00B0BCEF5 /* ThumbnailFilmstripTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailFilmstripTests.swift; sourceTree = "<group>"; };
+		2172AA878A892270B4DAD4DE /* NowPlayingCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCenter.swift; sourceTree = "<group>"; };
+		27578999F49A171B6A85C2FF /* PlayerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerState.swift; sourceTree = "<group>"; };
+		28ED5B96888E54F7E4C99E90 /* FullscreenPlayerPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenPlayerPresenter.swift; sourceTree = "<group>"; };
+		2AD9C30DD296E1E842395C5D /* PlaybackProgressStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackProgressStoreTests.swift; sourceTree = "<group>"; };
+		350EF09239D82DE2A970AE95 /* owl.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = owl.icon; sourceTree = "<group>"; };
+		3A45CF271BF51DEF146E472C /* ExternalProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalProcess.swift; sourceTree = "<group>"; };
+		40494D790102331CDA1DFA0A /* WindowFrameAutosave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowFrameAutosave.swift; sourceTree = "<group>"; };
+		40633D16992B312A728DCD19 /* PlayerStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerStateTests.swift; sourceTree = "<group>"; };
+		42493D4355E2786D1631F7E6 /* ActivePlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivePlayer.swift; sourceTree = "<group>"; };
+		433CCA26271A4B82EEA1EE86 /* CMPVShim.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CMPVShim.h; sourceTree = "<group>"; };
+		456156D2104CCC71E44ED064 /* CMPVShim.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CMPVShim.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		4621E1B4E6785A0FE5112F63 /* MediaMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaMetadata.swift; sourceTree = "<group>"; };
+		470EC57BEEF32A6E969AFC04 /* OwlTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OwlTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4970997FBFC0773D78E00155 /* ExternalThumbnailRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalThumbnailRenderer.swift; sourceTree = "<group>"; };
+		521442101CFC2609B330FADD /* FolderBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderBrowserView.swift; sourceTree = "<group>"; };
+		53B4FFFA39F2DDEE28712765 /* PlayerKeyRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerKeyRoutingTests.swift; sourceTree = "<group>"; };
+		53C32D670BE52750EF7D188B /* TimelinePreviewScrubber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelinePreviewScrubber.swift; sourceTree = "<group>"; };
+		5432C3419818B5FEE77FC848 /* FolderLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderLibraryTests.swift; sourceTree = "<group>"; };
+		59D27F50052E25A26733B25D /* Owl.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Owl.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5AF92AB949157F871F84B6FB /* FolderWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderWatcher.swift; sourceTree = "<group>"; };
+		656B2E6C7CDC5DD236F04AE3 /* LibMPVLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibMPVLoader.swift; sourceTree = "<group>"; };
+		74C76B9868D82BEC6FE6B098 /* PlaybackQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackQueue.swift; sourceTree = "<group>"; };
+		74D95441DA3E2BF2742CF836 /* WindowStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowStateTests.swift; sourceTree = "<group>"; };
+		7E9A82848C0D9F83D3630766 /* PlayerKeyboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerKeyboardMonitor.swift; sourceTree = "<group>"; };
+		81840AEB2C8BA1EEE343254F /* PlayerContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerContainerView.swift; sourceTree = "<group>"; };
+		85C54626E6A0F02EAB11B481 /* FilePlayerWindows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePlayerWindows.swift; sourceTree = "<group>"; };
+		86F95DCB088AE9C1F23648D9 /* LibMPVLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibMPVLoaderTests.swift; sourceTree = "<group>"; };
+		86F9A530CB7E7B750B311889 /* WindowState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowState.swift; sourceTree = "<group>"; };
+		8C9A0A5A5D5250649E7A1DA9 /* MPVCallbackContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPVCallbackContextTests.swift; sourceTree = "<group>"; };
+		8F4E79E721FB5FC7B15A2708 /* PlaybackQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackQueueTests.swift; sourceTree = "<group>"; };
+		934ADE9C5CEA91221C7B1377 /* LibMPVSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibMPVSetupView.swift; sourceTree = "<group>"; };
+		95B350A1FE624197E2AA32B0 /* OwlApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwlApp.swift; sourceTree = "<group>"; };
+		9E4A9FDB62392BD0AD14F244 /* DeferredVideoLoadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeferredVideoLoadTests.swift; sourceTree = "<group>"; };
+		A80EB50BD7D043D1A725AC90 /* ExternalMediaProbeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalMediaProbeTests.swift; sourceTree = "<group>"; };
+		AD5BE4F204397A6E90FE180A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B8C1E88E7092374764AEB3C8 /* MediaThumbnailProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaThumbnailProviderTests.swift; sourceTree = "<group>"; };
+		BB0D9DCB9D710E27DC8929AB /* SubtitlePreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitlePreference.swift; sourceTree = "<group>"; };
+		C30A33BD5231EF485304BABC /* ExternalMediaProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalMediaProbe.swift; sourceTree = "<group>"; };
+		C69E2716A6927AAE5AB0FC30 /* MPVPlayerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPVPlayerEngine.swift; sourceTree = "<group>"; };
+		C6F2B59B9C0F68193F93C159 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		C98F2734DF3D47DAA96A618C /* CMPVShim.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = CMPVShim.c; sourceTree = "<group>"; };
+		CD049F9D499797C934F77DAF /* OpenPanelPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenPanelPresentation.swift; sourceTree = "<group>"; };
+		CE47C887D3498C5E61DFE7DC /* MediaThumbnailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaThumbnailProvider.swift; sourceTree = "<group>"; };
+		D366A3377DC4542E4AD790B9 /* OwlVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwlVideoView.swift; sourceTree = "<group>"; };
+		DB3CED93F74A3379251EE497 /* MPVCallbackContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPVCallbackContext.swift; sourceTree = "<group>"; };
+		DC6D17A8C1723ECB080630E1 /* VideoSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoSurface.swift; sourceTree = "<group>"; };
+		DDD55B69E99761BC490581E9 /* FilePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilePlayerView.swift; sourceTree = "<group>"; };
+		E0F9CC47229CAEE965A61E2A /* ThumbnailFilmstrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailFilmstrip.swift; sourceTree = "<group>"; };
+		E1125A8BA6898A644DB4E704 /* NowPlayingRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingRoutingTests.swift; sourceTree = "<group>"; };
+		ED791579A595AB920BF3B4C3 /* ExternalThumbnailRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalThumbnailRendererTests.swift; sourceTree = "<group>"; };
+		F7156E287E501A185C1F371F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FCC8E952A90128DD529F1639 /* MPVPlayerEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPVPlayerEngineTests.swift; sourceTree = "<group>"; };
+		FFA9F32EE0856EF796AC2CFB /* FullscreenPlayerLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenPlayerLayer.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C4B51308814FDEBEF887A31F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				72B87347DFD4E9188C248106 /* CMPVShim.framework in Frameworks */,
+				0F0CEB4FB74A2EAE50E89AE0 /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C87CF5B90ED3F154A5618808 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9CE0B44EC6F32866FEF5F45C /* CMPVShim.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		13EDB218DE66416329FF374E /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				350EF09239D82DE2A970AE95 /* owl.icon */,
+			);
+			path = Assets;
+			sourceTree = "<group>";
+		};
+		1509B930BFEF9843B9B98B6E = {
+			isa = PBXGroup;
+			children = (
+				13EDB218DE66416329FF374E /* Assets */,
+				A8CD6BEBBA03B4B8D421F077 /* CMPVShim */,
+				478557D7252DE1936C5D3975 /* Owl */,
+				4EBA361E4EE12D2223230EB0 /* OwlTests */,
+				537CD631AA8F694929B223A2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		35D7660818D85EC9F58BF570 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				C30A33BD5231EF485304BABC /* ExternalMediaProbe.swift */,
+				3A45CF271BF51DEF146E472C /* ExternalProcess.swift */,
+				4970997FBFC0773D78E00155 /* ExternalThumbnailRenderer.swift */,
+				03546ED494F7981257B22719 /* FolderLibrary.swift */,
+				5AF92AB949157F871F84B6FB /* FolderWatcher.swift */,
+				4621E1B4E6785A0FE5112F63 /* MediaMetadata.swift */,
+				CE47C887D3498C5E61DFE7DC /* MediaThumbnailProvider.swift */,
+				048D3CA5A823BBC54F30C707 /* PlaybackProgressStore.swift */,
+				74C76B9868D82BEC6FE6B098 /* PlaybackQueue.swift */,
+				E0F9CC47229CAEE965A61E2A /* ThumbnailFilmstrip.swift */,
+			);
+			path = Library;
+			sourceTree = "<group>";
+		};
+		478557D7252DE1936C5D3975 /* Owl */ = {
+			isa = PBXGroup;
+			children = (
+				FBFBC427680D85D619D2CEA0 /* App */,
+				35D7660818D85EC9F58BF570 /* Library */,
+				909CB0784B74F4987D6FEEA9 /* Player */,
+				9F5B33CB44D07724955F7280 /* Support */,
+				6F9D3AAF2E26C18DCE688ABE /* UI */,
+			);
+			path = Owl;
+			sourceTree = "<group>";
+		};
+		4EBA361E4EE12D2223230EB0 /* OwlTests */ = {
+			isa = PBXGroup;
+			children = (
+				9E4A9FDB62392BD0AD14F244 /* DeferredVideoLoadTests.swift */,
+				A80EB50BD7D043D1A725AC90 /* ExternalMediaProbeTests.swift */,
+				ED791579A595AB920BF3B4C3 /* ExternalThumbnailRendererTests.swift */,
+				5432C3419818B5FEE77FC848 /* FolderLibraryTests.swift */,
+				86F95DCB088AE9C1F23648D9 /* LibMPVLoaderTests.swift */,
+				B8C1E88E7092374764AEB3C8 /* MediaThumbnailProviderTests.swift */,
+				8C9A0A5A5D5250649E7A1DA9 /* MPVCallbackContextTests.swift */,
+				FCC8E952A90128DD529F1639 /* MPVPlayerEngineTests.swift */,
+				E1125A8BA6898A644DB4E704 /* NowPlayingRoutingTests.swift */,
+				2AD9C30DD296E1E842395C5D /* PlaybackProgressStoreTests.swift */,
+				8F4E79E721FB5FC7B15A2708 /* PlaybackQueueTests.swift */,
+				093418A852F12FF5F2C2A376 /* PlaybackSleepPreventionTests.swift */,
+				53B4FFFA39F2DDEE28712765 /* PlayerKeyRoutingTests.swift */,
+				40633D16992B312A728DCD19 /* PlayerStateTests.swift */,
+				1967C4A2291A70E00B0BCEF5 /* ThumbnailFilmstripTests.swift */,
+				0FC415F37CDA276B30430A57 /* TimelinePreviewScrubberTests.swift */,
+				74D95441DA3E2BF2742CF836 /* WindowStateTests.swift */,
+			);
+			path = OwlTests;
+			sourceTree = "<group>";
+		};
+		537CD631AA8F694929B223A2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				456156D2104CCC71E44ED064 /* CMPVShim.framework */,
+				59D27F50052E25A26733B25D /* Owl.app */,
+				470EC57BEEF32A6E969AFC04 /* OwlTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6F9D3AAF2E26C18DCE688ABE /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				AD5BE4F204397A6E90FE180A /* ContentView.swift */,
+				DDD55B69E99761BC490581E9 /* FilePlayerView.swift */,
+				521442101CFC2609B330FADD /* FolderBrowserView.swift */,
+				FFA9F32EE0856EF796AC2CFB /* FullscreenPlayerLayer.swift */,
+				28ED5B96888E54F7E4C99E90 /* FullscreenPlayerPresenter.swift */,
+				934ADE9C5CEA91221C7B1377 /* LibMPVSetupView.swift */,
+				CD049F9D499797C934F77DAF /* OpenPanelPresentation.swift */,
+				81840AEB2C8BA1EEE343254F /* PlayerContainerView.swift */,
+				7E9A82848C0D9F83D3630766 /* PlayerKeyboardMonitor.swift */,
+				53C32D670BE52750EF7D188B /* TimelinePreviewScrubber.swift */,
+				40494D790102331CDA1DFA0A /* WindowFrameAutosave.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		909CB0784B74F4987D6FEEA9 /* Player */ = {
+			isa = PBXGroup;
+			children = (
+				656B2E6C7CDC5DD236F04AE3 /* LibMPVLoader.swift */,
+				DB3CED93F74A3379251EE497 /* MPVCallbackContext.swift */,
+				C69E2716A6927AAE5AB0FC30 /* MPVPlayerEngine.swift */,
+				D366A3377DC4542E4AD790B9 /* OwlVideoView.swift */,
+				27578999F49A171B6A85C2FF /* PlayerState.swift */,
+				BB0D9DCB9D710E27DC8929AB /* SubtitlePreference.swift */,
+				DC6D17A8C1723ECB080630E1 /* VideoSurface.swift */,
+			);
+			path = Player;
+			sourceTree = "<group>";
+		};
+		9F5B33CB44D07724955F7280 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				F7156E287E501A185C1F371F /* Info.plist */,
+				046A4BD934B655C47F79E02C /* Owl.entitlements */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		A8CD6BEBBA03B4B8D421F077 /* CMPVShim */ = {
+			isa = PBXGroup;
+			children = (
+				C98F2734DF3D47DAA96A618C /* CMPVShim.c */,
+				433CCA26271A4B82EEA1EE86 /* CMPVShim.h */,
+			);
+			path = CMPVShim;
+			sourceTree = "<group>";
+		};
+		FBFBC427680D85D619D2CEA0 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				42493D4355E2786D1631F7E6 /* ActivePlayer.swift */,
+				C6F2B59B9C0F68193F93C159 /* AppModel.swift */,
+				85C54626E6A0F02EAB11B481 /* FilePlayerWindows.swift */,
+				2172AA878A892270B4DAD4DE /* NowPlayingCenter.swift */,
+				95B350A1FE624197E2AA32B0 /* OwlApp.swift */,
+				86F9A530CB7E7B750B311889 /* WindowState.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		80D321C5851C7FC5258BF4CD /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				572323978357DDD81F2942EB /* CMPVShim.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		3233D70453F9176386ABD04F /* Owl */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 41267780F8F9D871CC81A651 /* Build configuration list for PBXNativeTarget "Owl" */;
+			buildPhases = (
+				643201878961DFE1D123D9DF /* Sources */,
+				1627520CE978EAE62242406E /* Resources */,
+				C4B51308814FDEBEF887A31F /* Frameworks */,
+				28D49BE3D59B633991086730 /* Embed Frameworks */,
+				E56A99EB3E01A0E54F44DDEB /* Embed mpv runtime */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FF94600C77E2A96D300C325B /* PBXTargetDependency */,
+			);
+			name = Owl;
+			packageProductDependencies = (
+				C86CBBC09AD4A7409E406990 /* Sparkle */,
+			);
+			productName = Owl;
+			productReference = 59D27F50052E25A26733B25D /* Owl.app */;
+			productType = "com.apple.product-type.application";
+		};
+		4264036E793A66793BFDDF4B /* OwlTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1D61F9E5949A62E02F1C60B2 /* Build configuration list for PBXNativeTarget "OwlTests" */;
+			buildPhases = (
+				2A464CBF90131DA1A8A72435 /* Sources */,
+				C87CF5B90ED3F154A5618808 /* Frameworks */,
+				C30531D3E9D93882EBC0A146 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D1A6455D0B744BD44C1251F2 /* PBXTargetDependency */,
+				1CE1EB82E01D3F532423D422 /* PBXTargetDependency */,
+			);
+			name = OwlTests;
+			packageProductDependencies = (
+			);
+			productName = OwlTests;
+			productReference = 470EC57BEEF32A6E969AFC04 /* OwlTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		59039AB03F90822B42A8CF0F /* CMPVShim */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D07A62A6718C92E0AAB9C04B /* Build configuration list for PBXNativeTarget "CMPVShim" */;
+			buildPhases = (
+				80D321C5851C7FC5258BF4CD /* Headers */,
+				EFCEC63262BABAFF7ADA21D4 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CMPVShim;
+			packageProductDependencies = (
+			);
+			productName = CMPVShim;
+			productReference = 456156D2104CCC71E44ED064 /* CMPVShim.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		13758DC77E5A96D6AFF092CC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					4264036E793A66793BFDDF4B = {
+						ProvisioningStyle = Automatic;
+					};
+					59039AB03F90822B42A8CF0F = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 53D46CB58F8A662EE2C6B042 /* Build configuration list for PBXProject "Owl" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 1509B930BFEF9843B9B98B6E;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				712C1CEB27C9A6BC77289CC3 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 537CD631AA8F694929B223A2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				59039AB03F90822B42A8CF0F /* CMPVShim */,
+				3233D70453F9176386ABD04F /* Owl */,
+				4264036E793A66793BFDDF4B /* OwlTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1627520CE978EAE62242406E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EDF65A905CBFC05FC7953460 /* owl.icon in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E56A99EB3E01A0E54F44DDEB /* Embed mpv runtime */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed mpv runtime";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/usr/bin/env bash\n#\n# Xcode \"Embed mpv runtime\" build phase. Copies the libmpv/ffmpeg bundle\n# scripts/bundle-mpv-deps.sh vendored into deps/lib and deps/bin into the\n# built app, then code-signs each copy with the same identity as the app\n# itself so hardened runtime accepts them at dlopen/exec time.\n#\n# Runs with SRCROOT missing, so it degrades gracefully: a contributor who\n# has not run bundle-mpv-deps.sh still gets a working dev build, just one\n# that falls back to Homebrew's libmpv/ffmpeg at runtime like before.\n\nset -euo pipefail\n\ndeps_lib_dir=\"$SRCROOT/deps/lib\"\ndeps_bin_dir=\"$SRCROOT/deps/bin\"\n\nif [[ ! -d \"$deps_lib_dir\" ]] || [[ -z \"$(ls -A \"$deps_lib_dir\" 2>/dev/null)\" ]]; then\n  echo \"warning: deps/lib is empty; run scripts/bundle-mpv-deps.sh to bundle libmpv so this build doesn't need Homebrew at runtime.\" >&2\n  exit 0\nfi\n\nframeworks_dir=\"$CODESIGNING_FOLDER_PATH/Contents/Frameworks\"\nbin_dir=\"$CODESIGNING_FOLDER_PATH/Contents/Resources/bin\"\nmkdir -p \"$frameworks_dir\" \"$bin_dir\"\n\necho \"Embedding $(ls \"$deps_lib_dir\" | wc -l | tr -d ' ') dylibs into Contents/Frameworks\"\ncp -p \"$deps_lib_dir\"/*.dylib \"$frameworks_dir/\"\n\nif [[ -f \"$deps_bin_dir/ffmpeg\" && -f \"$deps_bin_dir/ffprobe\" ]]; then\n  echo \"Embedding ffmpeg and ffprobe into Contents/Resources/bin\"\n  cp -p \"$deps_bin_dir/ffmpeg\" \"$deps_bin_dir/ffprobe\" \"$bin_dir/\"\nfi\n\nif [[ \"${CODE_SIGNING_ALLOWED:-YES}\" == \"YES\" ]]; then\n  sign_identity=\"${EXPANDED_CODE_SIGN_IDENTITY:-${CODE_SIGN_IDENTITY:--}}\"\n  [[ -n \"$sign_identity\" ]] || sign_identity=\"-\"\n\n  # Ad-hoc signing (dev builds with no cert) can't carry a secure timestamp.\n  # Notarization requires one on every signature made with a real identity,\n  # so Release archives need --timestamp, not --timestamp=none.\n  timestamp_flag=\"--timestamp=none\"\n  if [[ \"$sign_identity\" != \"-\" ]]; then\n    timestamp_flag=\"--timestamp\"\n  fi\n\n  for target in \"$frameworks_dir\"/*.dylib; do\n    [[ -f \"$target\" ]] || continue\n    codesign --force --sign \"$sign_identity\" --options runtime \"$timestamp_flag\" \"$target\"\n  done\n\n  # ffmpeg/ffprobe run as their own child processes rather than being\n  # dlopen'd into Owl, so it's their own signature — not Owl's\n  # disable-library-validation entitlement — that governs whether hardened\n  # runtime lets them load the ad-hoc-signed sibling dylibs above. Sign them\n  # with the same entitlement Owl itself carries so they can.\n  for target in \"$bin_dir/ffmpeg\" \"$bin_dir/ffprobe\"; do\n    [[ -f \"$target\" ]] || continue\n    codesign --force --sign \"$sign_identity\" --options runtime \"$timestamp_flag\" \\\n      --entitlements \"$SRCROOT/Owl/Support/Owl.entitlements\" \"$target\"\n  done\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2A464CBF90131DA1A8A72435 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B4249BE7FF887DA892E6660 /* DeferredVideoLoadTests.swift in Sources */,
+				87585A2B720D8EFFB0CC3D37 /* ExternalMediaProbeTests.swift in Sources */,
+				0003AF8949ED1256C3A43291 /* ExternalThumbnailRendererTests.swift in Sources */,
+				A5E72DC6FE56818127A1499A /* FolderLibraryTests.swift in Sources */,
+				19F93DAA44C3F00C9A4D04F7 /* LibMPVLoaderTests.swift in Sources */,
+				56706FE9718A5A319CF6C302 /* MPVCallbackContextTests.swift in Sources */,
+				4F84531FC86B81E85DF399CF /* MPVPlayerEngineTests.swift in Sources */,
+				5BEE184EE142C2D70AD946E6 /* MediaThumbnailProviderTests.swift in Sources */,
+				0282E16B4B8649D6470D201F /* NowPlayingRoutingTests.swift in Sources */,
+				813E6B59B6395BBE815BF623 /* PlaybackProgressStoreTests.swift in Sources */,
+				BA33FD9D3E71A5B4BCB0EC6B /* PlaybackQueueTests.swift in Sources */,
+				3794109AEE0FD8A669674436 /* PlaybackSleepPreventionTests.swift in Sources */,
+				154F47E287B4363ECFC3499F /* PlayerKeyRoutingTests.swift in Sources */,
+				D37A917110D804F2977D2DE5 /* PlayerStateTests.swift in Sources */,
+				D48B82811FA247B68FFBE208 /* ThumbnailFilmstripTests.swift in Sources */,
+				DD132B8BFC685969A7107A12 /* TimelinePreviewScrubberTests.swift in Sources */,
+				23EC0CFB57205F3A55D96D2E /* WindowStateTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		643201878961DFE1D123D9DF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EF9A1A3765574525227002CB /* ActivePlayer.swift in Sources */,
+				98E8F19BAC5C9AF9CA6DC9E3 /* AppModel.swift in Sources */,
+				8FAC2C7638AD8EBCA9D148CB /* ContentView.swift in Sources */,
+				E770198A243E7BFC0E08E2BD /* ExternalMediaProbe.swift in Sources */,
+				1B75F9576440638DA950DEDE /* ExternalProcess.swift in Sources */,
+				FCA100535EB69CB1750595DA /* ExternalThumbnailRenderer.swift in Sources */,
+				4659BF974AADCCE330D40EC6 /* FilePlayerView.swift in Sources */,
+				AFCEF0E501D3843D9A76BA10 /* FilePlayerWindows.swift in Sources */,
+				E4C14895F053EA94428F8350 /* FolderBrowserView.swift in Sources */,
+				3ED38378253222CF3BE41148 /* FolderLibrary.swift in Sources */,
+				7F9EBB84C420590F4F757AE2 /* FolderWatcher.swift in Sources */,
+				5F127852051AE9C61C927630 /* FullscreenPlayerLayer.swift in Sources */,
+				6D22011982BAAB39AD915448 /* FullscreenPlayerPresenter.swift in Sources */,
+				D74494569D6D047D8CDADA1E /* LibMPVLoader.swift in Sources */,
+				C0AA28E4D823547433204413 /* LibMPVSetupView.swift in Sources */,
+				A2BB7DDC0B32DE13076BD9ED /* MPVCallbackContext.swift in Sources */,
+				3087D0228911A1CA336730B4 /* MPVPlayerEngine.swift in Sources */,
+				94676EEEA065C0808A3B70B3 /* MediaMetadata.swift in Sources */,
+				C02A6D3379C8FBFA5A52D7B6 /* MediaThumbnailProvider.swift in Sources */,
+				D60DA7EC36E99FD3D4A9C2D3 /* NowPlayingCenter.swift in Sources */,
+				0B55DEFEE779D30558AB43A4 /* OpenPanelPresentation.swift in Sources */,
+				CFF9DEBF454481CC1533A1DB /* OwlApp.swift in Sources */,
+				9DA29AFE3B39E8806977475B /* OwlVideoView.swift in Sources */,
+				DFB04491A01F4C654B281290 /* PlaybackProgressStore.swift in Sources */,
+				0F1FE9B21281C99684FE0C7E /* PlaybackQueue.swift in Sources */,
+				7B4D8B780F0E31AAE65F195B /* PlayerContainerView.swift in Sources */,
+				F41673A067E6E9693504559E /* PlayerKeyboardMonitor.swift in Sources */,
+				4258ABB81C9695D807D8C38F /* PlayerState.swift in Sources */,
+				7FB9F834AEE4B64540CD3752 /* SubtitlePreference.swift in Sources */,
+				E32C7A723EF2638139F375B5 /* ThumbnailFilmstrip.swift in Sources */,
+				D0FB6ED6FC3CD7335EF99E97 /* TimelinePreviewScrubber.swift in Sources */,
+				3813DF4D2DC9B9A0E243BB1B /* VideoSurface.swift in Sources */,
+				29BEBB83BD55FEBCEA6343DB /* WindowFrameAutosave.swift in Sources */,
+				E2A6AEC7192FB0432DCFE6DC /* WindowState.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EFCEC63262BABAFF7ADA21D4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				531A435A1C413F8BA257E874 /* CMPVShim.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1CE1EB82E01D3F532423D422 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 59039AB03F90822B42A8CF0F /* CMPVShim */;
+			targetProxy = DF2BE124F3B381735B18E04B /* PBXContainerItemProxy */;
+		};
+		D1A6455D0B744BD44C1251F2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3233D70453F9176386ABD04F /* Owl */;
+			targetProxy = 101CD0A045CF529BEB86407A /* PBXContainerItemProxy */;
+		};
+		FF94600C77E2A96D300C325B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 59039AB03F90822B42A8CF0F /* CMPVShim */;
+			targetProxy = 28FEA1BA5BFD73768F6A85D5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		089333CC4D1F33C2A8D944CB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = me.limboy.owl.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Owl.app/Contents/MacOS/Owl";
+			};
+			name = Release;
+		};
+		1BA36A68C3DDC5BE5280F64F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				OTHER_SWIFT_FLAGS = (
+					"-Xcc",
+					"-DGL_SILENCE_DEPRECATION",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		2641DA66B13CDB41A94F72C6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/CMPVShim",
+				);
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = me.limboy.owl.CMPVShim;
+				PRODUCT_MODULE_NAME = CMPVShim;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		3AEB33D45485C90E3DD582AF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_SWIFT_FLAGS = (
+					"-Xcc",
+					"-DGL_SILENCE_DEPRECATION",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		59724652EB654E9274D43A08 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = me.limboy.owl.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Owl.app/Contents/MacOS/Owl";
+			};
+			name = Debug;
+		};
+		713D2ACA563825E1B2DF6765 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = owl;
+				CODE_SIGN_ENTITLEMENTS = Owl/Support/Owl.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Owl/Support/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Owl;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.2.5;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ldl",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = me.limboy.owl;
+				PRODUCT_MODULE_NAME = Owl;
+				PRODUCT_NAME = Owl;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		86C1F005CCF54C8A057D8FB7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/CMPVShim",
+				);
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = me.limboy.owl.CMPVShim;
+				PRODUCT_MODULE_NAME = CMPVShim;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		AC99758F420B87E2E4A705D3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = owl;
+				CODE_SIGN_ENTITLEMENTS = Owl/Support/Owl.entitlements;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Owl/Support/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Owl;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.2.5;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ldl",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = me.limboy.owl;
+				PRODUCT_MODULE_NAME = Owl;
+				PRODUCT_NAME = Owl;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1D61F9E5949A62E02F1C60B2 /* Build configuration list for PBXNativeTarget "OwlTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				59724652EB654E9274D43A08 /* Debug */,
+				089333CC4D1F33C2A8D944CB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		41267780F8F9D871CC81A651 /* Build configuration list for PBXNativeTarget "Owl" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				713D2ACA563825E1B2DF6765 /* Debug */,
+				AC99758F420B87E2E4A705D3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		53D46CB58F8A662EE2C6B042 /* Build configuration list for PBXProject "Owl" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3AEB33D45485C90E3DD582AF /* Debug */,
+				1BA36A68C3DDC5BE5280F64F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D07A62A6718C92E0AAB9C04B /* Build configuration list for PBXNativeTarget "CMPVShim" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2641DA66B13CDB41A94F72C6 /* Debug */,
+				86C1F005CCF54C8A057D8FB7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		712C1CEB27C9A6BC77289CC3 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C86CBBC09AD4A7409E406990 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 712C1CEB27C9A6BC77289CC3 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 13758DC77E5A96D6AFF092CC /* Project object */;
+}

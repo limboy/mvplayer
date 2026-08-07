@@ -1,4 +1,4 @@
 interface:
-  display_name: "Install MVPlayer"
-  short_description: "Build and install an optimized MVPlayer release"
-  default_prompt: "Use $install-to-local to build MVPlayer and install the local Release app."
+  display_name: "Install Owl"
+  short_description: "Build and install an optimized Owl release"
+  default_prompt: "Use $install-to-local to build Owl and install the local Release app."

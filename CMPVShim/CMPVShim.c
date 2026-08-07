@@ -190,7 +190,7 @@ static void *load_symbol(void *library, const char *name, char *error, size_t er
     } while (0)
 
 // Derives Contents/Frameworks/libmpv.2.dylib from the running executable's
-// own path (Contents/MacOS/MVPlayer), so a release build finds the copy
+// own path (Contents/MacOS/Owl), so a release build finds the copy
 // scripts/bundle-mpv-deps.sh and the "Embed mpv runtime" build phase placed
 // alongside it before ever looking at the Homebrew fallback paths.
 static bool bundled_library_path(char *out, size_t out_size) {
@@ -212,20 +212,20 @@ static bool bundled_library_path(char *out, size_t out_size) {
     if (macos_slash == NULL) {
         return false;
     }
-    *macos_slash = '\0'; // ".../MVPlayer.app/Contents/MacOS"
+    *macos_slash = '\0'; // ".../Owl.app/Contents/MacOS"
 
     char *contents_slash = strrchr(resolved, '/');
     if (contents_slash == NULL) {
         return false;
     }
-    *contents_slash = '\0'; // ".../MVPlayer.app/Contents"
+    *contents_slash = '\0'; // ".../Owl.app/Contents"
 
     int written = snprintf(out, out_size, "%s/Frameworks/libmpv.2.dylib", resolved);
     return written > 0 && (size_t)written < out_size;
 }
 
 static void *open_libmpv(char *path, size_t path_size, char *error, size_t error_size) {
-    const char *override_path = getenv("MVPLAYER_LIBMPV_PATH");
+    const char *override_path = getenv("OWL_LIBMPV_PATH");
     if (override_path != NULL && override_path[0] != '\0') {
         dlerror();
         void *library = dlopen(override_path, RTLD_NOW | RTLD_LOCAL);
@@ -238,7 +238,7 @@ static void *open_libmpv(char *path, size_t path_size, char *error, size_t error
         snprintf(
             message,
             sizeof(message),
-            "Could not load libmpv from MVPLAYER_LIBMPV_PATH (%s).%s%s",
+            "Could not load libmpv from OWL_LIBMPV_PATH (%s).%s%s",
             override_path,
             detail == NULL ? "" : "\n",
             detail == NULL ? "" : detail
@@ -362,7 +362,7 @@ MVPMPVPlayer *mvp_mpv_create(char *error_buffer, size_t error_buffer_size) {
     player->set_option_string(player->handle, "sub-file-paths", "sub:subs:subtitles:Sub:Subs:Subtitles");
 
     // Show an embedded subtitle even when nothing marked it. mpv's own default
-    // only falls back to tracks flagged "default", and MVPlayer never sets
+    // only falls back to tracks flagged "default", and Owl never sets
     // slang for a track to match by language instead, so a file whose one
     // English track carries no flag would open with no subtitle at all — not
     // what somebody who left "Show Subtitles Automatically" on is asking for.
@@ -370,7 +370,7 @@ MVPMPVPlayer *mvp_mpv_create(char *error_buffer, size_t error_buffer_size) {
     // overrides.
     player->set_option_string(player->handle, "subs-fallback", "yes");
 
-    // MVPlayer provides its own UI. Disable mpv's LuaJIT-backed scripts so the
+    // Owl provides its own UI. Disable mpv's LuaJIT-backed scripts so the
     // hardened app never attempts to execute unsigned generated code.
     player->set_option_string(player->handle, "load-scripts", "no");
     player->set_option_string(player->handle, "load-auto-profiles", "no");

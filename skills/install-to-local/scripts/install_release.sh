@@ -6,10 +6,10 @@ usage() {
   cat <<'USAGE'
 Usage: install_release.sh [options]
 
-Build and package MVPlayer for Apple-silicon macOS, then install the app locally.
+Build and package Owl for Apple-silicon macOS, then install the app locally.
 
 Options:
-  --project-dir DIR       MVPlayer repository root (default: current directory)
+  --project-dir DIR       Owl repository root (default: current directory)
   --derived-data-dir DIR  Xcode derived data directory (default: project/build)
   --install-dir DIR       Application destination (default: /Applications)
   --no-install            Build and package without copying the app to disk
@@ -124,7 +124,7 @@ done
 project_dir="$(cd "$project_dir" && pwd -P)"
 
 [[ -f "$project_dir/project.yml" ]] || fail "project.yml not found in $project_dir"
-[[ -f "$project_dir/MVPlayer.xcodeproj/project.pbxproj" ]] || fail "MVPlayer.xcodeproj not found in $project_dir"
+[[ -f "$project_dir/Owl.xcodeproj/project.pbxproj" ]] || fail "Owl.xcodeproj not found in $project_dir"
 
 if [[ -n "$derived_data_arg" ]]; then
   derived_data_dir="$(resolve_path "$derived_data_arg")"
@@ -147,7 +147,7 @@ require_command ditto
 
 if [[ "$should_generate" == true ]]; then
   require_command xcodegen
-  info "Regenerating MVPlayer.xcodeproj from project.yml"
+  info "Regenerating Owl.xcodeproj from project.yml"
   (cd "$project_dir" && xcodegen generate)
 fi
 
@@ -160,10 +160,10 @@ else
     if brew --prefix mpv >/dev/null 2>&1; then
       info "Found Homebrew mpv"
     else
-      printf 'warning: Homebrew mpv is not installed; MVPlayer playback will not work until it is.\n' >&2
+      printf 'warning: Homebrew mpv is not installed; Owl playback will not work until it is.\n' >&2
     fi
   else
-    printf 'warning: Homebrew is not installed; MVPlayer playback requires a libmpv installation.\n' >&2
+    printf 'warning: Homebrew is not installed; Owl playback requires a libmpv installation.\n' >&2
   fi
 fi
 
@@ -172,26 +172,26 @@ xcode_version_number="${xcode_version_line#Xcode }"
 xcode_major="${xcode_version_number%%.*}"
 xcode_minor="${xcode_version_number#*.}"
 use_legacy_icon=false
-if [[ "$xcode_major" == "26" && "$xcode_minor" =~ ^[0-9]+$ ]] && (( xcode_minor >= 5 )) && [[ -d "$project_dir/Assets/mvplayer.icon" ]]; then
+if [[ "$xcode_major" == "26" && "$xcode_minor" =~ ^[0-9]+$ ]] && (( xcode_minor >= 5 )) && [[ -d "$project_dir/Assets/owl.icon" ]]; then
   use_legacy_icon=true
   printf 'warning: %s has an Icon Composer build regression; using a generated legacy .icns fallback.\n' "$xcode_version_line" >&2
 fi
 
-info "Building MVPlayer Release for macOS arm64"
+info "Building Owl Release for macOS arm64"
 xcodebuild_args=(
-  -project "$project_dir/MVPlayer.xcodeproj" \
-  -scheme MVPlayer \
+  -project "$project_dir/Owl.xcodeproj" \
+  -scheme Owl \
   -configuration Release \
   -destination 'platform=macOS,arch=arm64' \
   -derivedDataPath "$derived_data_dir"
 )
 if [[ "$use_legacy_icon" == true ]]; then
-  xcodebuild_args+=(EXCLUDED_SOURCE_FILE_NAMES=mvplayer.icon)
+  xcodebuild_args+=(EXCLUDED_SOURCE_FILE_NAMES=owl.icon)
 fi
 xcodebuild "${xcodebuild_args[@]}" clean build
 
-built_app="$derived_data_dir/Build/Products/Release/MVPlayer.app"
-app_executable="$built_app/Contents/MacOS/MVPlayer"
+built_app="$derived_data_dir/Build/Products/Release/Owl.app"
+app_executable="$built_app/Contents/MacOS/Owl"
 app_info_plist="$built_app/Contents/Info.plist"
 [[ -d "$built_app" ]] || fail "Release app was not produced: $built_app"
 [[ -x "$app_executable" ]] || fail "Release app executable is missing: $app_executable"
@@ -201,14 +201,14 @@ if command -v plutil >/dev/null 2>&1; then
   plutil -lint "$app_info_plist" >/dev/null || fail "Release app Info.plist is invalid."
 fi
 
-package_tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/mvplayer-release.XXXXXX")"
+package_tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/owl-release.XXXXXX")"
 trap 'rm -rf "$package_tmp_dir"' EXIT
 
 if [[ "$use_legacy_icon" == true ]]; then
-  icon_source_image="$project_dir/Assets/mvplayer.icon/mvplayer.png"
+  icon_source_image="$project_dir/Assets/owl.icon/owl.png"
   if [[ -f "$icon_source_image" ]] && command -v sips >/dev/null 2>&1 && command -v iconutil >/dev/null 2>&1; then
-    info "Embedding a legacy MVPlayer.icns fallback"
-    iconset_dir="$package_tmp_dir/MVPlayer.iconset"
+    info "Embedding a legacy Owl.icns fallback"
+    iconset_dir="$package_tmp_dir/Owl.iconset"
     mkdir -p "$iconset_dir"
     for icon_size in 16 32 128 256 512; do
       double_size=$((icon_size * 2))
@@ -216,18 +216,18 @@ if [[ "$use_legacy_icon" == true ]]; then
       sips -z "$double_size" "$double_size" "$icon_source_image" --out "$iconset_dir/icon_${icon_size}x${icon_size}@2x.png" >/dev/null
     done
     mkdir -p "$built_app/Contents/Resources"
-    iconutil -c icns "$iconset_dir" -o "$built_app/Contents/Resources/MVPlayer.icns"
-    if ! /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string MVPlayer.icns" "$app_info_plist" >/dev/null 2>&1; then
-      /usr/libexec/PlistBuddy -c "Set :CFBundleIconFile MVPlayer.icns" "$app_info_plist" >/dev/null
+    iconutil -c icns "$iconset_dir" -o "$built_app/Contents/Resources/Owl.icns"
+    if ! /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string Owl.icns" "$app_info_plist" >/dev/null 2>&1; then
+      /usr/libexec/PlistBuddy -c "Set :CFBundleIconFile Owl.icns" "$app_info_plist" >/dev/null
     fi
-    entitlements_path="$derived_data_dir/Build/Intermediates.noindex/MVPlayer.build/Release/MVPlayer.build/MVPlayer.app.xcent"
+    entitlements_path="$derived_data_dir/Build/Intermediates.noindex/Owl.build/Release/Owl.build/Owl.app.xcent"
     if [[ -f "$entitlements_path" ]]; then
       codesign --force --sign - --options runtime --entitlements "$entitlements_path" "$built_app" >/dev/null
     else
       codesign --force --sign - --options runtime "$built_app" >/dev/null
     fi
   else
-    printf 'warning: Could not create MVPlayer.icns; the installed app will use the default macOS icon.\n' >&2
+    printf 'warning: Could not create Owl.icns; the installed app will use the default macOS icon.\n' >&2
   fi
 fi
 
@@ -236,24 +236,24 @@ if command -v codesign >/dev/null 2>&1; then
 fi
 
 package_dir="$derived_data_dir/Release"
-package_path="$package_dir/MVPlayer.zip"
+package_path="$package_dir/Owl.zip"
 mkdir -p "$package_dir"
 
 info "Creating Release package"
-ditto -c -k --sequesterRsrc --keepParent "$built_app" "$package_tmp_dir/MVPlayer.zip"
-mv -f "$package_tmp_dir/MVPlayer.zip" "$package_path"
+ditto -c -k --sequesterRsrc --keepParent "$built_app" "$package_tmp_dir/Owl.zip"
+mv -f "$package_tmp_dir/Owl.zip" "$package_path"
 
 if [[ "$should_install" == true ]]; then
   mkdir -p "$install_dir" || fail "Cannot create install directory: $install_dir"
-  installed_app="$install_dir/MVPlayer.app"
-  info "Installing MVPlayer to $installed_app"
+  installed_app="$install_dir/Owl.app"
+  info "Installing Owl to $installed_app"
   ditto --rsrc --extattr --acl "$built_app" "$installed_app" || \
     fail "Cannot install to $installed_app. Try --install-dir ~/Applications."
-  [[ -x "$installed_app/Contents/MacOS/MVPlayer" ]] || fail "Installed app is incomplete: $installed_app"
+  [[ -x "$installed_app/Contents/MacOS/Owl" ]] || fail "Installed app is incomplete: $installed_app"
 
-  # A copy of MVPlayer left in another Applications folder keeps the same bundle
+  # A copy of Owl left in another Applications folder keeps the same bundle
   # identifier, and LaunchServices may resolve that stale copy instead of the one
-  # just installed. Opening MVPlayer then silently runs the old build.
+  # just installed. Opening Owl then silently runs the old build.
   installed_real="$(real_path "$installed_app")"
   installed_identifier="$(bundle_identifier_of "$installed_app")"
   applications_dirs=(/Applications)
@@ -262,7 +262,7 @@ if [[ "$should_install" == true ]]; then
   fi
   duplicate_apps=()
   for applications_dir in "${applications_dirs[@]}"; do
-    duplicate_app="$applications_dir/MVPlayer.app"
+    duplicate_app="$applications_dir/Owl.app"
     [[ -d "$duplicate_app" ]] || continue
     duplicate_real="$(real_path "$duplicate_app")"
     [[ -n "$duplicate_real" && "$duplicate_real" != "$installed_real" ]] || continue
@@ -272,16 +272,16 @@ if [[ "$should_install" == true ]]; then
 
   for duplicate_app in "${duplicate_apps[@]+"${duplicate_apps[@]}"}"; do
     if [[ "$should_trash_duplicates" == true ]]; then
-      info "Trashing an older MVPlayer copy at $duplicate_app"
+      info "Trashing an older Owl copy at $duplicate_app"
       if trashed_app="$(trash_app "$duplicate_app")"; then
         printf 'Moved to %s\n' "$trashed_app"
       else
-        printf 'warning: Could not move %s to the Trash; remove it manually or MVPlayer may open that older copy.\n' \
+        printf 'warning: Could not move %s to the Trash; remove it manually or Owl may open that older copy.\n' \
           "$duplicate_app" >&2
       fi
     else
-      printf 'warning: Another MVPlayer.app with the same bundle identifier is installed at %s.\n' "$duplicate_app" >&2
-      printf 'warning: Opening MVPlayer may launch that copy instead of the build just installed.\n' >&2
+      printf 'warning: Another Owl.app with the same bundle identifier is installed at %s.\n' "$duplicate_app" >&2
+      printf 'warning: Opening Owl may launch that copy instead of the build just installed.\n' >&2
       printf 'warning: Re-run with --trash-duplicates, or remove that copy by hand.\n' >&2
     fi
   done
@@ -306,7 +306,7 @@ if [[ "$should_install" == true ]]; then
 
   if [[ "$should_launch" == true ]]; then
     require_command open
-    info "Opening installed MVPlayer"
+    info "Opening installed Owl"
     open "$installed_app"
   fi
 else

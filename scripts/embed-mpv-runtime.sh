@@ -49,13 +49,13 @@ if [[ "${CODE_SIGNING_ALLOWED:-YES}" == "YES" ]]; then
   done
 
   # ffmpeg/ffprobe run as their own child processes rather than being
-  # dlopen'd into MVPlayer, so it's their own signature — not MVPlayer's
+  # dlopen'd into Owl, so it's their own signature — not Owl's
   # disable-library-validation entitlement — that governs whether hardened
   # runtime lets them load the ad-hoc-signed sibling dylibs above. Sign them
-  # with the same entitlement MVPlayer itself carries so they can.
+  # with the same entitlement Owl itself carries so they can.
   for target in "$bin_dir/ffmpeg" "$bin_dir/ffprobe"; do
     [[ -f "$target" ]] || continue
     codesign --force --sign "$sign_identity" --options runtime "$timestamp_flag" \
-      --entitlements "$SRCROOT/MVPlayer/Support/MVPlayer.entitlements" "$target"
+      --entitlements "$SRCROOT/Owl/Support/Owl.entitlements" "$target"
   done
 fi

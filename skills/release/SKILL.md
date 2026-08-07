@@ -1,14 +1,14 @@
 ---
 name: release
-description: Determine the next version and run the GitHub Actions MVPlayer release pipeline.
+description: Determine the next version and run the GitHub Actions Owl release pipeline.
 ---
 
-Cut a new release of MVPlayer. See the README's "Releasing" section. This
+Cut a new release of Owl. See the README's "Releasing" section. This
 skill derives the version from the tag history and CHANGELOG.md, then
 triggers the tag-push GitHub Actions pipeline that builds, signs, notarizes,
 and publishes it.
 
-MVPlayer commits are plain imperative sentences with no `[scope]` prefix and
+Owl commits are plain imperative sentences with no `[scope]` prefix and
 no `feat:`/`fix:` conventional-commit markers, unlike some other repos. Do
 not invent or assume such a convention here — use full, unfiltered commit
 history and your own judgment, confirmed with the user.
@@ -101,7 +101,7 @@ Skip this step entirely if `project.yml` already has
 `MARKETING_VERSION: "<VERSION>"` and it's already committed (the
 already-drafted-section case from Step 2).
 
-1. Edit `project.yml`. Update `MARKETING_VERSION` under the `MVPlayer`
+1. Edit `project.yml`. Update `MARKETING_VERSION` under the `Owl`
    target's base settings.
 2. Commit and push:
    ```bash
@@ -144,7 +144,7 @@ git push
 
 Tell the user:
 - Version released
-- Link: `https://github.com/limboy/mvplayer/releases/tag/v<VERSION>`
+- Link: `https://github.com/limboy/owl/releases/tag/v<VERSION>`
 - That existing installs will pick this up via Sparkle's automatic check (or
   immediately via the app's "Check for Updates…" menu item), since
   `SUFeedURL` always points at `releases/latest/download/appcast.xml`.

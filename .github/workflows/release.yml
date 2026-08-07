@@ -17,7 +17,7 @@ jobs:
     name: Build, notarize, and publish DMG
     # Icon Composer crashes on macos-15 because Xcode 26's asset runtime loads
     # mismatched system AVFCore/CoreMedia frameworks. macOS 26 matches the
-    # Xcode 26 toolchain used to compile the shipping mvplayer.icon asset.
+    # Xcode 26 toolchain used to compile the shipping owl.icon asset.
     runs-on: macos-26
     timeout-minutes: 60
 
@@ -56,18 +56,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" build/MVPlayer.dmg build/appcast.xml \
+            gh release upload "$GITHUB_REF_NAME" build/Owl.dmg build/appcast.xml \
               --repo "$GITHUB_REPOSITORY" \
               --clobber
             gh release edit "$GITHUB_REF_NAME" \
               --repo "$GITHUB_REPOSITORY" \
-              --title "MVPlayer $GITHUB_REF_NAME" \
+              --title "Owl $GITHUB_REF_NAME" \
               --notes-file build/release-notes.md
           else
-            gh release create "$GITHUB_REF_NAME" build/MVPlayer.dmg build/appcast.xml \
+            gh release create "$GITHUB_REF_NAME" build/Owl.dmg build/appcast.xml \
               --repo "$GITHUB_REPOSITORY" \
               --verify-tag \
-              --title "MVPlayer $GITHUB_REF_NAME" \
+              --title "Owl $GITHUB_REF_NAME" \
               --notes-file build/release-notes.md
           fi
 

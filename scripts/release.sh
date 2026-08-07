@@ -29,7 +29,11 @@ if [ "${1:-}" = "--dry-run" ]; then
 fi
 
 VERSION="${1:?Usage: ./scripts/release.sh [--dry-run] <version>}"
-REPOSITORY="${GITHUB_REPOSITORY:-limboy/mvplayer}"
+REPOSITORY="${GITHUB_REPOSITORY:-limboy/owl}"
+# Names the Keychain item holding the Sparkle EdDSA private key. It keeps the
+# old "mvplayer" name on purpose: the key itself did not change when the app was
+# renamed, and SUPublicEDKey still has to match it. Rename it here only after
+# renaming the Keychain item to match.
 SPARKLE_ACCOUNT="mvplayer"
 
 # Extract changelog entries for a version and convert to HTML <ul>
@@ -84,23 +88,23 @@ extract_changelog_markdown() {
 }
 
 # Create a plain DMG with app icon and Applications drop link
-create_mvplayer_dmg() {
+create_owl_dmg() {
   local output_path="$1"
   rm -f "$output_path"
 
   create-dmg \
-    --volname "MVPlayer" \
+    --volname "Owl" \
     --window-pos 200 120 \
     --window-size 660 400 \
     --icon-size 160 \
     --text-size 14 \
-    --icon "MVPlayer.app" 170 180 \
-    --hide-extension "MVPlayer.app" \
+    --icon "Owl.app" 170 180 \
+    --hide-extension "Owl.app" \
     --app-drop-link 490 180 \
     --no-internet-enable \
     --format UDZO \
     "$output_path" \
-    build/export/MVPlayer.app || true
+    build/export/Owl.app || true
 
   [ -f "$output_path" ] || { echo "❌ DMG creation failed"; exit 1; }
 }
@@ -123,7 +127,7 @@ if ! $DRY_RUN; then
   fi
 fi
 
-echo "🔨 Building MVPlayer v$VERSION..."
+echo "🔨 Building Owl v$VERSION..."
 
 # Generate Xcode project
 xcodegen generate
@@ -137,10 +141,10 @@ rm -rf build
 mkdir -p build
 
 # Archive
-xcodebuild -project MVPlayer.xcodeproj \
-  -scheme MVPlayer \
+xcodebuild -project Owl.xcodeproj \
+  -scheme Owl \
   -configuration Release \
-  -archivePath build/MVPlayer.xcarchive \
+  -archivePath build/Owl.xcarchive \
   archive \
   CODE_SIGN_STYLE=Manual \
   CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
@@ -151,38 +155,38 @@ xcodebuild -project MVPlayer.xcodeproj \
 # Export
 sed "s/\${APPLE_TEAM_ID}/$TEAM_ID/g" ExportOptions.plist > build/ExportOptions.plist
 xcodebuild -exportArchive \
-  -archivePath build/MVPlayer.xcarchive \
+  -archivePath build/Owl.xcarchive \
   -exportOptionsPlist build/ExportOptions.plist \
   -exportPath build/export
 
 echo "🔍 Verifying code signature..."
-scripts/verify-entitlements.sh build/export/MVPlayer.app
-codesign --verify --deep --strict build/export/MVPlayer.app
+scripts/verify-entitlements.sh build/export/Owl.app
+codesign --verify --deep --strict build/export/Owl.app
 echo "✅ Code signature verified (deep + strict)."
 
 if $DRY_RUN; then
-  echo "🏁 Dry run complete. Signed app at: build/export/MVPlayer.app"
-  echo "   To inspect: codesign -d --entitlements :- build/export/MVPlayer.app"
+  echo "🏁 Dry run complete. Signed app at: build/export/Owl.app"
+  echo "   To inspect: codesign -d --entitlements :- build/export/Owl.app"
   echo "   Note: spctl --assess will fail until notarized (expected in dry-run)."
   exit 0
 fi
 
 echo "📦 Creating DMG..."
-create_mvplayer_dmg build/MVPlayer.dmg
+create_owl_dmg build/Owl.dmg
 
 echo "🔏 Notarizing..."
-xcrun notarytool submit build/MVPlayer.dmg \
+xcrun notarytool submit build/Owl.dmg \
   --keychain-profile "AC_PASSWORD" \
   --wait
 
 echo "📎 Stapling..."
-xcrun stapler staple build/export/MVPlayer.app
-rm build/MVPlayer.dmg
-create_mvplayer_dmg build/MVPlayer.dmg
-xcrun stapler staple build/MVPlayer.dmg || echo "⚠️  DMG staple failed (normal — CDN propagation delay). App inside is stapled."
+xcrun stapler staple build/export/Owl.app
+rm build/Owl.dmg
+create_owl_dmg build/Owl.dmg
+xcrun stapler staple build/Owl.dmg || echo "⚠️  DMG staple failed (normal — CDN propagation delay). App inside is stapled."
 
 # Gatekeeper assessment (must run after notarization + stapling)
-spctl --assess --type execute --verbose build/export/MVPlayer.app
+spctl --assess --type execute --verbose build/export/Owl.app
 echo "✅ Gatekeeper assessment passed."
 
 echo "🏷️  Tagging v$VERSION..."
@@ -190,8 +194,8 @@ git tag "v$VERSION"
 git push --tags
 
 echo "📡 Generating Sparkle appcast..."
-SPARKLE_BIN=$(find ~/Library/Developer/Xcode/DerivedData/MVPlayer-*/SourcePackages/artifacts/sparkle/Sparkle/bin -maxdepth 0 2>/dev/null | head -1)
-SIGNATURE=$("$SPARKLE_BIN/sign_update" --account "$SPARKLE_ACCOUNT" build/MVPlayer.dmg 2>&1)
+SPARKLE_BIN=$(find ~/Library/Developer/Xcode/DerivedData/Owl-*/SourcePackages/artifacts/sparkle/Sparkle/bin -maxdepth 0 2>/dev/null | head -1)
+SIGNATURE=$("$SPARKLE_BIN/sign_update" --account "$SPARKLE_ACCOUNT" build/Owl.dmg 2>&1)
 ED_SIG=$(echo "$SIGNATURE" | grep -o 'sparkle:edSignature="[^"]*"' | cut -d'"' -f2)
 LENGTH=$(echo "$SIGNATURE" | grep -o 'length="[^"]*"' | cut -d'"' -f2)
 PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
@@ -212,7 +216,7 @@ cat > build/appcast.xml << APPCAST
 <?xml version="1.0" standalone="yes"?>
 <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
   <channel>
-    <title>MVPlayer</title>
+    <title>Owl</title>
     <item>
       <title>Version $VERSION</title>
       <sparkle:version>$VERSION</sparkle:version>
@@ -221,7 +225,7 @@ cat > build/appcast.xml << APPCAST
       <pubDate>$PUB_DATE</pubDate>
 $DESC_ELEMENT
       <enclosure
-        url="https://github.com/$REPOSITORY/releases/download/v$VERSION/MVPlayer.dmg"
+        url="https://github.com/$REPOSITORY/releases/download/v$VERSION/Owl.dmg"
         sparkle:edSignature="$ED_SIG"
         length="$LENGTH"
         type="application/octet-stream"
@@ -234,14 +238,14 @@ APPCAST
 echo "🚀 Creating GitHub Release..."
 CHANGELOG_MD=$(extract_changelog_markdown "$VERSION" "CHANGELOG.md")
 if [ -n "$CHANGELOG_MD" ]; then
-  gh release create "v$VERSION" build/MVPlayer.dmg build/appcast.xml \
+  gh release create "v$VERSION" build/Owl.dmg build/appcast.xml \
     --repo "$REPOSITORY" \
-    --title "MVPlayer v$VERSION" \
+    --title "Owl v$VERSION" \
     --notes "$CHANGELOG_MD"
 else
-  gh release create "v$VERSION" build/MVPlayer.dmg build/appcast.xml \
+  gh release create "v$VERSION" build/Owl.dmg build/appcast.xml \
     --repo "$REPOSITORY" \
-    --title "MVPlayer v$VERSION" \
+    --title "Owl v$VERSION" \
     --generate-notes
 fi
 
