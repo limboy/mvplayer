@@ -43,6 +43,8 @@ struct OwlApp: App {
                 .background {
                     WindowFrameAutosave(key: "MainWindowFrame")
                         .frame(width: 0, height: 0)
+                    WindowTitleHidden()
+                        .frame(width: 0, height: 0)
                 }
         }
         .defaultSize(width: 1_080, height: 760)

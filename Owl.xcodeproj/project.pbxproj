@@ -20,6 +20,7 @@
 		1BC84FB4122C2EB235185A58 /* CMPVShim.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 456156D2104CCC71E44ED064 /* CMPVShim.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		23EC0CFB57205F3A55D96D2E /* WindowStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74D95441DA3E2BF2742CF836 /* WindowStateTests.swift */; };
 		29BEBB83BD55FEBCEA6343DB /* WindowFrameAutosave.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40494D790102331CDA1DFA0A /* WindowFrameAutosave.swift */; };
+		3042AB12579F72C816A04A10 /* WindowTitleHidden.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDA1F1304BD67FEF2F43DB03 /* WindowTitleHidden.swift */; };
 		3087D0228911A1CA336730B4 /* MPVPlayerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69E2716A6927AAE5AB0FC30 /* MPVPlayerEngine.swift */; };
 		3794109AEE0FD8A669674436 /* PlaybackSleepPreventionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 093418A852F12FF5F2C2A376 /* PlaybackSleepPreventionTests.swift */; };
 		3813DF4D2DC9B9A0E243BB1B /* VideoSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC6D17A8C1723ECB080630E1 /* VideoSurface.swift */; };
@@ -161,6 +162,7 @@
 		AD5BE4F204397A6E90FE180A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		B8C1E88E7092374764AEB3C8 /* MediaThumbnailProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaThumbnailProviderTests.swift; sourceTree = "<group>"; };
 		BB0D9DCB9D710E27DC8929AB /* SubtitlePreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitlePreference.swift; sourceTree = "<group>"; };
+		BDA1F1304BD67FEF2F43DB03 /* WindowTitleHidden.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowTitleHidden.swift; sourceTree = "<group>"; };
 		C30A33BD5231EF485304BABC /* ExternalMediaProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalMediaProbe.swift; sourceTree = "<group>"; };
 		C69E2716A6927AAE5AB0FC30 /* MPVPlayerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MPVPlayerEngine.swift; sourceTree = "<group>"; };
 		C6F2B59B9C0F68193F93C159 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
@@ -296,6 +298,7 @@
 				7E9A82848C0D9F83D3630766 /* PlayerKeyboardMonitor.swift */,
 				53C32D670BE52750EF7D188B /* TimelinePreviewScrubber.swift */,
 				40494D790102331CDA1DFA0A /* WindowFrameAutosave.swift */,
+				BDA1F1304BD67FEF2F43DB03 /* WindowTitleHidden.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -558,6 +561,7 @@
 				3813DF4D2DC9B9A0E243BB1B /* VideoSurface.swift in Sources */,
 				29BEBB83BD55FEBCEA6343DB /* WindowFrameAutosave.swift in Sources */,
 				E2A6AEC7192FB0432DCFE6DC /* WindowState.swift in Sources */,
+				3042AB12579F72C816A04A10 /* WindowTitleHidden.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -802,7 +806,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.5;
+				MARKETING_VERSION = 0.3.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ldl",
@@ -859,7 +863,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.5;
+				MARKETING_VERSION = 0.3.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ldl",
