@@ -68,10 +68,10 @@ struct FolderBrowserView: View {
     }
 
     /// Takes what was dropped on the browser: folders join the library, and a
-    /// video or audio file opens in a window of its own rather than pushing
-    /// aside what is playing here.
+    /// video file opens in a window of its own rather than pushing aside what
+    /// is playing here.
     private func accept(_ urls: [URL]) -> Bool {
-        let media = urls.filter { FolderLibrary.isVideo($0) || FolderLibrary.isAudio($0) }
+        let media = urls.filter { FolderLibrary.isVideo($0) }
         let folders = urls.filter { !media.contains($0) }
 
         let added = library.addFolders(folders)
@@ -131,7 +131,7 @@ struct FolderBrowserView: View {
         switch entry.kind {
         case .folder:
             library.openFolder(entry.url)
-        case .video, .audio:
+        case .video:
             appModel.play(
                 entry.url,
                 from: library.visibleVideos,
@@ -244,22 +244,6 @@ struct FolderBrowserView: View {
             return selectedRoot.url.path
         }
         if let selectedEntry {
-            // An mp3 introduces itself by whichever ID3 tags it has, title
-            // ahead of the artist - album pair (which itself needs both
-            // halves to show, same as before). Nothing parsed falls back to
-            // the filename like every other row always has.
-            if selectedEntry.url.pathExtension.lowercased() == "mp3",
-               let metadata = library.metadata(for: selectedEntry.url)
-            {
-                var pieces: [String] = []
-                if let title = metadata.title { pieces.append(title) }
-                if let artist = metadata.artist, let album = metadata.album {
-                    pieces.append("\(artist) - \(album)")
-                }
-                if !pieces.isEmpty {
-                    return pieces.joined(separator: " - ")
-                }
-            }
             return selectedEntry.name
         }
         return ""
@@ -273,7 +257,7 @@ struct FolderBrowserView: View {
         switch selectedEntry.kind {
         case .folder:
             return ["Folder"]
-        case .video, .audio:
+        case .video:
             // Empty until the read of the file comes back, rather than a row of
             // placeholders that would only be replaced a moment later.
             return library.metadata(for: selectedEntry.url)?.summaryParts ?? []
@@ -314,7 +298,7 @@ struct FolderBrowserView: View {
             ContentUnavailableView(
                 "No Media Here",
                 systemImage: "film",
-                description: Text("This folder has no supported video or audio files or subfolders.")
+                description: Text("This folder has no supported video files or subfolders.")
             )
         } else {
             ScrollViewReader { proxy in
@@ -396,10 +380,6 @@ struct FolderBrowserView: View {
                 if entry.kind == .folder {
                     Image(systemName: "folder.fill")
                         .foregroundStyle(Color.accentColor)
-                        .frame(width: 22, height: 22)
-                } else if entry.kind == .audio {
-                    Image(systemName: "music.note")
-                        .foregroundStyle(.secondary)
                         .frame(width: 22, height: 22)
                 } else if entry.kind == .video {
                     Image(systemName: "film")
@@ -575,7 +555,7 @@ private struct ScrollToSelection: ViewModifier {
     }
 }
 
-/// Right-click actions for a video or audio row. Folders in the same list keep
+/// Right-click actions for a video row. Folders in the same list keep
 /// their own click-to-open behavior and get no menu here — there is nothing
 /// file-level to offer on something that is really just a place to navigate
 /// into.

@@ -55,43 +55,6 @@
 			<key>LSHandlerRank</key>
 			<string>Alternate</string>
 		</dict>
-		<dict>
-			<key>CFBundleTypeName</key>
-			<string>Audio</string>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-			<key>LSHandlerRank</key>
-			<string>Alternate</string>
-			<key>LSItemContentTypes</key>
-			<array>
-				<string>public.audio</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
-				<string>aac</string>
-				<string>aif</string>
-				<string>aiff</string>
-				<string>alac</string>
-				<string>ape</string>
-				<string>flac</string>
-				<string>m4a</string>
-				<string>mka</string>
-				<string>mp3</string>
-				<string>oga</string>
-				<string>ogg</string>
-				<string>opus</string>
-				<string>wav</string>
-				<string>wma</string>
-			</array>
-			<key>CFBundleTypeName</key>
-			<string>Audio File</string>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-			<key>LSHandlerRank</key>
-			<string>Alternate</string>
-		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>

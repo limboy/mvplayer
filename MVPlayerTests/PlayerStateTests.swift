@@ -30,21 +30,6 @@ final class PlayerStateTests: XCTestCase {
         XCTAssertTrue(state.isLoading)
     }
 
-    func testResetForLoadClearsWhetherTheFileWasAudioOnly() {
-        // Left over from the previous file, isAudioOnly would otherwise show
-        // the spectrum and the lyrics toggle for the moment before mpv reports
-        // whether the new file actually has no picture.
-        let state = PlayerState()
-        state.isAudioOnly = true
-
-        state.resetForLoad(video)
-        XCTAssertFalse(state.isAudioOnly)
-
-        state.isAudioOnly = true
-        state.reset()
-        XCTAssertFalse(state.isAudioOnly)
-    }
-
     func testUnlabelledAudioTracksFallBackToTheirIdentifier() {
         // A file can carry several audio tracks with no title, language, or
         // codec between them. Without the identifier every entry in the menu

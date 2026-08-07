@@ -12,7 +12,6 @@ struct BrowserEntry: Identifiable, Hashable, Sendable {
     enum Kind: Hashable, Sendable {
         case folder
         case video
-        case audio
     }
 
     let url: URL
@@ -53,13 +52,6 @@ final class FolderLibrary: ObservableObject {
         "3g2", "3gp", "asf", "avi", "divx", "dv", "f4v", "flv", "m2t", "m2ts",
         "m4v", "mkv", "mov", "mp4", "mpeg", "mpg", "mts", "ogm", "ogv", "rm",
         "rmvb", "ts", "vob", "webm", "wmv"
-    ]
-
-    /// The audio counterpart to `videoExtensions`, same purpose: what counts as
-    /// playable when the system has no content type for it.
-    nonisolated static let audioExtensions: Set<String> = [
-        "aac", "aif", "aiff", "alac", "ape", "flac", "m4a", "mka", "mp3",
-        "oga", "ogg", "opus", "wav", "wma"
     ]
 
     init(
@@ -287,17 +279,6 @@ final class FolderLibrary: ObservableObject {
         return videoExtensions.contains(url.pathExtension.lowercased())
     }
 
-    nonisolated static func isAudio(_ url: URL) -> Bool {
-        let resourceValues = try? url.resourceValues(forKeys: [.contentTypeKey, .isRegularFileKey])
-        guard resourceValues?.isRegularFile != false else { return false }
-        if let contentType = resourceValues?.contentType,
-           contentType.conforms(to: .audio)
-        {
-            return true
-        }
-        return audioExtensions.contains(url.pathExtension.lowercased())
-    }
-
     private static func makeEntry(_ url: URL) -> BrowserEntry? {
         let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .isHiddenKey])
         if values?.isHidden == true {
@@ -308,9 +289,6 @@ final class FolderLibrary: ObservableObject {
         }
         if isVideo(url) {
             return BrowserEntry(url: url.standardizedFileURL, kind: .video)
-        }
-        if isAudio(url) {
-            return BrowserEntry(url: url.standardizedFileURL, kind: .audio)
         }
         return nil
     }

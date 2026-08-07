@@ -48,18 +48,17 @@ final class FilePlayerWindows {
     }
 
     /// Asks for a file and opens it. The panel lists what the browser would list
-    /// in a folder: the containers the system knows are video or audio, and the
-    /// ones only mpv does.
+    /// in a folder: the containers the system knows are video, and the ones only
+    /// mpv does.
     func chooseFile() {
         let panel = NSOpenPanel()
-        panel.title = "Open Media"
+        panel.title = "Open Video"
         panel.prompt = "Open"
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
-        panel.allowedContentTypes = [.movie, .audiovisualContent, .audio]
+        panel.allowedContentTypes = [.movie, .audiovisualContent]
             + FolderLibrary.videoExtensions.compactMap { UTType(filenameExtension: $0) }
-            + FolderLibrary.audioExtensions.compactMap { UTType(filenameExtension: $0) }
 
         panel.presentAsSheet { urls in
             guard let url = urls.first else { return }

@@ -80,11 +80,6 @@ struct PlayerContainerView: View {
                 }
                 .foregroundStyle(.secondary)
                 .allowsHitTesting(false)
-            } else if state.isAudioOnly, !state.audioHasCoverArt {
-                Image(systemName: "music.note")
-                    .font(.system(size: 64, weight: .light))
-                    .foregroundStyle(.secondary)
-                    .allowsHitTesting(false)
             }
 
             if state.isLoading {
@@ -369,7 +364,6 @@ private struct PlayerControlsView: View {
             currentTime: state.currentTime,
             duration: state.duration,
             url: state.currentURL,
-            showsPreview: !state.isAudioOnly,
             isSeeking: $isSeeking,
             seekValue: $seekValue
         ) { value in
@@ -389,12 +383,8 @@ private struct PlayerControlsView: View {
     private var secondaryControls: some View {
         Group {
             speedMenu
-            if state.audioTracks.count > 1 {
-                audioMenu
-            }
-            if !state.isAudioOnly {
-                subtitleMenu
-            }
+            audioMenu
+            subtitleMenu
 
             if showsQueueControls {
                 controlButton(
@@ -570,12 +560,16 @@ private struct PlayerControlsView: View {
 
     private var audioMenu: some View {
         Menu {
-            ForEach(state.audioTracks) { track in
-                trackToggle(
-                    track.displayName + (track.isExternal ? " — External" : ""),
-                    selected: track.isSelected
-                ) {
-                    engine.setAudio(id: track.id)
+            if state.audioTracks.isEmpty {
+                Text("No alternate audio tracks")
+            } else {
+                ForEach(state.audioTracks) { track in
+                    trackToggle(
+                        track.displayName + (track.isExternal ? " — External" : ""),
+                        selected: track.isSelected
+                    ) {
+                        engine.setAudio(id: track.id)
+                    }
                 }
             }
         } label: {
