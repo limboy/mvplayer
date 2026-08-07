@@ -309,6 +309,14 @@ struct FolderBrowserView: View {
                     }
                 }
                 .listStyle(.inset)
+                // Also the height the list assumes for every row it has not
+                // measured yet, so it must stay equal to what a row really
+                // measures. Any gap between the two is re-discovered whenever
+                // the rows are diffed — the first click, say — and the table
+                // resizes itself around the estimate mid-diff, throwing the
+                // scroll position an unpredictable distance for anyone deep
+                // in a long folder.
+                .environment(\.defaultMinListRowHeight, 32)
                 .modifier(KeyboardNavigation(isFocused: $isListFocused, open: openSelection))
                 .modifier(ScrollToSelection(target: autoScrollTarget, proxy: proxy))
             }
