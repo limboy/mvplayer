@@ -13,6 +13,12 @@ Releases](https://github.com/limboy/owl/releases/latest) — no Homebrew
 or other setup needed. The app checks for updates on its own via Sparkle; see
 [Distribution note](#distribution-note).
 
+Owl was called MVPlayer before 0.3.0, and it installs alongside an existing
+MVPlayer rather than replacing it: delete the old app by hand. To carry the
+library and playback progress over, move
+`~/Library/Application Support/MVPlayer` to
+`~/Library/Application Support/Owl` before first launch.
+
 ## Features
 
 - A folder-based library: drop folders in or add them from the browser header,
@@ -28,9 +34,12 @@ or other setup needed. The app checks for updates on its own via Sparkle; see
 - A status bar under the list describing the selection: running time,
   dimensions, frame rate, and file size for a video, the location for a folder.
 - Embedded subtitle and audio track selection, plus external subtitle loading.
-- Queue controls with previous, next, shuffle, repeat all, and repeat one.
-- Full-screen playback, macOS Now Playing information, and media-key and remote
-  playback controls.
+- Queue controls with previous, next, shuffle, repeat all, and repeat one, and
+  a queue that advances on its own when a file plays to its end.
+- Playback speed presets from 0.5x to 2x.
+- Full-screen playback, with the controls and the pointer both hiding after a
+  moment of stillness, plus macOS Now Playing information and media-key and
+  remote playback controls.
 - Broad local video support through `libmpv`, hardware accelerated where
   supported: MP4, MKV, MOV, AVI, WebM, MPEG, M2TS, FLV, WMV, and the rest of
   what mpv handles.
@@ -152,6 +161,7 @@ open "build/Build/Products/Release/Owl.app"
   load an external subtitle.
 - Use the audio menu to switch between embedded audio tracks.
 - Use the shuffle and repeat buttons to control queue playback.
+- Use the `1x` menu in the controls to change playback speed.
 
 Added folders are remembered and monitored for filesystem changes. The queue is
 made from the immediate video files in the folder where playback was started.
