@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-07
+- Remove the "Owl" text from the main window's title bar
+- Give video and folder rows in the browser the same height, and add a video icon to video entries
+
 ## [0.3.0] - 2026-08-07
 - The app is now called Owl. It installs alongside an existing MVPlayer rather than replacing it, so remove the old app by hand; to keep your library and playback progress, move `~/Library/Application Support/MVPlayer` to `~/Library/Application Support/Owl`.
 - Remove support for playing standalone audio files (mp3, flac, wav, etc.); only video containers are accepted now. Embedded audio-track selection for videos is unaffected.
