@@ -1,7 +1,12 @@
 # Changelog
 
 ## [Unreleased]
+
+## [0.3.0] - 2026-08-07
+- The app is now called Owl. It installs alongside an existing MVPlayer rather than replacing it, so remove the old app by hand; to keep your library and playback progress, move `~/Library/Application Support/MVPlayer` to `~/Library/Application Support/Owl`.
 - Remove support for playing standalone audio files (mp3, flac, wav, etc.); only video containers are accepted now. Embedded audio-track selection for videos is unaffected.
+- New app icon.
+- Fix the folder list jumping on the first click while browsing inside a folder.
 
 ## [0.2.5] - 2026-08-06
 - Enlarge the clickable area of the back button in the folder browser, making it easier to tap
