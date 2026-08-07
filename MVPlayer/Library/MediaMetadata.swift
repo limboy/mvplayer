@@ -8,9 +8,11 @@ struct MediaMetadata: Equatable, Sendable {
     let height: Int?
     let frameRate: Double?
 
-    /// ID3 tags, read for mp3 files only. Both are required for the status
-    /// bar's "artist - album" line — a file tagged with just one of them
-    /// falls back to showing its name, the same as a file with neither.
+    /// ID3 tags, read for mp3 files only. `artist` and `album` are a pair —
+    /// the status bar's "artist - album" line needs both, and falls back to
+    /// showing the filename if only one came back. `title` stands on its
+    /// own and is prepended ahead of that line whenever it is present.
+    let title: String?
     let artist: String?
     let album: String?
 
@@ -80,10 +82,12 @@ struct MediaMetadata: Equatable, Sendable {
             frameRate = frameRate ?? probed.frameRate
         }
 
+        var title: String?
         var artist: String?
         var album: String?
         if url.pathExtension.lowercased() == "mp3" {
             let tags = await id3Tags(from: asset)
+            title = tags.title
             artist = tags.artist
             album = tags.album
         }
@@ -97,17 +101,18 @@ struct MediaMetadata: Equatable, Sendable {
             width: width,
             height: height,
             frameRate: frameRate,
+            title: title,
             artist: artist,
             album: album
         )
     }
 
-    /// Pulls artist and album out of an mp3's ID3 tags. Either can be absent —
-    /// untagged files and files tagged by something idiosyncratic both come
-    /// back with a blank in one or both spots, which the caller treats as
+    /// Pulls title, artist and album out of an mp3's ID3 tags. Any of the
+    /// three can be absent — untagged files and files tagged by something
+    /// idiosyncratic both come back with blanks, which the caller treats as
     /// "not parseable" and falls back to the filename for.
-    private static func id3Tags(from asset: AVURLAsset) async -> (artist: String?, album: String?) {
-        guard let items = try? await asset.load(.commonMetadata) else { return (nil, nil) }
+    private static func id3Tags(from asset: AVURLAsset) async -> (title: String?, artist: String?, album: String?) {
+        guard let items = try? await asset.load(.commonMetadata) else { return (nil, nil, nil) }
         func value(for key: AVMetadataKey) async -> String? {
             for item in items where item.commonKey == key {
                 if let string = try? await item.load(.stringValue) {
@@ -117,8 +122,9 @@ struct MediaMetadata: Equatable, Sendable {
             }
             return nil
         }
+        let title = await value(for: .commonKeyTitle)
         let artist = await value(for: .commonKeyArtist)
         let album = await value(for: .commonKeyAlbumName)
-        return (artist, album)
+        return (title, artist, album)
     }
 }

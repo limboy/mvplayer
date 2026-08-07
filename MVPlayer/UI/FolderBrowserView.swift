@@ -244,15 +244,21 @@ struct FolderBrowserView: View {
             return selectedRoot.url.path
         }
         if let selectedEntry {
-            // An mp3 with both ID3 tags read introduces itself that way instead
-            // of by filename; anything untagged, unparseable, or not an mp3
-            // falls back to the name like every other row always has.
+            // An mp3 introduces itself by whichever ID3 tags it has, title
+            // ahead of the artist - album pair (which itself needs both
+            // halves to show, same as before). Nothing parsed falls back to
+            // the filename like every other row always has.
             if selectedEntry.url.pathExtension.lowercased() == "mp3",
-               let metadata = library.metadata(for: selectedEntry.url),
-               let artist = metadata.artist,
-               let album = metadata.album
+               let metadata = library.metadata(for: selectedEntry.url)
             {
-                return "\(artist) - \(album)"
+                var pieces: [String] = []
+                if let title = metadata.title { pieces.append(title) }
+                if let artist = metadata.artist, let album = metadata.album {
+                    pieces.append("\(artist) - \(album)")
+                }
+                if !pieces.isEmpty {
+                    return pieces.joined(separator: " - ")
+                }
             }
             return selectedEntry.name
         }
@@ -419,6 +425,24 @@ struct FolderBrowserView: View {
         }
         .buttonStyle(.plain)
         .listRowBackground(NowPlayingRowBackground(state: state, url: entry.url))
+        .modifier(EntryContextMenu(entry: entry, showInFinder: showInFinder, moveToTrash: moveToTrash))
+    }
+
+    /// Reveals the file in Finder rather than opening it — the row already
+    /// does that on click.
+    private func showInFinder(_ entry: BrowserEntry) {
+        NSWorkspace.shared.activateFileViewerSelecting([entry.url])
+    }
+
+    /// Trashes the underlying file. The row disappears on its own once the
+    /// folder watcher notices, rather than being removed here — that keeps
+    /// this in step with someone deleting the same file from Finder instead.
+    private func moveToTrash(_ entry: BrowserEntry) {
+        do {
+            try FileManager.default.trashItem(at: entry.url, resultingItemURL: nil)
+        } catch {
+            library.errorMessage = "Could not move \(entry.name) to Trash: \(error.localizedDescription)"
+        }
     }
 
     private func chooseFolders() {
@@ -548,6 +572,32 @@ private struct ScrollToSelection: ViewModifier {
                     proxy.scrollTo(newValue, anchor: .center)
                 }
             }
+    }
+}
+
+/// Right-click actions for a video or audio row. Folders in the same list keep
+/// their own click-to-open behavior and get no menu here — there is nothing
+/// file-level to offer on something that is really just a place to navigate
+/// into.
+private struct EntryContextMenu: ViewModifier {
+    let entry: BrowserEntry
+    let showInFinder: (BrowserEntry) -> Void
+    let moveToTrash: (BrowserEntry) -> Void
+
+    func body(content: Content) -> some View {
+        if entry.kind == .folder {
+            content
+        } else {
+            content.contextMenu {
+                Button("Show in Finder") {
+                    showInFinder(entry)
+                }
+                Divider()
+                Button("Move to Trash", role: .destructive) {
+                    moveToTrash(entry)
+                }
+            }
+        }
     }
 }
 
